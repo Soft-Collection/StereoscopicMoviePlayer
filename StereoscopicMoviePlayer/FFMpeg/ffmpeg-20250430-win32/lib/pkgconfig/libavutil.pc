@@ -1,0 +1,14 @@
+prefix=install_directory_32bit
+exec_prefix=${prefix}
+libdir=install_directory_32bit/lib
+includedir=install_directory_32bit/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 60.2.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil 
+Libs.private: -lm -luser32 -lbcrypt -latomic
+Cflags: -I${includedir}

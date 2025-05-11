@@ -1,0 +1,14 @@
+prefix=install_directory_32bit
+exec_prefix=${prefix}
+libdir=install_directory_32bit/lib
+includedir=install_directory_32bit/include
+
+Name: libavfilter
+Description: FFmpeg audio/video filtering library
+Version: 11.0.100
+Requires: 
+Requires.private: libswscale >= 9.0.100, libavformat >= 62.0.102, libavcodec >= 62.1.102, libswresample >= 6.0.100, libavutil >= 60.2.100
+Conflicts:
+Libs: -L${libdir}  -lavfilter 
+Libs.private: -lm -latomic
+Cflags: -I${includedir}
