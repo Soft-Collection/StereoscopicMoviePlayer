@@ -103,18 +103,19 @@
     <Content Include="Images\apause.png" />
     <Content Include="Images\aplay.png" />
     <Content Include="Images\astop.png" />
-    <Content Include="Images\both.png" />
-    <Content Include="Images\left_only.png" />
+    <Content Include="Images\both_selected.png" />
+    <Content Include="Images\both_unselected.png" />
+    <Content Include="Images\left_only_selected.png" />
+    <Content Include="Images\left_only_unselected.png" />
     <Content Include="Images\mylogo.jpg" />
     <Content Include="Images\no_sound.png" />
     <Content Include="Images\open.png" />
-    <Content Include="Images\openleft.png" />
-    <Content Include="Images\openright.png" />
-    <Content Include="Images\right_only.png" />
+    <Content Include="Images\refresh.png" />
+    <Content Include="Images\right_only_selected.png" />
+    <Content Include="Images\right_only_unselected.png" />
     <Content Include="Images\sound.png" />
-    <Content Include="Images\swap.png" />
-    <None Include="Images\play.png" />
-    <None Include="Images\stop.png" />
+    <Content Include="Images\swap_selected.png" />
+    <Content Include="Images\swap_unselected.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

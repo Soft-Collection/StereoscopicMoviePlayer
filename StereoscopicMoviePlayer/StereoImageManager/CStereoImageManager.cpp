@@ -376,3 +376,21 @@ void CStereoImageManager::PlayerMute(BOOL mute)
 		}
 	}
 }
+UINT16 CStereoImageManager::PlayerGetVolume()
+{
+	if (mWave != NULL)
+	{
+		WORD leftVolume;
+		WORD rightVolume;
+		mWave->GetVolume(&leftVolume, &rightVolume);
+		return leftVolume;
+	}
+	return 0;
+}
+void CStereoImageManager::PlayerSetVolume(UINT16 volume)
+{
+	if (mWave != NULL)
+	{
+		mWave->SetVolume(volume, volume);
+	}
+}

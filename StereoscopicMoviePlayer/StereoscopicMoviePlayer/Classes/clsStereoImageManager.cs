@@ -191,5 +191,20 @@ public class clsStereoImageManager
             clsStereoImageManagerWrap.StereoImageManagerPlayerMute(mHandle, mute);
         }
     }
+    public UInt16 PlayerGetVolume()
+    {
+        if (mHandle != IntPtr.Zero)
+        {
+            return clsStereoImageManagerWrap.StereoImageManagerPlayerGetVolume(mHandle);
+        }
+        return 0;
+    }
+    public void PlayerSetVolume(UInt16 volume)
+    {
+        if (mHandle != IntPtr.Zero)
+        {
+            clsStereoImageManagerWrap.StereoImageManagerPlayerSetVolume(mHandle, volume);
+        }
+    }
     #endregion
 }

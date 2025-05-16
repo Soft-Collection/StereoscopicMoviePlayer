@@ -13,6 +13,7 @@ CFFMpegPlayer::CFFMpegPlayer(void* user, dOnNewVideoFrame onNewVideoFrame, dOnNe
 	mPlayerThread = nullptr;
 	mPlayerThreadRunning.store(false);
 	mPlayerPaused.store(false);
+	mPlayerPausedOnSeek.store(false);
 	mPlayerIsSeeking.store(false);
 	mPlayerSeekRequest.store(false);
 	//-------------------------------------------------------
@@ -227,6 +228,7 @@ void CFFMpegPlayer::Seek(INT64 seek_target_seconds)
 			int64_t target_ts = seek_target_seconds / av_q2d(time_base);
 			mPlayerSeekRequest.store(true);
 			mPlayerIsSeeking.store(true);
+			mPlayerPausedOnSeek.store(mPlayerPaused.load());
 			mPlayerPaused.store(false);
 			mSeekTime.store(target_ts);
 		}
@@ -392,9 +394,10 @@ void CFFMpegPlayer::OnNewDecodedVideoFrame(AVFrame* decodedFrame)
 	{
 		if ((-500 < mSeekTime.load() - decodedFrame->pts) && (mSeekTime.load() - decodedFrame->pts < 500))
 		{
-			mPlayerPaused.store(true);
+			mPlayerPaused.store(mPlayerPausedOnSeek.load());
 			mPlayerIsSeeking.store(false);
 		}
+		if (mPlayerIsSeeking.load()) return;
 	}
 	if (mFFColorConversion != NULL)
 	{
@@ -424,6 +427,10 @@ void CFFMpegPlayer::OnNewDecodedAudioFrameStatic(void* user, AVFrame* decodedFra
 
 void CFFMpegPlayer::OnNewDecodedAudioFrame(AVFrame* decodedFrame)
 {
+	if (mPlayerIsSeeking.load())
+	{
+		return;
+	}
 	if (mFFSampleConversion != NULL)
 	{
 		AVFrame* convertedFrame = NULL;

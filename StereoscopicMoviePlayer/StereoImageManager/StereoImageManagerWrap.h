@@ -27,4 +27,6 @@ extern "C"
     __declspec(dllexport) int StereoImageManagerPlayerGetNumberOfAudioTracks(void* handle);
     __declspec(dllexport) void StereoImageManagerPlayerSetAudioTrack(void* handle, int audio_track_index);
     __declspec(dllexport) void StereoImageManagerPlayerMute(void* handle, BOOL mute);
+    __declspec(dllexport) UINT16 StereoImageManagerPlayerGetVolume(void* handle);
+    __declspec(dllexport) void StereoImageManagerPlayerSetVolume(void* handle, UINT16 volume);
 }

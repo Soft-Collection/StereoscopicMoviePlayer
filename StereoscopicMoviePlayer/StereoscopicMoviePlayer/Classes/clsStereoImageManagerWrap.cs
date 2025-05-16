@@ -90,6 +90,12 @@ public class clsStereoImageManagerWrap
     [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
     public static extern void StereoImageManagerPlayerMute(IntPtr StereoImageManagerHandle, bool mute);
 
+    [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern UInt16 StereoImageManagerPlayerGetVolume(IntPtr StereoImageManagerHandle);
+
+    [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void StereoImageManagerPlayerSetVolume(IntPtr StereoImageManagerHandle, UInt16 volume);
+
     #endregion
 
     #endregion

@@ -19,6 +19,7 @@ private:
 	std::thread*                 mPlayerThread;
 	std::atomic<bool>            mPlayerThreadRunning;
 	std::atomic<bool>            mPlayerPaused;
+	std::atomic<bool>            mPlayerPausedOnSeek;
 	std::atomic<bool>            mPlayerIsSeeking;
 	std::atomic<bool>            mPlayerSeekRequest;
 	//------------------------------------------------

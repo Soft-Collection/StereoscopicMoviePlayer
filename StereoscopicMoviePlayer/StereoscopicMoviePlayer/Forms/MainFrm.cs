@@ -15,8 +15,7 @@ namespace StereoscopicMoviePlayer
             InitializeComponent();
             Initialize();
             Init();
-            InitStereo();
-            InitPlayer();
+            InitStereoPlayer();
         }
         #endregion
 
@@ -62,13 +61,6 @@ namespace StereoscopicMoviePlayer
             //-----------------------------------
             pbVideoPanel.BackColor = System.Drawing.Color.DarkGray;
             //------------------------------------------------------
-            bStartStop.Enabled = false;
-            tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
-            lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
-            tbGlassesTimeOffset.Enabled = false;
-            tbTransparentTimePercent.Value = Settings.TransparentTimePercent;
-            lblTransparentTimePercent.Text = Settings.TransparentTimePercent.ToString();
-            tbTransparentTimePercent.Enabled = false;
             tsslFrequencyLabel.Visible = false;
             tsslFrequency.Visible = false;
             //-----------------------------------
@@ -104,7 +96,7 @@ namespace StereoscopicMoviePlayer
         }
         private void ExitProg()
         {
-            PerformStop();
+            PerformStereoStop();
             if (mStereoImageManager != null)
             {
                 mStereoImageManager.Dispose();
@@ -142,7 +134,7 @@ namespace StereoscopicMoviePlayer
                     isStarted = mStereoImageManager.StereoIsStarted();
                 }
                 mWasStartedWhenMinimized = isStarted;
-                if (isStarted) PerformStop();
+                if (isStarted) PerformStereoStop();
             }
             else
             {
@@ -153,7 +145,7 @@ namespace StereoscopicMoviePlayer
                     {
                         isStarted = mStereoImageManager.StereoIsStarted();
                     }
-                    if (!isStarted) PerformStart();
+                    if (!isStarted) PerformStereoStart();
                 }
             }
             this.Visible = !this.Visible;
@@ -284,38 +276,81 @@ namespace StereoscopicMoviePlayer
 
         #endregion
 
-        #region Stereo
+        #region Stereo Player
 
         #region Enums
-        private enum eStereoStates
+        private enum eMainStates
         {
-            VideoFileNotOpened = 0,
-            VideoFileOpened = 1,
-            Stereo = 2,
+            NotSetYet = 0,
+            VideoFileNotOpened = 1,
+            COMPortNotSelected = 2,
+            Stopped = 3,
+            PlayingPaused = 4
+        }
+        private enum eEnableDisableStates
+        {
+            NotSetYet = 0,
+            VideoFileNotOpened = 1,
+            COMPortNotSelected = 2,
+            Stopped = 3,
+            PlayingPaused = 4
+        }
+        private enum ePlayerButtonsStates
+        {
+            NotSetYet = 0,
+            Playing = 1,
+            Paused = 2,
+            Stopped = 3,
+            None = 4
+        }
+        private enum eStereoButtonsStates
+        {
+            NotSetYet = 0,
+            Both = 1,
+            LeftOnly = 2,
+            RightOnly = 3,
+            None = 4
+        }
+        private enum eSoundButtonStates
+        {
+            NotSetYet = 0,
+            SoundOn = 1,
+            SoundOff = 2
+        }
+        private enum eSwapButtonStates
+        {
+            NotSetYet = 0,
+            SwapOn = 1,
+            SwapOff = 2
         }
         #endregion
 
         #region Variables
-        private eStereoStates mStereoState = eStereoStates.VideoFileNotOpened;
-        private eStereoStates mLastStereoState = eStereoStates.Stereo;
+        private eMainStates mMainState = eMainStates.VideoFileNotOpened;
+        private eMainStates mLastMainState = eMainStates.NotSetYet;
+        private eEnableDisableStates mEnableDisableState = eEnableDisableStates.VideoFileNotOpened;
+        private eEnableDisableStates mLastEnableDisableState = eEnableDisableStates.NotSetYet;
+        private ePlayerButtonsStates mPlayerButtonsState = ePlayerButtonsStates.Stopped;
+        private ePlayerButtonsStates mLastPlayerButtonsState = ePlayerButtonsStates.NotSetYet;
+        private eStereoButtonsStates mStereoButtonsState = eStereoButtonsStates.Both;
+        private eStereoButtonsStates mLastStereoButtonsState = eStereoButtonsStates.NotSetYet;
+        private eSoundButtonStates mSoundButtonState = eSoundButtonStates.SoundOn;
+        private eSoundButtonStates mLastSoundButtonState = eSoundButtonStates.NotSetYet;
+        private eSwapButtonStates mSwapButtonState = eSwapButtonStates.SwapOff;
+        private eSwapButtonStates mLastSwapButtonState = eSwapButtonStates.NotSetYet;
         private bool mAlreadySent = true;
         private int mAlreadySentCounter = 0;
+        private long mLastSWMovieTime = 0;
+        private bool mSeekAlreadyApplied = false;
         #endregion
 
         #region Initialize
-        private void InitStereo()
+        private void InitStereoPlayer()
         {
             timerFrequency.Start();
             timerSendSettings.Start();
-            timerGUIStereo.Start();
-            if (File.Exists(Settings.FilePath))
-            {
-                mStereoState = eStereoStates.VideoFileOpened;
-            }
-            else
-            {
-                mStereoState = eStereoStates.VideoFileNotOpened;
-            }
+            timerGUIStereoPlayer.Start();
+            mMainState = eMainStates.VideoFileNotOpened;
         }
         #endregion
 
@@ -323,21 +358,171 @@ namespace StereoscopicMoviePlayer
         #endregion
 
         #region Main Form Events
-        private void timerGUIStereo_Tick(object sender, EventArgs e)
+        private void timerGUIStereoPlayer_Tick(object sender, EventArgs e)
         {
-            if (!File.Exists(Settings.FilePath))
+            if (File.Exists(Settings.FilePath))
             {
-                mStereoState = eStereoStates.VideoFileNotOpened;
+                if (mStereoImageManager != null)
+                {
+                    if (!mStereoImageManager.PlayerIsOpened())
+                    {
+                        mStereoImageManager.PlayerOpen(Settings.FilePath);
+                        Int64 duration = mStereoImageManager.PlayerGetDuration();
+                        tbMovieTime.Maximum = (int)duration;
+                        LoadTracks();
+                        mMainState = (cbComPort.SelectedIndex >= 0) ? eMainStates.Stopped : eMainStates.COMPortNotSelected;
+                    }
+                }
             }
-            if (mLastStereoState != mStereoState)
+            else
             {
-                SetStereoState(mStereoState);
-                mLastStereoState = mStereoState;
+                mMainState = eMainStates.VideoFileNotOpened;
+            }
+            //-----------------------------------------------------
+            if (mLastMainState != mMainState)
+            {
+                SetMainState(mMainState);
+                mLastMainState = mMainState;
+            }
+            //-----------------------------------------------------
+            if (mLastPlayerButtonsState != mPlayerButtonsState)
+            {
+                SetPlayerButtonsState(mPlayerButtonsState);
+                if (mStereoImageManager != null)
+                {
+                    if (mStereoImageManager.PlayerIsOpened())
+                    {
+                        switch (mPlayerButtonsState)
+                        {
+                            case ePlayerButtonsStates.Playing:
+                                mStereoImageManager.PlayerPlay();
+                                PerformStereoStart();
+                                break;
+                            case ePlayerButtonsStates.Paused:
+                                mStereoImageManager.PlayerPause();
+                                break;
+                            case ePlayerButtonsStates.Stopped:
+                                mStereoImageManager.PlayerStop();
+                                PerformStereoStop();
+                                break;
+                        }
+                    }
+                }
+                mLastPlayerButtonsState = mPlayerButtonsState;
+            }
+            //-----------------------------------------------------
+            if (mLastStereoButtonsState != mStereoButtonsState)
+            {
+                SetStereoButtonsState(mStereoButtonsState);
+                if (mStereoImageManager != null)
+                {
+                    if (mStereoImageManager.PlayerIsOpened())
+                    {
+                        switch (mStereoButtonsState)
+                        {
+                            case eStereoButtonsStates.Both:
+                                mStereoImageManager.StereoLRBoth(0);
+                                break;
+                            case eStereoButtonsStates.LeftOnly:
+                                mStereoImageManager.StereoLRBoth(1);
+                                break;
+                            case eStereoButtonsStates.RightOnly:
+                                mStereoImageManager.StereoLRBoth(2);
+                                break;
+                        }
+                    }
+                }
+                mLastStereoButtonsState = mStereoButtonsState;
+            }
+            //-----------------------------------------------------
+            if (mLastSoundButtonState != mSoundButtonState)
+            {
+                SetSoundButtonState(mSoundButtonState);
+                if (mStereoImageManager != null)
+                {
+                    if (mStereoImageManager.PlayerIsOpened())
+                    {
+                        switch (mSoundButtonState)
+                        {
+                            case eSoundButtonStates.SoundOn:
+                                mStereoImageManager.PlayerMute(false);
+                                break;
+                            case eSoundButtonStates.SoundOff:
+                                mStereoImageManager.PlayerMute(true);
+                                break;
+                        }
+                    }
+                }
+                mLastSoundButtonState = mSoundButtonState;
+            }
+            //-----------------------------------------------------
+            if (mLastSwapButtonState != mSwapButtonState)
+            {
+                SetSwapButtonState(mSwapButtonState);
+                if (mStereoImageManager != null)
+                {
+                    if (mStereoImageManager.PlayerIsOpened())
+                    {
+                        switch (mSwapButtonState)
+                        {
+                            case eSwapButtonStates.SwapOn:
+                                mStereoImageManager.StereoSwapLR(true);
+                                break;
+                            case eSwapButtonStates.SwapOff:
+                                mStereoImageManager.StereoSwapLR(false);
+                                break;
+                        }
+                    }
+                }
+                mLastSwapButtonState = mSwapButtonState;
+            }
+            //-----------------------------------------------------
+            if (mLastEnableDisableState != mEnableDisableState)
+            {
+                SetEnableDisableState(mEnableDisableState);
+                mLastEnableDisableState = mEnableDisableState;
+            }
+            //-----------------------------------------------------
+            if (mStereoImageManager != null)
+            {
+                Int64 currentPlayingTime = mStereoImageManager.PlayerGetCurrentPlayingTime();
+                int hours = (int)currentPlayingTime / 3600;
+                int minutes = (int)currentPlayingTime / 60 % 60;
+                int seconds = (int)currentPlayingTime % 60;
+                lblMovieTime.Text = $"{hours:D2}:{minutes:D2}:{seconds:D2}";
+            }
+            //-----------------------------------------------------
+            if (((double)(Stopwatch.GetTimestamp() - mLastSWMovieTime)) / ((double)Stopwatch.Frequency / 1000.0) > 400)
+            {
+                if (mStereoImageManager != null)
+                {
+                    Int64 currentPlayingTime = mStereoImageManager.PlayerGetCurrentPlayingTime();
+                    if ((int)currentPlayingTime > tbMovieTime.Maximum) currentPlayingTime = 0;
+                    tbMovieTime.Value = (int)currentPlayingTime;
+                }
+            }
+            //-----------------------------------------------------
+            if (((double)(Stopwatch.GetTimestamp() - mLastSWMovieTime)) / ((double)Stopwatch.Frequency / 1000.0) > 200)
+            {
+                if (!mSeekAlreadyApplied)
+                {
+                    if (mStereoImageManager != null)
+                    {
+                        if (mStereoImageManager.PlayerIsOpened())
+                        {
+                            mStereoImageManager.PlayerSeek(tbMovieTime.Value);
+                            PerformStereoStart();
+                            if (mPlayerButtonsState == ePlayerButtonsStates.Stopped) mPlayerButtonsState = ePlayerButtonsStates.Paused;
+                        }
+                    }
+                    mSeekAlreadyApplied = true;
+                }
             }
         }
         private void cbComPort_SelectedIndexChanged(object sender, EventArgs e)
         {
             Settings.ComPort = (string)cbComPort.SelectedItem;
+            mMainState = eMainStates.Stopped;
         }
         private void bRefresh_Click(object sender, EventArgs e)
         {
@@ -357,15 +542,6 @@ namespace StereoscopicMoviePlayer
                 cbComPort.SelectedIndex = 0;
             }
         }
-        private void bStartStop_Click(object sender, EventArgs e)
-        {
-            if (mStereoImageManager != null)
-            {
-                bool isStarted = false;
-                isStarted = mStereoImageManager.StereoIsStarted();
-                if (isStarted) PerformStop(); else PerformStart();
-            }
-        }
         private void timerFrequency_Tick(object sender, EventArgs e)
         {
             int frequencyInHz = 0;
@@ -383,6 +559,10 @@ namespace StereoscopicMoviePlayer
                 {
                     if (mStereoImageManager != null)
                     {
+                        mStereoImageManager.PlayerMute(!Settings.SoundOn);
+                        mStereoImageManager.PlayerSetVolume((UInt16)tbVolume.Value);
+                        mStereoImageManager.StereoLRBoth(Settings.LRBoth);
+                        mStereoImageManager.StereoSwapLR(Settings.SwapLR);
                         mStereoImageManager.StereoSetGlassesTimeOffset(Settings.GlassesTimeOffset);
                         mStereoImageManager.StereoSetTransparentTimePercent(Settings.TransparentTimePercent);
                     }
@@ -409,199 +589,73 @@ namespace StereoscopicMoviePlayer
                 mStereoImageManager.StereoSetTransparentTimePercent(Settings.TransparentTimePercent);
             }
         }
-        #endregion
-
-        #region Methods
-        private void SetStereoState(eStereoStates stereoState)
+        private void bPlayPause_Click(object sender, EventArgs e)
         {
-            switch (stereoState)
+            mMainState = eMainStates.PlayingPaused;
+            if (mPlayerButtonsState == ePlayerButtonsStates.Playing)
             {
-                case eStereoStates.VideoFileNotOpened:
-                    bStartStop.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.play;
-                    bStartStop.Enabled = false;
-                    cbComPort.Enabled = true;
-                    bRefresh.Enabled = true;
-                    bLeftOnly.Enabled = false;
-                    bRightOnly.Enabled = false;
-                    bBoth.Enabled = false;
-                    bSwap.Enabled = false;
-                    tbGlassesTimeOffset.Enabled = false;
-                    tbTransparentTimePercent.Enabled = false;
-                    tsslFrequencyLabel.Visible = false;
-                    tsslFrequency.Visible = false;
-                    break;
-                case eStereoStates.VideoFileOpened:
-                    bStartStop.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.play;
-                    bStartStop.Enabled = true;
-                    cbComPort.Enabled = true;
-                    bRefresh.Enabled = true;
-                    bLeftOnly.Enabled = true;
-                    bRightOnly.Enabled = true;
-                    bBoth.Enabled = true;
-                    bSwap.Enabled = true;
-                    tbGlassesTimeOffset.Enabled = false;
-                    tbTransparentTimePercent.Enabled = false;
-                    tsslFrequencyLabel.Visible = false;
-                    tsslFrequency.Visible = false;
-                    break;
-                case eStereoStates.Stereo:
-                    bStartStop.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.stop;
-                    bStartStop.Enabled = true;
-                    cbComPort.Enabled = false;
-                    bRefresh.Enabled = false;
-                    bLeftOnly.Enabled = true;
-                    bRightOnly.Enabled = true;
-                    bBoth.Enabled = true;
-                    bSwap.Enabled = true;
-                    tbGlassesTimeOffset.Enabled = true;
-                    tbTransparentTimePercent.Enabled = true;
-                    tsslFrequencyLabel.Visible = true;
-                    tsslFrequency.Visible = true;
-                    break;
+                mPlayerButtonsState = ePlayerButtonsStates.Paused;
             }
-        }
-        private void PerformStart()
-        {
-            if (mStereoImageManager != null)
+            else if (mPlayerButtonsState == ePlayerButtonsStates.Paused)
             {
-                bool isStarted = false;
-                isStarted = mStereoImageManager.StereoIsStarted();
-                //To Be Started here.
-                if (!isStarted)
-                {
-                    mStereoState = eStereoStates.Stereo;
-                    Start();
-                    mAlreadySent = false;
-                    mAlreadySentCounter = 0;
-                }
+                mPlayerButtonsState = ePlayerButtonsStates.Playing;
             }
-        }
-        private void PerformStop()
-        {
-            if (mStereoImageManager != null)
+            else if (mPlayerButtonsState == ePlayerButtonsStates.Stopped)
             {
-                bool isStarted = false;
-                isStarted = mStereoImageManager.StereoIsStarted();
-                //To Be Stopped here.
-                if (isStarted)
-                {
-                    Stop();
-                    mStereoState = eStereoStates.VideoFileOpened;
-                    pbVideoPanel.Refresh();
-                }
-            }
-        }
-        private void Start()
-        {
-            if (mStereoImageManager != null)
-            {
-                mStereoImageManager.StereoSetCOMPort(Settings.ComPort);
-                mStereoImageManager.StereoStart();
-            }
-        }
-        private void Stop()
-        {
-            if (mStereoImageManager != null)
-            {
-                mStereoImageManager.StereoStop();
-            }
-        }
-        #endregion
-
-        #endregion
-
-        #region Player
-
-        #region Enums
-        private enum ePlayerStates
-        {
-            Disabled = 0,
-            Playing = 1,
-            Paused = 2,
-            Stopped = 3
-        }
-        #endregion
-
-        #region Variables
-        private ePlayerStates mPlayerState = ePlayerStates.Disabled;
-        private ePlayerStates mLastPlayerState = ePlayerStates.Playing;
-        #endregion
-
-        #region Initialize
-        private void InitPlayer()
-        {
-            timerGUIPlayer.Start();
-            if (File.Exists(Settings.FilePath))
-            {
-                mPlayerState = ePlayerStates.Stopped;
-                if (mStereoImageManager != null)
-                {
-                    mStereoImageManager.PlayerOpen(Settings.FilePath);
-                    Int64 duration = mStereoImageManager.PlayerGetDuration();
-                    tbMovieTime.Maximum = (int)duration;
-                }
-                LoadTracks();
-            }
-            else
-            {
-                mPlayerState = ePlayerStates.Disabled;
-            }
-        }
-        #endregion
-
-        #region Main Form Events
-        private void timerGUIPlayer_Tick(object sender, EventArgs e)
-        {
-            if (!File.Exists(Settings.FilePath))
-            {
-                mPlayerState = ePlayerStates.Disabled;
-            }
-            if (mLastPlayerState != mPlayerState)
-            {
-                SetPlayerState(mPlayerState);
-                mLastPlayerState = mPlayerState;
-            }
-            if (mStereoImageManager != null)
-            {
-                Int64 currentPlayingTime = mStereoImageManager.PlayerGetCurrentPlayingTime();
-                tbMovieTime.Value = (int)currentPlayingTime;
-                int hours = (int)currentPlayingTime / 3600;
-                int minutes = (int)currentPlayingTime / 60 % 60;
-                int seconds = (int)currentPlayingTime % 60;
-                lblMovieTime.Text = $"{hours:D2}:{minutes:D2}:{seconds:D2}";
-            }
-        }
-        private void bPlay_Click(object sender, EventArgs e)
-        {
-            mPlayerState = ePlayerStates.Playing;
-            if (mStereoImageManager != null)
-            {
-                if (mStereoImageManager.PlayerIsOpened())
-                {
-                    mStereoImageManager.PlayerPlay();
-                }
-            }
-        }
-        private void bPause_Click(object sender, EventArgs e)
-        {
-            mPlayerState = ePlayerStates.Paused;
-            if (mStereoImageManager != null)
-            {
-                if (mStereoImageManager.PlayerIsOpened())
-                {
-                    mStereoImageManager.PlayerPause();
-                }
+                mPlayerButtonsState = ePlayerButtonsStates.Playing;
             }
         }
         private void bStop_Click(object sender, EventArgs e)
         {
-            mPlayerState = ePlayerStates.Stopped;
+            mMainState = eMainStates.Stopped;
+        }
+        private void bSound_Click(object sender, EventArgs e)
+        {
+            if (mSoundButtonState == eSoundButtonStates.SoundOn)
+            {
+                mSoundButtonState = eSoundButtonStates.SoundOff;
+                Settings.SoundOn = false;
+            }
+            else if (mSoundButtonState == eSoundButtonStates.SoundOff)
+            {
+                mSoundButtonState = eSoundButtonStates.SoundOn;
+                Settings.SoundOn = true;
+            }
+        }
+        private void tbVolume_Scroll(object sender, EventArgs e)
+        {
             if (mStereoImageManager != null)
             {
-                if (mStereoImageManager.PlayerIsOpened())
-                {
-                    mStereoImageManager.PlayerStop();
-                }
+                mStereoImageManager.PlayerSetVolume((UInt16)tbVolume.Value);
+                Settings.Volume = tbVolume.Value;
+            }
+        }
+        private void bBoth_Click(object sender, EventArgs e)
+        {
+            mStereoButtonsState = eStereoButtonsStates.Both;
+            Settings.LRBoth = 0;
+        }
+        private void bLeftOnly_Click(object sender, EventArgs e)
+        {
+            mStereoButtonsState = eStereoButtonsStates.LeftOnly;
+            Settings.LRBoth = 1;
+        }
+        private void bRightOnly_Click(object sender, EventArgs e)
+        {
+            mStereoButtonsState = eStereoButtonsStates.RightOnly;
+            Settings.LRBoth = 2;
+        }
+        private void bSwap_Click(object sender, EventArgs e)
+        {
+            if (mSwapButtonState == eSwapButtonStates.SwapOn)
+            {
+                mSwapButtonState = eSwapButtonStates.SwapOff;
+                Settings.SwapLR = false;
+            }
+            else if (mSwapButtonState == eSwapButtonStates.SwapOff)
+            {
+                mSwapButtonState = eSwapButtonStates.SwapOn;
+                Settings.SwapLR = true;
             }
         }
         private void bOpen_Click(object sender, EventArgs e)
@@ -613,20 +667,23 @@ namespace StereoscopicMoviePlayer
             {
                 if (File.Exists(Settings.FilePath))
                 {
-                    mPlayerState = ePlayerStates.Stopped;
-                    mStereoState = eStereoStates.VideoFileOpened;
+                    mMainState = (cbComPort.SelectedIndex >= 0) ? eMainStates.Stopped : eMainStates.COMPortNotSelected;
                     if (mStereoImageManager != null)
                     {
+                        if (mStereoImageManager.PlayerIsOpened())
+                        {
+                            mStereoImageManager.PlayerClose();
+                        }
                         mStereoImageManager.PlayerOpen(Settings.FilePath);
                         Int64 duration = mStereoImageManager.PlayerGetDuration();
+                        tbMovieTime.Value = 0;
                         tbMovieTime.Maximum = (int)duration;
                     }
                     LoadTracks();
                 }
                 else
                 {
-                    mPlayerState = ePlayerStates.Disabled;
-                    mStereoState = eStereoStates.VideoFileNotOpened;
+                    mMainState = eMainStates.VideoFileNotOpened;
                 }
             }
         }
@@ -642,17 +699,317 @@ namespace StereoscopicMoviePlayer
         }
         private void tbMovieTime_Scroll(object sender, EventArgs e)
         {
-            if (mStereoImageManager != null)
-            {
-                if (mStereoImageManager.PlayerIsOpened())
-                {
-                    mStereoImageManager.PlayerSeek(tbMovieTime.Value);
-                }
-            }
+            mLastSWMovieTime = Stopwatch.GetTimestamp();
+            mSeekAlreadyApplied = false;
         }
         #endregion
 
         #region Methods
+        private void SetMainState(eMainStates mainState)
+        {
+            switch (mainState)
+            {
+                case eMainStates.VideoFileNotOpened:
+                    mEnableDisableState = eEnableDisableStates.VideoFileNotOpened;
+                    mPlayerButtonsState = ePlayerButtonsStates.None;
+                    switch (Settings.LRBoth)
+                    {
+                        case 0:
+                            mStereoButtonsState = eStereoButtonsStates.Both;
+                            break;
+                        case 1:
+                            mStereoButtonsState = eStereoButtonsStates.LeftOnly;
+                            break;
+                        case 2:
+                            mStereoButtonsState = eStereoButtonsStates.RightOnly;
+                            break;
+                    }
+                    mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
+                    mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
+                    tbVolume.Value = Settings.Volume;
+                    tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
+                    lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
+                    tbTransparentTimePercent.Value = Settings.TransparentTimePercent;
+                    lblTransparentTimePercent.Text = Settings.TransparentTimePercent.ToString();
+                    break;
+                case eMainStates.COMPortNotSelected:
+                    mEnableDisableState = eEnableDisableStates.COMPortNotSelected;
+                    mPlayerButtonsState = ePlayerButtonsStates.None;
+                    switch (Settings.LRBoth)
+                    {
+                        case 0:
+                            mStereoButtonsState = eStereoButtonsStates.Both;
+                            break;
+                        case 1:
+                            mStereoButtonsState = eStereoButtonsStates.LeftOnly;
+                            break;
+                        case 2:
+                            mStereoButtonsState = eStereoButtonsStates.RightOnly;
+                            break;
+                    }
+                    mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
+                    mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
+                    tbVolume.Value = Settings.Volume;
+                    tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
+                    lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
+                    tbTransparentTimePercent.Value = Settings.TransparentTimePercent;
+                    lblTransparentTimePercent.Text = Settings.TransparentTimePercent.ToString();
+                    break;
+                case eMainStates.Stopped:
+                    mEnableDisableState = eEnableDisableStates.Stopped;
+                    mPlayerButtonsState = ePlayerButtonsStates.Stopped;
+                    switch (Settings.LRBoth)
+                    {
+                        case 0:
+                            mStereoButtonsState = eStereoButtonsStates.Both;
+                            break;
+                        case 1:
+                            mStereoButtonsState = eStereoButtonsStates.LeftOnly;
+                            break;
+                        case 2:
+                            mStereoButtonsState = eStereoButtonsStates.RightOnly;
+                            break;
+                    }
+                    mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
+                    mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
+                    tbVolume.Value = Settings.Volume;
+                    tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
+                    lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
+                    tbTransparentTimePercent.Value = Settings.TransparentTimePercent;
+                    lblTransparentTimePercent.Text = Settings.TransparentTimePercent.ToString();
+                    break;
+                case eMainStates.PlayingPaused:
+                    mEnableDisableState = eEnableDisableStates.PlayingPaused;
+                    switch (Settings.LRBoth)
+                    {
+                        case 0:
+                            mStereoButtonsState = eStereoButtonsStates.Both;
+                            break;
+                        case 1:
+                            mStereoButtonsState = eStereoButtonsStates.LeftOnly;
+                            break;
+                        case 2:
+                            mStereoButtonsState = eStereoButtonsStates.RightOnly;
+                            break;
+                    }
+                    mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
+                    mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
+                    tbVolume.Value = Settings.Volume;
+                    tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
+                    lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
+                    tbTransparentTimePercent.Value = Settings.TransparentTimePercent;
+                    lblTransparentTimePercent.Text = Settings.TransparentTimePercent.ToString();
+                    break;
+            }
+        }
+        private void SetEnableDisableState(eEnableDisableStates enableDisableState)
+        {
+            switch (enableDisableState)
+            {
+                case eEnableDisableStates.VideoFileNotOpened:
+                    bOpen.Enabled = true;
+                    bPlayPause.Enabled = false;
+                    bStop.Enabled = false;
+                    bSound.Enabled = false;
+                    tbVolume.Enabled = false;
+                    cbTracks.Enabled = false;
+                    cbComPort.Enabled = false;
+                    bRefresh.Enabled = false;
+                    bBoth.Enabled = false;
+                    bLeftOnly.Enabled = false;
+                    bRightOnly.Enabled = false;
+                    bSwap.Enabled = false;
+                    tbMovieTime.Enabled = false;
+                    lblMovieTime.Enabled = false;
+                    tbTransparentTimePercent.Enabled = false;
+                    lblTransparentTimePercent.Enabled = false;  
+                    tbGlassesTimeOffset.Enabled = false;
+                    lblGlassesTimeOffset.Enabled= false;
+                    tsslFrequencyLabel.Visible = false;
+                    tsslFrequency.Visible = false;
+                    break;
+                case eEnableDisableStates.COMPortNotSelected:
+                    bOpen.Enabled = true;
+                    bPlayPause.Enabled = false;
+                    bStop.Enabled = false;
+                    bSound.Enabled = false;
+                    tbVolume.Enabled = false;
+                    cbTracks.Enabled = false;
+                    cbComPort.Enabled = true;
+                    bRefresh.Enabled = true;
+                    bBoth.Enabled = false;
+                    bLeftOnly.Enabled = false;
+                    bRightOnly.Enabled = false;
+                    bSwap.Enabled = false;
+                    tbMovieTime.Enabled = false;
+                    lblMovieTime.Enabled = false;
+                    tbTransparentTimePercent.Enabled = false;
+                    lblTransparentTimePercent.Enabled = false;
+                    tbGlassesTimeOffset.Enabled = false;
+                    lblGlassesTimeOffset.Enabled = false;
+                    tsslFrequencyLabel.Visible = false;
+                    tsslFrequency.Visible = false;
+                    break;
+                case eEnableDisableStates.Stopped:
+                    bOpen.Enabled = true;
+                    bPlayPause.Enabled = true;
+                    bStop.Enabled = true;
+                    bSound.Enabled = true;
+                    tbVolume.Enabled = true;
+                    cbTracks.Enabled = true;
+                    cbComPort.Enabled = true;
+                    bRefresh.Enabled = true;
+                    bBoth.Enabled = false;
+                    bLeftOnly.Enabled = false;
+                    bRightOnly.Enabled = false;
+                    bSwap.Enabled = true;
+                    tbMovieTime.Enabled = true;
+                    lblMovieTime.Enabled = true;
+                    tbTransparentTimePercent.Enabled = false;
+                    lblTransparentTimePercent.Enabled = false;
+                    tbGlassesTimeOffset.Enabled = false;
+                    lblGlassesTimeOffset.Enabled = false;
+                    tsslFrequencyLabel.Visible = false;
+                    tsslFrequency.Visible = false;
+                    break;
+                case eEnableDisableStates.PlayingPaused:
+                    bOpen.Enabled = true;
+                    bPlayPause.Enabled = true;
+                    bStop.Enabled = true;
+                    bSound.Enabled = true;
+                    tbVolume.Enabled = true;
+                    cbTracks.Enabled = true;
+                    cbComPort.Enabled = false;
+                    bRefresh.Enabled = false;
+                    bBoth.Enabled = true;
+                    bLeftOnly.Enabled = true;
+                    bRightOnly.Enabled = true;
+                    bSwap.Enabled = true;
+                    tbMovieTime.Enabled = true;
+                    lblMovieTime.Enabled = true;
+                    tbTransparentTimePercent.Enabled = true;
+                    lblTransparentTimePercent.Enabled = true;
+                    tbGlassesTimeOffset.Enabled = true;
+                    lblGlassesTimeOffset.Enabled = true;
+                    tsslFrequencyLabel.Visible = true;
+                    tsslFrequency.Visible = true;
+                    break;
+            }
+        }
+        private void SetPlayerButtonsState(ePlayerButtonsStates playerButtonsState)
+        {
+            switch (playerButtonsState)
+            {
+                case ePlayerButtonsStates.Playing:
+                    bPlayPause.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.apause;
+                    break;
+                case ePlayerButtonsStates.Paused:
+                    bPlayPause.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.aplay;
+                    break;
+                case ePlayerButtonsStates.Stopped:
+                    bPlayPause.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.aplay;
+                    break;
+                case ePlayerButtonsStates.None:
+                    bPlayPause.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.aplay;
+                    break;
+            }
+        }
+        private void SetStereoButtonsState(eStereoButtonsStates stereoButtonsState)
+        {
+            switch (stereoButtonsState)
+            {
+                case eStereoButtonsStates.Both:
+                    bBoth.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.both_selected;
+                    bLeftOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.left_only_unselected;
+                    bRightOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.right_only_unselected;
+                    break;
+                case eStereoButtonsStates.LeftOnly:
+                    bBoth.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.both_unselected;
+                    bLeftOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.left_only_selected;
+                    bRightOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.right_only_unselected;
+                    break;
+                case eStereoButtonsStates.RightOnly:
+                    bBoth.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.both_unselected;
+                    bLeftOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.left_only_unselected;
+                    bRightOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.right_only_selected;
+                    break;
+                case eStereoButtonsStates.None:
+                    bBoth.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.both_unselected;
+                    bLeftOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.left_only_unselected;
+                    bRightOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.right_only_unselected;
+                    break;
+            }
+        }
+        private void SetSoundButtonState(eSoundButtonStates soundButtonStates)
+        {
+            switch (soundButtonStates)
+            {
+                case eSoundButtonStates.SoundOn:
+                    bSound.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.sound;
+                    tbVolume.Enabled = true;
+                    break;
+                case eSoundButtonStates.SoundOff:
+                    bSound.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.no_sound;
+                    tbVolume.Enabled = false;
+                    break;
+            }
+        }
+        private void SetSwapButtonState(eSwapButtonStates swapButtonStates)
+        {
+            switch (swapButtonStates)
+            {
+                case eSwapButtonStates.SwapOn:
+                    bSwap.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.swap_selected;
+                    break;
+                case eSwapButtonStates.SwapOff:
+                    bSwap.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.swap_unselected;
+                    break;
+            }
+        }
+        private void PerformStereoStart()
+        {
+            if (mStereoImageManager != null)
+            {
+                bool isStereoStarted = false;
+                isStereoStarted = mStereoImageManager.StereoIsStarted();
+                //To Be Started here.
+                if (!isStereoStarted)
+                {
+                    StereoStart();
+                    mAlreadySent = false;
+                    mAlreadySentCounter = 0;
+                }
+            }
+        }
+        private void PerformStereoStop()
+        {
+            if (mStereoImageManager != null)
+            {
+                bool isStarted = false;
+                isStarted = mStereoImageManager.StereoIsStarted();
+                //To Be Stopped here.
+                if (isStarted)
+                {
+                    StereoStop();
+                    pbVideoPanel.Refresh();
+                }
+            }
+        }
+        private void StereoStart()
+        {
+            if (mStereoImageManager != null)
+            {
+                mStereoImageManager.StereoSetCOMPort(Settings.ComPort);
+                mStereoImageManager.StereoStart();
+            }
+        }
+        private void StereoStop()
+        {
+            if (mStereoImageManager != null)
+            {
+                mStereoImageManager.StereoStop();
+            }
+        }
         private string OpenFile()
         {
             dlgOpen.Title = "Open Video Movie File";
@@ -666,60 +1023,6 @@ namespace StereoscopicMoviePlayer
                 return dlgOpen.FileName;
             }
             return string.Empty;
-        }
-        private void SetPlayerState(ePlayerStates playerState)
-        {
-            switch (playerState)
-            {
-                case ePlayerStates.Disabled:
-                    bPlay.Enabled = false;
-                    bPause.Enabled = false;
-                    bStop.Enabled = false;
-                    cbTracks.Enabled = false;
-                    tbMovieTime.Enabled = false;
-                    lblMovieTime.Enabled = false;
-                    bPlay.FlatAppearance.BorderSize = 0;
-                    bPause.FlatAppearance.BorderSize = 0;
-                    bStop.FlatAppearance.BorderSize = 0;
-                    cbTracks.Items.Clear();
-                    tbMovieTime.Maximum = 0;
-                    tbMovieTime.Value = 0;
-                    lblMovieTime.Text = "00:00:00";
-                    break;
-                case ePlayerStates.Playing:
-                    bPlay.Enabled = true;
-                    bPause.Enabled = true;
-                    bStop.Enabled = true;
-                    cbTracks.Enabled = true;
-                    tbMovieTime.Enabled = true;
-                    lblMovieTime.Enabled = true;
-                    bPlay.FlatAppearance.BorderSize = 1;
-                    bPause.FlatAppearance.BorderSize = 0;
-                    bStop.FlatAppearance.BorderSize = 0;
-                    break;
-                case ePlayerStates.Paused:
-                    bPlay.Enabled = true;
-                    bPause.Enabled = true;
-                    bStop.Enabled = true;
-                    cbTracks.Enabled = true;
-                    tbMovieTime.Enabled = true;
-                    lblMovieTime.Enabled = true;
-                    bPlay.FlatAppearance.BorderSize = 0;
-                    bPause.FlatAppearance.BorderSize = 1;
-                    bStop.FlatAppearance.BorderSize = 0;
-                    break;
-                case ePlayerStates.Stopped:
-                    bPlay.Enabled = true;
-                    bPause.Enabled = true;
-                    bStop.Enabled = true;
-                    cbTracks.Enabled = true;
-                    tbMovieTime.Enabled = true;
-                    lblMovieTime.Enabled = true;
-                    bPlay.FlatAppearance.BorderSize = 0;
-                    bPause.FlatAppearance.BorderSize = 0;
-                    bStop.FlatAppearance.BorderSize = 1;
-                    break;
-            }
         }
         private void LoadTracks()
         {

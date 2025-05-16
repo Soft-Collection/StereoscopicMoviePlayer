@@ -81,32 +81,12 @@ namespace StereoscopicMoviePlayer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap play {
-            get {
-                object obj = ResourceManager.GetObject("play", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon program_icon {
             get {
                 object obj = ResourceManager.GetObject("program_icon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap stop {
-            get {
-                object obj = ResourceManager.GetObject("stop", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -153,9 +133,9 @@ namespace StereoscopicMoviePlayer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap left_only {
+        internal static System.Drawing.Bitmap left_only_selected {
             get {
-                object obj = ResourceManager.GetObject("left_only", resourceCulture);
+                object obj = ResourceManager.GetObject("left_only_selected", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }		
@@ -163,9 +143,9 @@ namespace StereoscopicMoviePlayer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap right_only {
+        internal static System.Drawing.Bitmap right_only_selected {
             get {
-                object obj = ResourceManager.GetObject("right_only", resourceCulture);
+                object obj = ResourceManager.GetObject("right_only_selected", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }		
@@ -173,9 +153,9 @@ namespace StereoscopicMoviePlayer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap both {
+        internal static System.Drawing.Bitmap both_selected {
             get {
-                object obj = ResourceManager.GetObject("both", resourceCulture);
+                object obj = ResourceManager.GetObject("both_selected", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }		
@@ -183,12 +163,52 @@ namespace StereoscopicMoviePlayer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap swap {
+        internal static System.Drawing.Bitmap swap_selected {
             get {
-                object obj = ResourceManager.GetObject("swap", resourceCulture);
+                object obj = ResourceManager.GetObject("swap_selected", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }		
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap left_only_unselected {
+            get {
+                object obj = ResourceManager.GetObject("left_only_unselected", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }		
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap right_only_unselected {
+            get {
+                object obj = ResourceManager.GetObject("right_only_unselected", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }		
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap both_unselected {
+            get {
+                object obj = ResourceManager.GetObject("both_unselected", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }		
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap swap_unselected {
+            get {
+                object obj = ResourceManager.GetObject("swap_unselected", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }	
 
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.

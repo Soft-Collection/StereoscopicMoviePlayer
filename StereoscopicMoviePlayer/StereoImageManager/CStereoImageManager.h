@@ -67,5 +67,7 @@ public:
 	int PlayerGetNumberOfAudioTracks();
 	void PlayerSetAudioTrack(int audio_track_index);
 	void PlayerMute(BOOL mute);
+	UINT16 PlayerGetVolume();
+	void PlayerSetVolume(UINT16 volume);
 };
 #endif // __CSTEREOIMAGEMANAGER_H__

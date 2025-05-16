@@ -150,3 +150,15 @@ void StereoImageManagerPlayerMute(void* handle, BOOL mute)
 	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
 	cStereoImageManager->PlayerMute(mute);
 }
+UINT16 StereoImageManagerPlayerGetVolume(void* handle)
+{
+	if (handle == NULL) return 0;
+	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
+	return(cStereoImageManager->PlayerGetVolume());
+}
+void StereoImageManagerPlayerSetVolume(void* handle, UINT16 volume)
+{
+	if (handle == NULL) return;
+	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
+	cStereoImageManager->PlayerSetVolume(volume);
+}

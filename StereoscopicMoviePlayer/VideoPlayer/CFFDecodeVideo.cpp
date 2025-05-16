@@ -43,5 +43,6 @@ AVDictionary* CFFDecodeVideo::SetOpts()
 {
 	AVDictionary* opts = NULL;
 	av_dict_set(&opts, "b", "2.5M", 0);
+	av_dict_set(&opts, "threads", "4", 0);
 	return opts;
 }

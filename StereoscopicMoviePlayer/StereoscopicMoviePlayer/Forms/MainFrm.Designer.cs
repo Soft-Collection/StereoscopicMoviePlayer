@@ -60,8 +60,8 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.timerSendSettings = new System.Windows.Forms.Timer(this.components);
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.tbVolume = new System.Windows.Forms.TrackBar();
             this.bSound = new System.Windows.Forms.Button();
-            this.bStartStop = new System.Windows.Forms.Button();
             this.bRefresh = new System.Windows.Forms.Button();
             this.cbComPort = new System.Windows.Forms.ComboBox();
             this.bSwap = new System.Windows.Forms.Button();
@@ -71,13 +71,11 @@
             this.cbTracks = new System.Windows.Forms.ComboBox();
             this.bOpen = new System.Windows.Forms.Button();
             this.bStop = new System.Windows.Forms.Button();
-            this.bPause = new System.Windows.Forms.Button();
-            this.bPlay = new System.Windows.Forms.Button();
+            this.bPlayPause = new System.Windows.Forms.Button();
             this.tbMovieTime = new System.Windows.Forms.TrackBar();
             this.lblMovieTime = new System.Windows.Forms.Label();
             this.dlgOpen = new System.Windows.Forms.OpenFileDialog();
-            this.timerGUIPlayer = new System.Windows.Forms.Timer(this.components);
-            this.timerGUIStereo = new System.Windows.Forms.Timer(this.components);
+            this.timerGUIStereoPlayer = new System.Windows.Forms.Timer(this.components);
             this.popUpMenu.SuspendLayout();
             this.menuStrip.SuspendLayout();
             this.statusStrip.SuspendLayout();
@@ -87,6 +85,7 @@
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tbVolume)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbMovieTime)).BeginInit();
             this.SuspendLayout();
             // 
@@ -344,8 +343,8 @@
             // 
             this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox3.Controls.Add(this.tbVolume);
             this.groupBox3.Controls.Add(this.bSound);
-            this.groupBox3.Controls.Add(this.bStartStop);
             this.groupBox3.Controls.Add(this.bRefresh);
             this.groupBox3.Controls.Add(this.cbComPort);
             this.groupBox3.Controls.Add(this.bSwap);
@@ -355,8 +354,7 @@
             this.groupBox3.Controls.Add(this.cbTracks);
             this.groupBox3.Controls.Add(this.bOpen);
             this.groupBox3.Controls.Add(this.bStop);
-            this.groupBox3.Controls.Add(this.bPause);
-            this.groupBox3.Controls.Add(this.bPlay);
+            this.groupBox3.Controls.Add(this.bPlayPause);
             this.groupBox3.Controls.Add(this.tbMovieTime);
             this.groupBox3.Controls.Add(this.lblMovieTime);
             this.groupBox3.Location = new System.Drawing.Point(5, 347);
@@ -368,30 +366,30 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Player Controls";
             // 
+            // tbVolume
+            // 
+            this.tbVolume.AutoSize = false;
+            this.tbVolume.Location = new System.Drawing.Point(120, 47);
+            this.tbVolume.Maximum = 65535;
+            this.tbVolume.Name = "tbVolume";
+            this.tbVolume.Size = new System.Drawing.Size(112, 23);
+            this.tbVolume.TabIndex = 34;
+            this.tbVolume.TickFrequency = 5000;
+            this.tbVolume.Value = 70;
+            this.tbVolume.Scroll += new System.EventHandler(this.tbVolume_Scroll);
+            // 
             // bSound
             // 
             this.bSound.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.sound;
             this.bSound.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.bSound.FlatAppearance.BorderSize = 0;
             this.bSound.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bSound.Location = new System.Drawing.Point(123, 45);
+            this.bSound.Location = new System.Drawing.Point(94, 45);
             this.bSound.Name = "bSound";
             this.bSound.Size = new System.Drawing.Size(26, 26);
             this.bSound.TabIndex = 44;
             this.bSound.UseVisualStyleBackColor = true;
-            // 
-            // bStartStop
-            // 
-            this.bStartStop.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.play;
-            this.bStartStop.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.bStartStop.FlatAppearance.BorderSize = 0;
-            this.bStartStop.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bStartStop.Location = new System.Drawing.Point(366, 45);
-            this.bStartStop.Name = "bStartStop";
-            this.bStartStop.Size = new System.Drawing.Size(26, 26);
-            this.bStartStop.TabIndex = 43;
-            this.bStartStop.UseVisualStyleBackColor = true;
-            this.bStartStop.Click += new System.EventHandler(this.bStartStop_Click);
+            this.bSound.Click += new System.EventHandler(this.bSound_Click);
             // 
             // bRefresh
             // 
@@ -399,7 +397,7 @@
             this.bRefresh.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.bRefresh.FlatAppearance.BorderSize = 0;
             this.bRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bRefresh.Location = new System.Drawing.Point(337, 45);
+            this.bRefresh.Location = new System.Drawing.Point(415, 45);
             this.bRefresh.Name = "bRefresh";
             this.bRefresh.Size = new System.Drawing.Size(26, 26);
             this.bRefresh.TabIndex = 42;
@@ -410,7 +408,7 @@
             // 
             this.cbComPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbComPort.FormattingEnabled = true;
-            this.cbComPort.Location = new System.Drawing.Point(231, 48);
+            this.cbComPort.Location = new System.Drawing.Point(309, 48);
             this.cbComPort.Name = "cbComPort";
             this.cbComPort.Size = new System.Drawing.Size(100, 21);
             this.cbComPort.TabIndex = 41;
@@ -418,57 +416,61 @@
             // 
             // bSwap
             // 
-            this.bSwap.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.swap;
+            this.bSwap.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.swap_unselected;
             this.bSwap.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.bSwap.FlatAppearance.BorderSize = 0;
             this.bSwap.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bSwap.Location = new System.Drawing.Point(482, 45);
+            this.bSwap.Location = new System.Drawing.Point(531, 45);
             this.bSwap.Name = "bSwap";
             this.bSwap.Size = new System.Drawing.Size(26, 26);
             this.bSwap.TabIndex = 40;
             this.bSwap.UseVisualStyleBackColor = true;
+            this.bSwap.Click += new System.EventHandler(this.bSwap_Click);
             // 
             // bBoth
             // 
-            this.bBoth.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.both;
+            this.bBoth.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.both_unselected;
             this.bBoth.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.bBoth.FlatAppearance.BorderSize = 0;
             this.bBoth.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bBoth.Location = new System.Drawing.Point(453, 45);
+            this.bBoth.Location = new System.Drawing.Point(444, 45);
             this.bBoth.Name = "bBoth";
             this.bBoth.Size = new System.Drawing.Size(26, 26);
             this.bBoth.TabIndex = 39;
             this.bBoth.UseVisualStyleBackColor = true;
+            this.bBoth.Click += new System.EventHandler(this.bBoth_Click);
             // 
             // bRightOnly
             // 
-            this.bRightOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.right_only;
+            this.bRightOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.right_only_unselected;
             this.bRightOnly.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.bRightOnly.FlatAppearance.BorderSize = 0;
             this.bRightOnly.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bRightOnly.Location = new System.Drawing.Point(424, 45);
+            this.bRightOnly.Location = new System.Drawing.Point(502, 45);
             this.bRightOnly.Name = "bRightOnly";
             this.bRightOnly.Size = new System.Drawing.Size(26, 26);
             this.bRightOnly.TabIndex = 38;
             this.bRightOnly.UseVisualStyleBackColor = true;
+            this.bRightOnly.Click += new System.EventHandler(this.bRightOnly_Click);
             // 
             // bLeftOnly
             // 
-            this.bLeftOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.left_only;
+            this.bLeftOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.left_only_unselected;
             this.bLeftOnly.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.bLeftOnly.FlatAppearance.BorderSize = 0;
             this.bLeftOnly.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bLeftOnly.Location = new System.Drawing.Point(395, 45);
+            this.bLeftOnly.Location = new System.Drawing.Point(473, 45);
             this.bLeftOnly.Name = "bLeftOnly";
             this.bLeftOnly.Size = new System.Drawing.Size(26, 26);
             this.bLeftOnly.TabIndex = 37;
             this.bLeftOnly.UseVisualStyleBackColor = true;
+            this.bLeftOnly.Click += new System.EventHandler(this.bLeftOnly_Click);
             // 
             // cbTracks
             // 
             this.cbTracks.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbTracks.FormattingEnabled = true;
-            this.cbTracks.Location = new System.Drawing.Point(155, 48);
+            this.cbTracks.Location = new System.Drawing.Point(233, 48);
             this.cbTracks.Name = "cbTracks";
             this.cbTracks.Size = new System.Drawing.Size(70, 21);
             this.cbTracks.TabIndex = 36;
@@ -493,38 +495,25 @@
             this.bStop.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.bStop.FlatAppearance.BorderSize = 0;
             this.bStop.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bStop.Location = new System.Drawing.Point(94, 45);
+            this.bStop.Location = new System.Drawing.Point(65, 45);
             this.bStop.Name = "bStop";
             this.bStop.Size = new System.Drawing.Size(26, 26);
             this.bStop.TabIndex = 34;
             this.bStop.UseVisualStyleBackColor = true;
             this.bStop.Click += new System.EventHandler(this.bStop_Click);
             // 
-            // bPause
+            // bPlayPause
             // 
-            this.bPause.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.apause;
-            this.bPause.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.bPause.FlatAppearance.BorderSize = 0;
-            this.bPause.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bPause.Location = new System.Drawing.Point(65, 45);
-            this.bPause.Name = "bPause";
-            this.bPause.Size = new System.Drawing.Size(26, 26);
-            this.bPause.TabIndex = 33;
-            this.bPause.UseVisualStyleBackColor = true;
-            this.bPause.Click += new System.EventHandler(this.bPause_Click);
-            // 
-            // bPlay
-            // 
-            this.bPlay.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.aplay;
-            this.bPlay.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.bPlay.FlatAppearance.BorderSize = 0;
-            this.bPlay.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bPlay.Location = new System.Drawing.Point(36, 45);
-            this.bPlay.Name = "bPlay";
-            this.bPlay.Size = new System.Drawing.Size(26, 26);
-            this.bPlay.TabIndex = 32;
-            this.bPlay.UseVisualStyleBackColor = true;
-            this.bPlay.Click += new System.EventHandler(this.bPlay_Click);
+            this.bPlayPause.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.aplay;
+            this.bPlayPause.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.bPlayPause.FlatAppearance.BorderSize = 0;
+            this.bPlayPause.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.bPlayPause.Location = new System.Drawing.Point(36, 45);
+            this.bPlayPause.Name = "bPlayPause";
+            this.bPlayPause.Size = new System.Drawing.Size(26, 26);
+            this.bPlayPause.TabIndex = 32;
+            this.bPlayPause.UseVisualStyleBackColor = true;
+            this.bPlayPause.Click += new System.EventHandler(this.bPlayPause_Click);
             // 
             // tbMovieTime
             // 
@@ -550,13 +539,9 @@
             this.lblMovieTime.Text = "00:00:00";
             this.lblMovieTime.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
-            // timerGUIPlayer
+            // timerGUIStereoPlayer
             // 
-            this.timerGUIPlayer.Tick += new System.EventHandler(this.timerGUIPlayer_Tick);
-            // 
-            // timerGUIStereo
-            // 
-            this.timerGUIStereo.Tick += new System.EventHandler(this.timerGUIStereo_Tick);
+            this.timerGUIStereoPlayer.Tick += new System.EventHandler(this.timerGUIStereoPlayer_Tick);
             // 
             // MainFrm
             // 
@@ -588,6 +573,7 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.tbVolume)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbMovieTime)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -629,21 +615,19 @@
         private System.Windows.Forms.TrackBar tbMovieTime;
         private System.Windows.Forms.Label lblMovieTime;
         private System.Windows.Forms.Button bStop;
-        private System.Windows.Forms.Button bPause;
-        private System.Windows.Forms.Button bPlay;
+        private System.Windows.Forms.Button bPlayPause;
         private System.Windows.Forms.Button bOpen;
         private System.Windows.Forms.OpenFileDialog dlgOpen;
         private System.Windows.Forms.ComboBox cbTracks;
-        private System.Windows.Forms.Timer timerGUIPlayer;
-        private System.Windows.Forms.Timer timerGUIStereo;
+        private System.Windows.Forms.Timer timerGUIStereoPlayer;
         private System.Windows.Forms.Button bSwap;
         private System.Windows.Forms.Button bBoth;
         private System.Windows.Forms.Button bRightOnly;
         private System.Windows.Forms.Button bLeftOnly;
-        private System.Windows.Forms.Button bStartStop;
         private System.Windows.Forms.Button bRefresh;
         private System.Windows.Forms.ComboBox cbComPort;
         private System.Windows.Forms.Button bSound;
+        private System.Windows.Forms.TrackBar tbVolume;
     }
 }
 

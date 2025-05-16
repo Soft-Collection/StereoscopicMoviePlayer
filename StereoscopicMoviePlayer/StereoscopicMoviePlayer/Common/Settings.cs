@@ -17,6 +17,9 @@ namespace StereoscopicMoviePlayer
         private static int GlassesTimeOffsetValue = 0;
         private static int TransparentTimePercentValue = 70;
         private static bool SoundOnValue = true;
+        private static int VolumeValue = 32768;
+        private static bool SwapLRValue = false;
+        private static int LRBothValue = 0;
 
         //Location Property.
         public static Point Location
@@ -204,6 +207,60 @@ namespace StereoscopicMoviePlayer
                 SoundOnValue = value;
                 RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct, true);
                 key.SetValue("SoundOn", SoundOnValue.ToString());
+            }
+        }
+
+        //Volume Property.
+        public static int Volume
+        {
+            get
+            {
+                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct);
+                if (key == null) key = Registry.CurrentUser.CreateSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct);
+                VolumeValue = (int)key.GetValue("Volume", 32768);
+                return (VolumeValue);
+            }
+            set
+            {
+                VolumeValue = value;
+                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct, true);
+                key.SetValue("Volume", VolumeValue);
+            }
+        }
+
+        //SwapLR Property.
+        public static bool SwapLR
+        {
+            get
+            {
+                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct);
+                if (key == null) key = Registry.CurrentUser.CreateSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct);
+                SwapLRValue = Boolean.Parse((string)key.GetValue("SwapLR", "False"));
+                return (SwapLRValue);
+            }
+            set
+            {
+                SwapLRValue = value;
+                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct, true);
+                key.SetValue("SwapLR", SwapLRValue.ToString());
+            }
+        }
+
+        //LRBoth Property.
+        public static int LRBoth
+        {
+            get
+            {
+                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct);
+                if (key == null) key = Registry.CurrentUser.CreateSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct);
+                LRBothValue = (int)key.GetValue("LRBoth", 0);
+                return (LRBothValue);
+            }
+            set
+            {
+                LRBothValue = value;
+                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct, true);
+                key.SetValue("LRBoth", LRBothValue);
             }
         }
     }
