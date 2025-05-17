@@ -3,13 +3,11 @@
 
 #include <windows.h>
 #include <iostream>
-#include <mutex>
 
 class CComPort
 {
 private:
 	HANDLE mHCom;
-	std::mutex* mHComMutex;
 public:
 	enum eCommandTypes : int
 	{

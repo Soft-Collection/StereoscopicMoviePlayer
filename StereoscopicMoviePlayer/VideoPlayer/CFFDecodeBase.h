@@ -2,14 +2,12 @@
 #define __CFFDECODEBASE_H__
 
 #include "CFFCommon.h"
-#include <mutex>
 
 class CFFDecodeBase
 {
 protected:
 	dOnNewDecodedFrame mOnNewDecodedFrame;
 	void*              mUser;
-	std::mutex*        mMutex;
 	AVCodec*           mCodec;
 	AVCodecContext*    mCodecContext;
 	AVFrame*           mDecodedFrame;

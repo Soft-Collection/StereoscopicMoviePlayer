@@ -9,7 +9,11 @@ CFFMpegPlayer::CFFMpegPlayer(void* user, dOnNewVideoFrame onNewVideoFrame, dOnNe
 {
 	InitStatic();
 	//-------------------------------------------------------
-	mPlayerMutex = new std::mutex();
+	mMutexDecodeVideo = new std::mutex();
+	mMutexDecodeAudio = new std::mutex();
+	mMutexSampleConversion = new std::mutex();
+	mMutexColorConversion = new std::mutex();
+	//-------------------------------------------------------
 	mPlayerThread = nullptr;
 	mPlayerThreadRunning.store(false);
 	mPlayerPaused.store(false);
@@ -45,10 +49,25 @@ CFFMpegPlayer::CFFMpegPlayer(void* user, dOnNewVideoFrame onNewVideoFrame, dOnNe
 CFFMpegPlayer::~CFFMpegPlayer()
 {
 	Close();
-	if (mPlayerMutex != nullptr)
+	if (mMutexColorConversion != nullptr)
 	{
-		delete mPlayerMutex;
-		mPlayerMutex = nullptr;
+		delete mMutexColorConversion;
+		mMutexColorConversion = nullptr;
+	}
+	if (mMutexSampleConversion != nullptr)
+	{
+		delete mMutexSampleConversion;
+		mMutexSampleConversion = nullptr;
+	}
+	if (mMutexDecodeAudio != nullptr)
+	{
+		delete mMutexDecodeAudio;
+		mMutexDecodeAudio = nullptr;
+	}
+	if (mMutexDecodeVideo != nullptr)
+	{
+		delete mMutexDecodeVideo;
+		mMutexDecodeVideo = nullptr;
 	}
 }
 
@@ -113,36 +132,40 @@ void CFFMpegPlayer::Close()
 		delete mPlayerThread;
 		mPlayerThread = nullptr;
 	}
-	std::unique_lock<std::mutex> lock1(*mPlayerMutex); // Lock the mutex
-	//--------------------------------------------------------------
 	if (mFormatContext != NULL)
 	{
 		avformat_close_input(&mFormatContext);
 		avformat_free_context(mFormatContext);
 		mFormatContext = NULL;
 	}
+	std::unique_lock<std::mutex> lock1(*mMutexSampleConversion); // Lock the mutex
 	if (mFFSampleConversion != NULL)
 	{
 		delete mFFSampleConversion;
 		mFFSampleConversion = NULL;
 	}
+	lock1.unlock();
+	std::unique_lock<std::mutex> lock2(*mMutexColorConversion); // Lock the mutex
 	if (mFFColorConversion != NULL)
 	{
 		delete mFFColorConversion;
 		mFFColorConversion = NULL;
 	}
+	lock2.unlock();
+	std::unique_lock<std::mutex> lock3(*mMutexDecodeAudio); // Lock the mutex
 	if (mFFDecodeAudio != NULL)
 	{
 		delete mFFDecodeAudio;
 		mFFDecodeAudio = NULL;
 	}
+	lock3.unlock();
+	std::unique_lock<std::mutex> lock4(*mMutexDecodeVideo); // Lock the mutex
 	if (mFFDecodeVideo != NULL)
 	{
 		delete mFFDecodeVideo;
 		mFFDecodeVideo = NULL;
 	}
-	//--------------------------------------------------------------
-	lock1.unlock();
+	lock4.unlock();
 }
 
 void CFFMpegPlayer::Reopen()
@@ -325,9 +348,6 @@ void CFFMpegPlayer::MyThreadPlayerFunction()
 	{
 		AVPacket* packet;
 		packet = av_packet_alloc();
-		//----------------------------------------------------------------
-		std::unique_lock<std::mutex> lock1(*mPlayerMutex); // Lock the mutex
-		//----------------------------------------------------------------
 		if (mPlayerSeekRequest.load())
 		{
 			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, mSeekTime.load(), INT64_MAX, 0);
@@ -352,11 +372,7 @@ void CFFMpegPlayer::MyThreadPlayerFunction()
 			}
 		}
 		av_packet_unref(packet);
-		//----------------------------------------------------------------
-		lock1.unlock();
-		//----------------------------------------------------------------
 		av_packet_free(&packet);
-		//----------------------------------------------------------------
 		while (mPlayerPaused.load())
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(30));
@@ -366,18 +382,22 @@ void CFFMpegPlayer::MyThreadPlayerFunction()
 
 void CFFMpegPlayer::OnVideoPacketReceived(AVFormatContext* formatContext, AVPacket* packet)
 {
+	std::unique_lock<std::mutex> lock1(*mMutexDecodeVideo); // Lock the mutex
 	if (mFFDecodeVideo != NULL)
 	{
 		mFFDecodeVideo->Decode(formatContext, packet);
 	}
+	lock1.unlock();
 }
 
 void CFFMpegPlayer::OnAudioPacketReceived(AVFormatContext* formatContext, AVPacket* packet)
 {
+	std::unique_lock<std::mutex> lock1(*mMutexDecodeAudio); // Lock the mutex
 	if (mFFDecodeAudio != NULL)
 	{
 		mFFDecodeAudio->Decode(formatContext, packet);
 	}
+	lock1.unlock();
 }
 
 void CFFMpegPlayer::OnNewDecodedVideoFrameStatic(void* user, AVFrame* decodedFrame)
@@ -399,6 +419,7 @@ void CFFMpegPlayer::OnNewDecodedVideoFrame(AVFrame* decodedFrame)
 		}
 		if (mPlayerIsSeeking.load()) return;
 	}
+	std::unique_lock<std::mutex> lock1(*mMutexColorConversion); // Lock the mutex
 	if (mFFColorConversion != NULL)
 	{
 		AVFrame* convertedFrame = NULL;
@@ -415,6 +436,7 @@ void CFFMpegPlayer::OnNewDecodedVideoFrame(AVFrame* decodedFrame)
 			}
 		}
 	}
+	lock1.unlock();
 	av_frame_unref(decodedFrame);
 }
 
@@ -431,6 +453,7 @@ void CFFMpegPlayer::OnNewDecodedAudioFrame(AVFrame* decodedFrame)
 	{
 		return;
 	}
+	std::unique_lock<std::mutex> lock1(*mMutexSampleConversion); // Lock the mutex
 	if (mFFSampleConversion != NULL)
 	{
 		AVFrame* convertedFrame = NULL;
@@ -479,6 +502,7 @@ void CFFMpegPlayer::OnNewDecodedAudioFrame(AVFrame* decodedFrame)
 			}
 		}
 	}
+	lock1.unlock();
 	av_frame_unref(decodedFrame);
 }
 

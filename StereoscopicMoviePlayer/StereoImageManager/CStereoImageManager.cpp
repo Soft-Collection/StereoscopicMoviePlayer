@@ -14,6 +14,8 @@ CStereoImageManager::CStereoImageManager(HWND hWnd)
 	mLeftImage = NULL;
 	mRightImage = NULL;
 	//----------------------------------------------------
+	mMutexWave = new std::mutex();
+	mMutexPlayer = new std::mutex();
 	mMutexRender = new std::mutex();
 	mThreadRenderRunning.store(false);
 	mThreadRender = nullptr;
@@ -31,18 +33,22 @@ CStereoImageManager::~CStereoImageManager()
 {
 	StereoStop();
 	//----------------------------------------------------
+	std::unique_lock<std::mutex> lock3(*mMutexWave); // Lock the mutex
 	if (mWave != NULL)
 	{
 		delete mWave;
 		mWave = NULL;
 	}
+	lock3.unlock();
 	//----------------------------------------------------
+	std::unique_lock<std::mutex> lock4(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
 	{
 		mPlayer->Close();
 		delete mPlayer;
 		mPlayer = NULL;
 	}
+	lock4.unlock();
 	//----------------------------------------------------
 	if (mRightImage != NULL)
 	{
@@ -82,6 +88,18 @@ CStereoImageManager::~CStereoImageManager()
 	{
 		delete mMutexRender;
 		mMutexRender = nullptr;
+	}
+	//----------------------------------------------------
+	if (mMutexPlayer != nullptr)
+	{
+		delete mMutexPlayer;
+		mMutexPlayer = nullptr;
+	}
+	//----------------------------------------------------
+	if (mMutexWave != nullptr)
+	{
+		delete mMutexWave;
+		mMutexWave = nullptr;
 	}
 }
 void CStereoImageManager::StereoStart()
@@ -355,15 +373,21 @@ void CStereoImageManager::OnNewVideoFrame(BYTE* frameData, int width, int height
 }
 void CStereoImageManager::OnNewAudioFrame(BYTE* frameData, int nb_samples, int samplesPerSec, int bitsPerSample, int Channels, INT64 pts)
 {
+	std::unique_lock<std::mutex> lock1(*mMutexWave); // Lock the mutex
 	if (mWave == NULL)
 	{
 		mWave = new CWavePlaying(10, 100000, samplesPerSec, bitsPerSample, Channels);
 		mWave->Open();
 	}
-	mWave->Play((char*)frameData, 0, nb_samples * (bitsPerSample / 8));
+	if (mWave != NULL)
+	{
+		mWave->Play((char*)frameData, 0, nb_samples * (bitsPerSample / 8));
+	}
+	lock1.unlock();
 }
 void CStereoImageManager::PlayerMute(BOOL mute)
 {
+	std::unique_lock<std::mutex> lock1(*mMutexWave); // Lock the mutex
 	if (mWave != NULL)
 	{
 		if (mute)
@@ -375,9 +399,11 @@ void CStereoImageManager::PlayerMute(BOOL mute)
 			mWave->Unmute();
 		}
 	}
+	lock1.unlock();
 }
 UINT16 CStereoImageManager::PlayerGetVolume()
 {
+	std::unique_lock<std::mutex> lock1(*mMutexWave); // Lock the mutex
 	if (mWave != NULL)
 	{
 		WORD leftVolume;
@@ -385,12 +411,15 @@ UINT16 CStereoImageManager::PlayerGetVolume()
 		mWave->GetVolume(&leftVolume, &rightVolume);
 		return leftVolume;
 	}
+	lock1.unlock();
 	return 0;
 }
 void CStereoImageManager::PlayerSetVolume(UINT16 volume)
 {
+	std::unique_lock<std::mutex> lock1(*mMutexWave); // Lock the mutex
 	if (mWave != NULL)
 	{
 		mWave->SetVolume(volume, volume);
 	}
+	lock1.unlock();
 }

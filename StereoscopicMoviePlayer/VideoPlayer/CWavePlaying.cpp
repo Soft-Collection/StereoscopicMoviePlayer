@@ -3,8 +3,7 @@
 
 CWavePlaying::CWavePlaying(DWORD buffersCount, DWORD bufferLength, DWORD nSamplesPerSec, WORD wBitsPerSample, WORD nChannels)
 {
-	InitializeCriticalSection(&m_HeadersCriticalSection);
-	InitializeCriticalSection(&m_QueueCriticalSection);
+	mQueueMutex = new std::mutex();
 	mHWaveOut = NULL;
 	mPlayingState =  Initialized;
 	mLeftVolume = 0;
@@ -29,9 +28,11 @@ CWavePlaying::CWavePlaying(DWORD buffersCount, DWORD bufferLength, DWORD nSample
 CWavePlaying::~CWavePlaying()
 {
 	Close();
-	delete m_queue;
-	DeleteCriticalSection(&m_QueueCriticalSection);
-	DeleteCriticalSection(&m_HeadersCriticalSection);
+	if (mQueueMutex != nullptr)
+	{
+		delete mQueueMutex;
+		mQueueMutex = nullptr;
+	}
 }
 BOOL CWavePlaying::Open()
 {
@@ -64,12 +65,17 @@ BOOL CWavePlaying::Close()
 	if (res != MMSYSERR_NOERROR) return FALSE;
 	mHWaveOut = NULL;
 	mPlayingState = Initialized;
-	return (TRUE);
+	if (m_queue != NULL)
+	{
+		delete m_queue;
+		m_queue = NULL;
+	}
+	return TRUE;
 }
 BOOL CWavePlaying::GetPlayingState(DWORD* playingState)
 {
 	*playingState = (DWORD)mPlayingState;
-	return (TRUE);
+	return TRUE;
 }
 BOOL CWavePlaying::PrepareBuffers()
 {
@@ -123,76 +129,52 @@ BOOL CWavePlaying::DestroyBuffers()
 }
 BOOL CWavePlaying::PrepareHeaders()
 {
-	BOOL retVal = TRUE;
-	EnterCriticalSection(&m_HeadersCriticalSection);
 	for (UINT i = 0; i < mBuffersCount; i++)
 	{
 		res = waveOutPrepareHeader(mHWaveOut, &mWaveHeaders[i], sizeof(WAVEHDR));
 		GetMMResult(res);
-		if (res != MMSYSERR_NOERROR) retVal = FALSE;
+		if (res != MMSYSERR_NOERROR) return FALSE;
 		WAVEOUTPROCDATA woProcData = {mHWaveOut, 0, (DWORD)this, (DWORD)&mWaveHeaders[i], 0};
-		EnterCriticalSection(&m_QueueCriticalSection);
+		std::unique_lock<std::mutex> lock1(*mQueueMutex); // Lock the mutex
 		m_queue->push(woProcData);
-		LeaveCriticalSection(&m_QueueCriticalSection);
+		lock1.unlock();
 	}
 	mHeadersAreReady = TRUE;
-	LeaveCriticalSection(&m_HeadersCriticalSection);
-    return retVal;
+	return TRUE;
 }
 BOOL CWavePlaying::UnprepareHeaders()
 {
-	BOOL retVal = TRUE;
-	EnterCriticalSection(&m_HeadersCriticalSection);
 	mHeadersAreReady = FALSE;
 	for (UINT i = 0; i < mBuffersCount; i++)
 	{
 		res = waveOutUnprepareHeader(mHWaveOut, &mWaveHeaders[i], sizeof(WAVEHDR));
 		GetMMResult(res);
-		if (res != MMSYSERR_NOERROR) retVal = FALSE;
+		if (res != MMSYSERR_NOERROR) return FALSE;
 	}
-	LeaveCriticalSection(&m_HeadersCriticalSection);
-    return retVal;
+	return TRUE;
 }
 BOOL CWavePlaying::Play(char* pData, ULONG offset, ULONG size)
 {
-	BOOL retVal = TRUE;
 	DWORD dwObject = WaitForSingleObject(m_hevBufferArrived, mBufferLength * 10000 / (mPCMfmt.nSamplesPerSec * mPCMfmt.nChannels));
-	if (dwObject == WAIT_TIMEOUT) retVal = FALSE;
-	else
-	{
-		if ((mPlayingState !=  Opened) && (mPlayingState !=  PlayingStarted)) retVal = FALSE;
-		else
-		{
-			EnterCriticalSection(&m_HeadersCriticalSection);
-			if (!mHeadersAreReady) retVal = FALSE;
-			else
-			{
-				if (m_queue->size() <= 0) retVal = FALSE;
-				else
-				{
-					EnterCriticalSection(&m_QueueCriticalSection);
-					WAVEOUTPROCDATA woProcData = m_queue->front();
-					LeaveCriticalSection(&m_QueueCriticalSection);
-					CWavePlaying* pWave = (CWavePlaying*) woProcData.dwInstance;
-					CopyMemory(((WAVEHDR*)woProcData.dwParam1)->lpData, pData + (offset * (mPCMfmt.wBitsPerSample / 8)), size * (mPCMfmt.wBitsPerSample / 8));
-					((WAVEHDR*)woProcData.dwParam1)->dwBufferLength = size * (mPCMfmt.wBitsPerSample / 8);
-					res = waveOutWrite(mHWaveOut, (WAVEHDR*)woProcData.dwParam1, sizeof(WAVEHDR));
-					GetMMResult(res);
-					if (res != MMSYSERR_NOERROR) retVal = FALSE;
-					else
-					{
-						EnterCriticalSection(&m_QueueCriticalSection);
-						m_queue->pop();
-						LeaveCriticalSection(&m_QueueCriticalSection);
-						if (m_queue->size() == 0) ResetEvent(m_hevBufferArrived);
-					}
-				}
-			}
-			LeaveCriticalSection(&m_HeadersCriticalSection);
-		}
-	}
-	if (retVal) mPlayingState =  PlayingStarted;
-	return retVal;
+	if (dwObject == WAIT_TIMEOUT) return FALSE;
+	if ((mPlayingState != Opened) && (mPlayingState != PlayingStarted)) return FALSE;
+	if (!mHeadersAreReady) return FALSE;
+	std::unique_lock<std::mutex> lock1(*mQueueMutex); // Lock the mutex
+	if (m_queue->size() <= 0) return FALSE;
+	WAVEOUTPROCDATA woProcData = m_queue->front();
+	lock1.unlock();
+	CWavePlaying* pWave = (CWavePlaying*)woProcData.dwInstance;
+	CopyMemory(((WAVEHDR*)woProcData.dwParam1)->lpData, pData + (offset * (mPCMfmt.wBitsPerSample / 8)), size * (mPCMfmt.wBitsPerSample / 8));
+	((WAVEHDR*)woProcData.dwParam1)->dwBufferLength = size * (mPCMfmt.wBitsPerSample / 8);
+	res = waveOutWrite(mHWaveOut, (WAVEHDR*)woProcData.dwParam1, sizeof(WAVEHDR));
+	GetMMResult(res);
+	if (res != MMSYSERR_NOERROR) return FALSE;
+	std::unique_lock<std::mutex> lock2(*mQueueMutex); // Lock the mutex
+	m_queue->pop();
+	if (m_queue->size() == 0) ResetEvent(m_hevBufferArrived);
+	lock2.unlock();
+	mPlayingState = PlayingStarted;
+	return TRUE;
 }
 BOOL CWavePlaying::Stop()
 {
@@ -201,7 +183,7 @@ BOOL CWavePlaying::Stop()
 	GetMMResult(res);
 	if (res != MMSYSERR_NOERROR) return FALSE;
 	mPlayingState =  Opened;
-	return (TRUE);
+	return TRUE;
 }
 BOOL CWavePlaying::Pause()
 {
@@ -210,7 +192,7 @@ BOOL CWavePlaying::Pause()
 	GetMMResult(res);
 	if (res != MMSYSERR_NOERROR) return FALSE;
 	mPlayingState =  PlayingPaused;
-	return (TRUE);
+	return TRUE;
 }
 BOOL CWavePlaying::Resume()
 {
@@ -219,7 +201,7 @@ BOOL CWavePlaying::Resume()
 	GetMMResult(res);
 	if (res != MMSYSERR_NOERROR) return FALSE;
 	mPlayingState =  PlayingStarted;
-	return (TRUE);
+	return TRUE;
 }
 BOOL CWavePlaying::GetPitch(LPDWORD pdwPitch)
 {
@@ -256,20 +238,26 @@ BOOL CWavePlaying::GetVolume(LPWORD pwLeftVolume, LPWORD pwRightVolume)
 }
 BOOL CWavePlaying::SetVolume(WORD wLeftVolume, WORD wRightVolume)
 {
-	DWORD dwVolume = wRightVolume;
-	dwVolume <<= 16;
-	dwVolume += wLeftVolume;
-	res = waveOutSetVolume(mHWaveOut, dwVolume);
-	GetMMResult(res);
-	return (res == MMSYSERR_NOERROR);
+	if (!mIsMuted)
+	{
+		DWORD dwVolume = wRightVolume;
+		dwVolume <<= 16;
+		dwVolume += wLeftVolume;
+		res = waveOutSetVolume(mHWaveOut, dwVolume);
+		GetMMResult(res);
+		return (res == MMSYSERR_NOERROR);
+	}
+	return TRUE;
 }
 BOOL CWavePlaying::Mute()
 {
 	if (!mIsMuted)
 	{
 		GetVolume(&mLeftVolume, &mRightVolume);
-		SetVolume(0, 0);
+		res = waveOutSetVolume(mHWaveOut, 0);
+		GetMMResult(res);
 		mIsMuted = TRUE;
+		return (res == MMSYSERR_NOERROR);
 	}
 	return TRUE;
 }
@@ -277,8 +265,13 @@ BOOL CWavePlaying::Unmute()
 {
 	if (mIsMuted)
 	{
-		SetVolume(mLeftVolume, mRightVolume);
+		DWORD dwVolume = mRightVolume;
+		dwVolume <<= 16;
+		dwVolume += mLeftVolume;
+		res = waveOutSetVolume(mHWaveOut, dwVolume);
+		GetMMResult(res);
 		mIsMuted = FALSE;
+		return (res == MMSYSERR_NOERROR);
 	}
 	return TRUE;
 }
@@ -302,9 +295,9 @@ void CALLBACK WaveOutProc(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance, DWORD dwPar
 	{
 		CWavePlaying* pWave = (CWavePlaying*) dwInstance;
 		WAVEOUTPROCDATA woProcData = {hwo, uMsg, dwInstance, dwParam1, dwParam2};
-		EnterCriticalSection(&pWave->m_QueueCriticalSection);
+		std::unique_lock<std::mutex> lock1(*pWave->mQueueMutex); // Lock the mutex
 		pWave->m_queue->push(woProcData);
-		LeaveCriticalSection(&pWave->m_QueueCriticalSection);
+		lock1.unlock();
 		SetEvent(pWave->m_hevBufferArrived);
 	}
 }

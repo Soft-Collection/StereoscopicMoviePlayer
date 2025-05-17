@@ -4,8 +4,6 @@
 
 CComPort::CComPort(std::wstring comPortName)
 {
-    mHComMutex = new std::mutex();
-    std::unique_lock<std::mutex> lock1(*mHComMutex); // Lock the mutex
     std::wstring portNameW = std::wstring(L"\\\\.\\") + comPortName;
     std::string portNameA = CTools::ConvertUnicodeToMultibyte(portNameW);
     // Open the COM port
@@ -45,26 +43,17 @@ CComPort::CComPort(std::wstring comPortName)
         }
         return;
     }
-    lock1.unlock();
 }
 CComPort::~CComPort()
 {
-    std::unique_lock<std::mutex> lock1(*mHComMutex); // Lock the mutex
     if (mHCom != INVALID_HANDLE_VALUE)
     {
         CloseHandle(mHCom);
         mHCom = INVALID_HANDLE_VALUE;
     }
-    lock1.unlock();
-    if (mHComMutex != nullptr)
-    {
-        delete mHComMutex;
-        mHComMutex = nullptr;
-    }
 }
 void CComPort::Send(BYTE* command, int length)
 {
-    std::unique_lock<std::mutex> lock1(*mHComMutex); // Lock the mutex
     if (mHCom != INVALID_HANDLE_VALUE)
     {
         DWORD bytesWritten;
@@ -87,7 +76,6 @@ void CComPort::Send(BYTE* command, int length)
             return;
         }
     }
-    lock1.unlock();
 }
 void CComPort::SendSync()
 {

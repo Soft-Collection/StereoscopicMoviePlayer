@@ -15,7 +15,6 @@ CStereoDirect3D::CStereoDirect3D(HWND hWnd)
 	m_LRBoth.store(0);
 	m_SwapLR.store(FALSE);
 	//--------------------------------------------------------
-	mMutexDispose = new std::mutex();
 	mMutexDrawBlt = new std::mutex();
 	//--------------------------------------------------------
 	m_D3D = Direct3DCreate9(D3D_SDK_VERSION);
@@ -29,22 +28,15 @@ CStereoDirect3D::CStereoDirect3D(HWND hWnd)
 }
 CStereoDirect3D::~CStereoDirect3D()
 {
-	std::unique_lock<std::mutex> lock1(*mMutexDispose); // Lock the mutex
 	if (m_Left.Surface) m_Left.Surface->Release();
 	if (m_Right.Surface) m_Right.Surface->Release();
 	if (m_Device) m_Device->Release();
 	if (m_D3D) m_D3D->Release();
-	lock1.unlock();
 	//--------------------------------------------------------
 	if (mMutexDrawBlt != nullptr)
 	{
 		delete mMutexDrawBlt;
 		mMutexDrawBlt = nullptr;
-	}
-	if (mMutexDispose != nullptr)
-	{
-		delete mMutexDispose;
-		mMutexDispose = nullptr;
 	}
 }
 LPDIRECT3DSURFACE9 CStereoDirect3D::CreateSurface(ImageData idat)
@@ -98,7 +90,7 @@ LPDIRECT3DSURFACE9 CStereoDirect3D::CreateSurface(ImageData idat)
 }
 BOOL CStereoDirect3D::DrawImageRGB(ImageData idat)
 {
-	std::unique_lock<std::mutex> lock1(*mMutexDispose); // Lock the mutex
+	std::unique_lock<std::mutex> lock1(*mMutexDrawBlt); // Lock the mutex
 	if (m_Left.Surface) m_Left.Surface->Release();
 	if (m_Right.Surface) m_Right.Surface->Release();
 	idat.IsLeft = TRUE;
@@ -110,15 +102,15 @@ BOOL CStereoDirect3D::DrawImageRGB(ImageData idat)
 }
 BOOL CStereoDirect3D::Blt(bool isLeft)
 {
-	std::unique_lock<std::mutex> lock1(*mMutexDispose); // Lock the mutex
 	LPDIRECT3DSURFACE9 backBuffer = nullptr;
 	m_Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &backBuffer);
 	if (backBuffer) {
+		std::unique_lock<std::mutex> lock1(*mMutexDrawBlt); // Lock the mutex
 		m_Device->BeginScene();
-		LPDIRECT3DSURFACE9 srcSurface = isLeft ? m_Left.Surface : m_Right.Surface;
-		m_Device->StretchRect(srcSurface, nullptr, backBuffer, nullptr, D3DTEXF_LINEAR);
+		m_Device->StretchRect(isLeft ? m_Left.Surface : m_Right.Surface, nullptr, backBuffer, nullptr, D3DTEXF_LINEAR);
 		m_Device->EndScene();
 		m_Device->Present(nullptr, nullptr, nullptr, nullptr); //Blocks until new vsync.
+		lock1.unlock();
 		std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
 		std::chrono::microseconds duration = std::chrono::duration_cast<std::chrono::microseconds>(now - m_LastTimeMeasuring);
 		if (duration.count() > 0)
@@ -128,7 +120,6 @@ BOOL CStereoDirect3D::Blt(bool isLeft)
 		m_LastTimeMeasuring = std::chrono::high_resolution_clock::now();
 		backBuffer->Release();
 	}
-	lock1.unlock();
 	return TRUE;
 }
 INT CStereoDirect3D::GetFrequency()

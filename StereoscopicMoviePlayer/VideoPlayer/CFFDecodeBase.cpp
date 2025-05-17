@@ -4,8 +4,6 @@
 
 CFFDecodeBase::CFFDecodeBase(void* user, dOnNewDecodedFrame onNewDecodedFrame)
 {
-	mMutex = new std::mutex();
-	//-------------------------------------------------------
 	mUser = user;
 	mOnNewDecodedFrame = onNewDecodedFrame;
 	mCodec = NULL;
@@ -17,12 +15,6 @@ CFFDecodeBase::CFFDecodeBase(void* user, dOnNewDecodedFrame onNewDecodedFrame)
 CFFDecodeBase::~CFFDecodeBase()
 {
 	DeallocateResources();
-	//-------------------------------------------------------
-	if (mMutex != nullptr)
-	{
-		delete mMutex;
-		mMutex = nullptr;
-	}
 }
 
 BOOL CFFDecodeBase::AllocateResources(AVFormatContext* formatContext, AVPacket* packet)
@@ -47,8 +39,6 @@ BOOL CFFDecodeBase::AllocateResources(AVFormatContext* formatContext, AVPacket* 
 
 BOOL CFFDecodeBase::DeallocateResources()
 {
-	std::unique_lock<std::mutex> lock1(*mMutex); // Lock the mutex
-	//--------------------------------------------------------------
 	if (mDecodedFrame != NULL)
 	{
 		av_free(mDecodedFrame);
@@ -60,8 +50,6 @@ BOOL CFFDecodeBase::DeallocateResources()
 		mCodecContext = NULL;
 	}
 	//mCodec must not be disposed.
-	//--------------------------------------------------------------
-	lock1.unlock();
 	return (TRUE);
 }
 
@@ -82,8 +70,6 @@ int CFFDecodeBase::Decode(AVFormatContext* formatContext, AVPacket* packet)
 	//-------------------------------------------------------
 	if (!mCodecContext) return (-1);
 	if (!mDecodedFrame) return (-1);
-	std::unique_lock<std::mutex> lock1(*mMutex); // Lock the mutex
-	//--------------------------------------------------------------
 	if (avcodec_send_packet(mCodecContext, packet) < 0) return (-1);
 	while (avcodec_receive_frame(mCodecContext, mDecodedFrame) >= 0)
 	{
@@ -101,7 +87,5 @@ int CFFDecodeBase::Decode(AVFormatContext* formatContext, AVPacket* packet)
 			wasReallocated = FALSE;
 		}
 	}
-	//--------------------------------------------------------------
-	lock1.unlock();
 	return 0;
 }

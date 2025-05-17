@@ -21,6 +21,8 @@ private:
 	CImage* mLeftImage;
 	CImage* mRightImage;
 	//----------------------------------------
+	std::mutex* mMutexWave;
+	std::mutex* mMutexPlayer;
 	std::mutex* mMutexRender;
 	std::atomic<bool> mThreadRenderRunning;
 	std::thread* mThreadRender;

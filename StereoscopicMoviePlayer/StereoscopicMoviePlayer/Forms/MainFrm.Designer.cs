@@ -76,6 +76,7 @@
             this.lblMovieTime = new System.Windows.Forms.Label();
             this.dlgOpen = new System.Windows.Forms.OpenFileDialog();
             this.timerGUIStereoPlayer = new System.Windows.Forms.Timer(this.components);
+            this.ttControls = new System.Windows.Forms.ToolTip(this.components);
             this.popUpMenu.SuspendLayout();
             this.menuStrip.SuspendLayout();
             this.statusStrip.SuspendLayout();
@@ -163,7 +164,7 @@
             this.helpToolStripMenuItem1});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(783, 24);
+            this.menuStrip.Size = new System.Drawing.Size(584, 24);
             this.menuStrip.TabIndex = 26;
             this.menuStrip.Text = "menuStrip1";
             // 
@@ -226,9 +227,9 @@
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsslFrequencyLabel,
             this.tsslFrequency});
-            this.statusStrip.Location = new System.Drawing.Point(0, 493);
+            this.statusStrip.Location = new System.Drawing.Point(0, 473);
             this.statusStrip.Name = "statusStrip";
-            this.statusStrip.Size = new System.Drawing.Size(783, 22);
+            this.statusStrip.Size = new System.Drawing.Size(584, 22);
             this.statusStrip.TabIndex = 29;
             this.statusStrip.Text = "statusStrip1";
             // 
@@ -258,7 +259,7 @@
             this.pbVideoPanel.BackColor = System.Drawing.SystemColors.ControlDark;
             this.pbVideoPanel.Location = new System.Drawing.Point(0, 27);
             this.pbVideoPanel.Name = "pbVideoPanel";
-            this.pbVideoPanel.Size = new System.Drawing.Size(783, 317);
+            this.pbVideoPanel.Size = new System.Drawing.Size(584, 297);
             this.pbVideoPanel.TabIndex = 28;
             this.pbVideoPanel.TabStop = false;
             // 
@@ -270,15 +271,16 @@
             this.tbGlassesTimeOffset.Location = new System.Drawing.Point(6, 19);
             this.tbGlassesTimeOffset.Maximum = 100;
             this.tbGlassesTimeOffset.Name = "tbGlassesTimeOffset";
-            this.tbGlassesTimeOffset.Size = new System.Drawing.Size(517, 23);
+            this.tbGlassesTimeOffset.Size = new System.Drawing.Size(318, 23);
             this.tbGlassesTimeOffset.TabIndex = 30;
             this.tbGlassesTimeOffset.Scroll += new System.EventHandler(this.tbGlassesTimeOffset_Scroll);
+            this.tbGlassesTimeOffset.MouseEnter += new System.EventHandler(this.tbGlassesTimeOffset_MouseEnter);
             // 
             // lblGlassesTimeOffset
             // 
             this.lblGlassesTimeOffset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblGlassesTimeOffset.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblGlassesTimeOffset.Location = new System.Drawing.Point(520, 16);
+            this.lblGlassesTimeOffset.Location = new System.Drawing.Point(321, 16);
             this.lblGlassesTimeOffset.Name = "lblGlassesTimeOffset";
             this.lblGlassesTimeOffset.Size = new System.Drawing.Size(53, 23);
             this.lblGlassesTimeOffset.TabIndex = 31;
@@ -298,6 +300,7 @@
             this.tbTransparentTimePercent.TickFrequency = 5;
             this.tbTransparentTimePercent.Value = 70;
             this.tbTransparentTimePercent.Scroll += new System.EventHandler(this.tbTransparentTimePercent_Scroll);
+            this.tbTransparentTimePercent.MouseEnter += new System.EventHandler(this.tbTransparentTimePercent_MouseEnter);
             // 
             // lblTransparentTimePercent
             // 
@@ -316,9 +319,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.tbGlassesTimeOffset);
             this.groupBox1.Controls.Add(this.lblGlassesTimeOffset);
-            this.groupBox1.Location = new System.Drawing.Point(198, 438);
+            this.groupBox1.Location = new System.Drawing.Point(198, 418);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(579, 52);
+            this.groupBox1.Size = new System.Drawing.Size(380, 52);
             this.groupBox1.TabIndex = 34;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Glasses Time Offset";
@@ -328,7 +331,7 @@
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.groupBox2.Controls.Add(this.tbTransparentTimePercent);
             this.groupBox2.Controls.Add(this.lblTransparentTimePercent);
-            this.groupBox2.Location = new System.Drawing.Point(5, 438);
+            this.groupBox2.Location = new System.Drawing.Point(5, 418);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(187, 52);
             this.groupBox2.TabIndex = 35;
@@ -357,11 +360,11 @@
             this.groupBox3.Controls.Add(this.bPlayPause);
             this.groupBox3.Controls.Add(this.tbMovieTime);
             this.groupBox3.Controls.Add(this.lblMovieTime);
-            this.groupBox3.Location = new System.Drawing.Point(5, 347);
+            this.groupBox3.Location = new System.Drawing.Point(5, 327);
             this.groupBox3.Margin = new System.Windows.Forms.Padding(0);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Padding = new System.Windows.Forms.Padding(0);
-            this.groupBox3.Size = new System.Drawing.Size(772, 85);
+            this.groupBox3.Size = new System.Drawing.Size(573, 85);
             this.groupBox3.TabIndex = 35;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Player Controls";
@@ -377,6 +380,7 @@
             this.tbVolume.TickFrequency = 5000;
             this.tbVolume.Value = 70;
             this.tbVolume.Scroll += new System.EventHandler(this.tbVolume_Scroll);
+            this.tbVolume.MouseEnter += new System.EventHandler(this.tbVolume_MouseEnter);
             // 
             // bSound
             // 
@@ -390,6 +394,7 @@
             this.bSound.TabIndex = 44;
             this.bSound.UseVisualStyleBackColor = true;
             this.bSound.Click += new System.EventHandler(this.bSound_Click);
+            this.bSound.MouseEnter += new System.EventHandler(this.bSound_MouseEnter);
             // 
             // bRefresh
             // 
@@ -403,6 +408,7 @@
             this.bRefresh.TabIndex = 42;
             this.bRefresh.UseVisualStyleBackColor = true;
             this.bRefresh.Click += new System.EventHandler(this.bRefresh_Click);
+            this.bRefresh.MouseEnter += new System.EventHandler(this.bRefresh_MouseEnter);
             // 
             // cbComPort
             // 
@@ -413,6 +419,7 @@
             this.cbComPort.Size = new System.Drawing.Size(100, 21);
             this.cbComPort.TabIndex = 41;
             this.cbComPort.SelectedIndexChanged += new System.EventHandler(this.cbComPort_SelectedIndexChanged);
+            this.cbComPort.MouseEnter += new System.EventHandler(this.cbComPort_MouseEnter);
             // 
             // bSwap
             // 
@@ -426,6 +433,7 @@
             this.bSwap.TabIndex = 40;
             this.bSwap.UseVisualStyleBackColor = true;
             this.bSwap.Click += new System.EventHandler(this.bSwap_Click);
+            this.bSwap.MouseEnter += new System.EventHandler(this.bSwap_MouseEnter);
             // 
             // bBoth
             // 
@@ -439,6 +447,7 @@
             this.bBoth.TabIndex = 39;
             this.bBoth.UseVisualStyleBackColor = true;
             this.bBoth.Click += new System.EventHandler(this.bBoth_Click);
+            this.bBoth.MouseEnter += new System.EventHandler(this.bBoth_MouseEnter);
             // 
             // bRightOnly
             // 
@@ -452,6 +461,7 @@
             this.bRightOnly.TabIndex = 38;
             this.bRightOnly.UseVisualStyleBackColor = true;
             this.bRightOnly.Click += new System.EventHandler(this.bRightOnly_Click);
+            this.bRightOnly.MouseEnter += new System.EventHandler(this.bRightOnly_MouseEnter);
             // 
             // bLeftOnly
             // 
@@ -465,6 +475,7 @@
             this.bLeftOnly.TabIndex = 37;
             this.bLeftOnly.UseVisualStyleBackColor = true;
             this.bLeftOnly.Click += new System.EventHandler(this.bLeftOnly_Click);
+            this.bLeftOnly.MouseEnter += new System.EventHandler(this.bLeftOnly_MouseEnter);
             // 
             // cbTracks
             // 
@@ -475,6 +486,7 @@
             this.cbTracks.Size = new System.Drawing.Size(70, 21);
             this.cbTracks.TabIndex = 36;
             this.cbTracks.SelectedIndexChanged += new System.EventHandler(this.cbTracks_SelectedIndexChanged);
+            this.cbTracks.MouseEnter += new System.EventHandler(this.cbTracks_MouseEnter);
             // 
             // bOpen
             // 
@@ -488,6 +500,7 @@
             this.bOpen.TabIndex = 35;
             this.bOpen.UseVisualStyleBackColor = true;
             this.bOpen.Click += new System.EventHandler(this.bOpen_Click);
+            this.bOpen.MouseEnter += new System.EventHandler(this.bOpen_MouseEnter);
             // 
             // bStop
             // 
@@ -501,6 +514,7 @@
             this.bStop.TabIndex = 34;
             this.bStop.UseVisualStyleBackColor = true;
             this.bStop.Click += new System.EventHandler(this.bStop_Click);
+            this.bStop.MouseEnter += new System.EventHandler(this.bStop_MouseEnter);
             // 
             // bPlayPause
             // 
@@ -514,6 +528,7 @@
             this.bPlayPause.TabIndex = 32;
             this.bPlayPause.UseVisualStyleBackColor = true;
             this.bPlayPause.Click += new System.EventHandler(this.bPlayPause_Click);
+            this.bPlayPause.MouseEnter += new System.EventHandler(this.bPlayPause_MouseEnter);
             // 
             // tbMovieTime
             // 
@@ -523,16 +538,17 @@
             this.tbMovieTime.Location = new System.Drawing.Point(3, 18);
             this.tbMovieTime.Maximum = 100;
             this.tbMovieTime.Name = "tbMovieTime";
-            this.tbMovieTime.Size = new System.Drawing.Size(683, 21);
+            this.tbMovieTime.Size = new System.Drawing.Size(484, 21);
             this.tbMovieTime.TabIndex = 30;
             this.tbMovieTime.TickStyle = System.Windows.Forms.TickStyle.None;
             this.tbMovieTime.Scroll += new System.EventHandler(this.tbMovieTime_Scroll);
+            this.tbMovieTime.MouseEnter += new System.EventHandler(this.tbMovieTime_MouseEnter);
             // 
             // lblMovieTime
             // 
             this.lblMovieTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblMovieTime.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblMovieTime.Location = new System.Drawing.Point(662, 18);
+            this.lblMovieTime.Location = new System.Drawing.Point(463, 18);
             this.lblMovieTime.Name = "lblMovieTime";
             this.lblMovieTime.Size = new System.Drawing.Size(104, 23);
             this.lblMovieTime.TabIndex = 31;
@@ -543,11 +559,17 @@
             // 
             this.timerGUIStereoPlayer.Tick += new System.EventHandler(this.timerGUIStereoPlayer_Tick);
             // 
+            // ttControls
+            // 
+            this.ttControls.AutoPopDelay = 5000;
+            this.ttControls.InitialDelay = 500;
+            this.ttControls.ReshowDelay = 100;
+            // 
             // MainFrm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(783, 515);
+            this.ClientSize = new System.Drawing.Size(584, 495);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -555,7 +577,7 @@
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.menuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MinimumSize = new System.Drawing.Size(500, 400);
+            this.MinimumSize = new System.Drawing.Size(600, 400);
             this.Name = "MainFrm";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
@@ -628,6 +650,7 @@
         private System.Windows.Forms.ComboBox cbComPort;
         private System.Windows.Forms.Button bSound;
         private System.Windows.Forms.TrackBar tbVolume;
+        private System.Windows.Forms.ToolTip ttControls;
     }
 }
 

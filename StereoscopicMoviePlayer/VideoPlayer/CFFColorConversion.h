@@ -2,12 +2,10 @@
 #define __CFFCOLORCONVERSION_H__
 
 #include "CFFCommon.h"
-#include <mutex>
 
 class CFFColorConversion
 {
 private:
-	std::mutex*                  mMutex;
 	SwsContext*                  mImg_Convert_Context;
 	uint8_t*                     mPicture_Buf_RGB;
 	AVFrame*                     mPicRGB;

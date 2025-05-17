@@ -2,12 +2,10 @@
 #define __CFFSAMPLECONVERSION_H__
 
 #include "CFFCommon.h"
-#include <mutex>
 
 class CFFSampleConversion
 {
 private:
-	std::mutex*                   mMutex;
 	SwrContext*                   mSwrContext;
 	AVFrame*                      mOutFrame;
 	BOOL                          mResourcesMustBeReallocated;

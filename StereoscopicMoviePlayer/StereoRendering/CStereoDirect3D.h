@@ -30,7 +30,6 @@ private:
 	std::atomic<int> m_LRBoth;
 	std::atomic<BOOL> m_SwapLR;
 private:
-	std::mutex* mMutexDispose;
 	std::mutex* mMutexDrawBlt;
 	LPDIRECT3D9 m_D3D;
 	LPDIRECT3DDEVICE9 m_Device;

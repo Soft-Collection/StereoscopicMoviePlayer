@@ -15,7 +15,11 @@
 class CFFMpegPlayer
 {
 private:
-	std::mutex*                  mPlayerMutex;
+	std::mutex*                  mMutexDecodeVideo;
+	std::mutex*                  mMutexDecodeAudio;
+	std::mutex*                  mMutexSampleConversion;
+	std::mutex*                  mMutexColorConversion;
+	//------------------------------------------------
 	std::thread*                 mPlayerThread;
 	std::atomic<bool>            mPlayerThreadRunning;
 	std::atomic<bool>            mPlayerPaused;

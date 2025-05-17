@@ -4,7 +4,6 @@
 
 CFFSampleConversion::CFFSampleConversion()
 {
-	mMutex = new std::mutex();
 	mSwrContext = NULL;
 	mOutFrame = NULL;
 	mSampleTargetParams = {};
@@ -13,11 +12,6 @@ CFFSampleConversion::CFFSampleConversion()
 CFFSampleConversion::~CFFSampleConversion()
 {
 	DeallocateResources();
-	if (mMutex != NULL)
-	{
-		delete mMutex;
-		mMutex = NULL;
-	}
 }
 
 BOOL CFFSampleConversion::AllocateResources(AVFormatContext* formatContext, AVFrame* in_frame, CFFCommon::SampleTargetParams sampleTargetParams)
@@ -49,8 +43,6 @@ BOOL CFFSampleConversion::AllocateResources(AVFormatContext* formatContext, AVFr
 
 BOOL CFFSampleConversion::DeallocateResources()
 {
-	std::unique_lock<std::mutex> lock1(*mMutex); // Lock the mutex
-	//--------------------------------------------------------------
 	if (mOutFrame != NULL)
 	{
 		av_frame_free(&mOutFrame);
@@ -61,8 +53,6 @@ BOOL CFFSampleConversion::DeallocateResources()
 		swr_free(&mSwrContext);
 		mSwrContext = NULL;
 	}
-	//--------------------------------------------------------------
-	lock1.unlock();
 	return (TRUE);
 }
 
@@ -102,13 +92,9 @@ int CFFSampleConversion::PerformSampleConversion(AVFormatContext* formatContext,
 		DeallocateResources();
 		AllocateResources(formatContext, in_frame, sampleTargetParams);
 	}
-	std::unique_lock<std::mutex> lock1(*mMutex); // Lock the mutex
-	//--------------------------------------------------------------
 	if (swr_convert_frame(mSwrContext, mOutFrame, in_frame) < 0) return (-1);
 	mOutFrame->pts = in_frame->pts;
 	mOutFrame->pkt_dts = in_frame->pkt_dts;
-	//--------------------------------------------------------------
-	lock1.unlock();
 	out_frame = mOutFrame;
 	return 0;
 }

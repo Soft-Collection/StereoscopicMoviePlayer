@@ -4,8 +4,6 @@
 
 CFFColorConversion::CFFColorConversion()
 {
-	mMutex = new std::mutex();
-	//-------------------------------------------------------
 	mPicture_Buf_RGB = NULL;
 	mPicRGB = NULL;
 	mImg_Convert_Context = NULL;
@@ -16,11 +14,6 @@ CFFColorConversion::CFFColorConversion()
 CFFColorConversion::~CFFColorConversion()
 {
 	DeallocateResources();
-	if (mMutex != NULL)
-	{
-		delete mMutex;
-		mMutex = NULL;
-	}
 }
 
 BOOL CFFColorConversion::AllocateResources(AVFormatContext* formatContext, AVFrame* in_frame, CFFCommon::ColorTargetParams colorTargetParams)
@@ -54,8 +47,6 @@ BOOL CFFColorConversion::AllocateResources(AVFormatContext* formatContext, AVFra
 
 BOOL CFFColorConversion::DeallocateResources()
 {
-	std::unique_lock<std::mutex> lock1(*mMutex); // Lock the mutex
-	//--------------------------------------------------------------
 	if (mImg_Convert_Context != NULL)
 	{
 		av_free(mImg_Convert_Context);
@@ -71,8 +62,6 @@ BOOL CFFColorConversion::DeallocateResources()
 		av_free(mPicture_Buf_RGB);
 		mPicture_Buf_RGB = NULL;
 	}
-	//--------------------------------------------------------------
-	lock1.unlock();
 	return TRUE;
 }
 
@@ -112,15 +101,11 @@ int CFFColorConversion::PerformColorConversion(AVFormatContext* formatContext, A
 		DeallocateResources();
 		AllocateResources(formatContext, in_frame, colorTargetParams);
 	}
-	std::unique_lock<std::mutex> lock1(*mMutex); // Lock the mutex
-	//--------------------------------------------------------------
 	if (sws_scale(mImg_Convert_Context, in_frame->data, in_frame->linesize, 0, in_frame->height, mPicRGB->data, mPicRGB->linesize) < 0) return (-1);
 	mPicRGB->width = colorTargetParams.ResizedWidth;
 	mPicRGB->height = colorTargetParams.ResizedHeight;
 	mPicRGB->pts = in_frame->pts;
 	mPicRGB->pkt_dts = in_frame->pkt_dts;
-	//--------------------------------------------------------------
-	lock1.unlock();
 	out_frame = mPicRGB;
 	return 0;
 }

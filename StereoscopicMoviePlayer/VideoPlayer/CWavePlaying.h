@@ -2,6 +2,7 @@
 #define __CWAVEPLAYING_H__
 
 #include <queue>
+#include <mutex>
 #include "CWaveBase.h"
 
 typedef struct 
@@ -53,7 +54,7 @@ private:
 public:
 	HANDLE m_hevBufferArrived;
 	std::queue<WAVEOUTPROCDATA>* m_queue;
-	CRITICAL_SECTION m_QueueCriticalSection;
+	std::mutex* mQueueMutex;
 private:
 	HWAVEOUT mHWaveOut;
 	ePlayingState mPlayingState;
@@ -67,7 +68,6 @@ private:
 	char** mBuffers;
 	WAVEHDR* mWaveHeaders;
 	WAVEFORMATEX mPCMfmt;
-	CRITICAL_SECTION m_HeadersCriticalSection;
 };
 
 #endif // !defined(__CWAVEPLAYING_H__)

@@ -702,6 +702,66 @@ namespace StereoscopicMoviePlayer
             mLastSWMovieTime = Stopwatch.GetTimestamp();
             mSeekAlreadyApplied = false;
         }
+        private void tbMovieTime_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Rewind or go forward in the movie", (IWin32Window)sender, 5000);
+        }
+        private void bOpen_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Open video file", (IWin32Window)sender, 5000);
+        }
+        private void bPlayPause_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Play / pause the video", (IWin32Window)sender, 5000);
+        }
+        private void bStop_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Stop the video", (IWin32Window)sender, 5000);
+        }
+        private void bSound_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Sound On / Off", (IWin32Window)sender, 5000);
+        }
+        private void tbVolume_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Change the volume", (IWin32Window)sender, 5000);
+        }
+        private void cbTracks_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Select audio track", (IWin32Window)sender, 5000);
+        }
+        private void cbComPort_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Select COM Port of Arduino glasses controller", (IWin32Window)sender, 5000);
+        }
+        private void bRefresh_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Refresh COM Ports", (IWin32Window)sender, 5000);
+        }
+        private void bBoth_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Show pictures for both eyes", (IWin32Window)sender, 5000);
+        }
+        private void bLeftOnly_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Show picture for left eye only", (IWin32Window)sender, 5000);
+        }
+        private void bRightOnly_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Show picture for right eye only", (IWin32Window)sender, 5000);
+        }
+        private void bSwap_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Swap left eye and right eye pictures", (IWin32Window)sender, 5000);
+        }
+        private void tbTransparentTimePercent_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Time in percents when glasses are transparent", (IWin32Window)sender, 5000);
+        }
+        private void tbGlassesTimeOffset_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("Fine correction for the stereo effect", (IWin32Window)sender, 5000);
+        }
         #endregion
 
         #region Methods
@@ -862,7 +922,7 @@ namespace StereoscopicMoviePlayer
                     bBoth.Enabled = false;
                     bLeftOnly.Enabled = false;
                     bRightOnly.Enabled = false;
-                    bSwap.Enabled = true;
+                    bSwap.Enabled = false;
                     tbMovieTime.Enabled = true;
                     lblMovieTime.Enabled = true;
                     tbTransparentTimePercent.Enabled = false;
