@@ -19,12 +19,12 @@ public:
 		INT Height;
 		INT Channels;
 		BOOL IsLeft;
-		LPDIRECT3DSURFACE9 Surface;
 	} ImageData;
 private:
 	HWND m_HWnd;
-	ImageData m_Left;
-	ImageData m_Right;
+	LPDIRECT3DSURFACE9 m_LeftSurface;
+	LPDIRECT3DSURFACE9 m_RightSurface;
+	LPDIRECT3DSURFACE9 m_BlackSurface;
 	std::chrono::high_resolution_clock::time_point m_LastTimeMeasuring;
 	std::atomic<int> m_FrequencyInHz;
 	std::atomic<int> m_LRBoth;
@@ -34,7 +34,8 @@ private:
 	LPDIRECT3D9 m_D3D;
 	LPDIRECT3DDEVICE9 m_Device;
 private:
-	LPDIRECT3DSURFACE9 CreateSurface(ImageData idat);
+	BOOL CreateBlackSurface();
+	BOOL CreateLRSurface(ImageData idat);
 public:
 	CStereoDirect3D(HWND hWnd);
 	~CStereoDirect3D();
