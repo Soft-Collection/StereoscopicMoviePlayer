@@ -10,16 +10,24 @@ It consists of two projects:
    When right-eye image is shown, right shutter is opened and left shutter is closed.
    3D Movies you can download for example from YouTube using Youtube Downloader HD or other software.
    <https://www.youtube.com/watch?v=4L-We9onn9s>
+   
    <https://www.youtube.com/watch?v=mHDxBvWW9Mg>
+   
    <https://www.youtube.com/watch?v=QzyjLtzPDNw>
+   
    <https://www.youtube.com/watch?v=NP9UnI9P87w>
+   
    <https://www.youtube.com/watch?v=dG4s6WoREpg>
+   
    <https://www.youtube.com/watch?v=zBa-bCxsZDk>
+   
    <https://www.youtube.com/watch?v=QzyjLtzPDNw>
+   
    <https://www.youtube.com/watch?v=VKM1agpjwE0>
+   
    <https://www.youtube.com/watch?v=ydwPjrKM86A>
 
-2. 3D Glasses controller Arduino project.
+3. 3D Glasses controller Arduino project.
    This project gets information that was sent from the Windows project above and opens / closes shutters on 3D Glasses.
    The shutters must be connected directly to Arduino board using cable
 
