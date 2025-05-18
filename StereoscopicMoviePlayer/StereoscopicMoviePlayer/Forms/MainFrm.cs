@@ -341,7 +341,7 @@ namespace StereoscopicMoviePlayer
         private bool mAlreadySent = true;
         private int mAlreadySentCounter = 0;
         private long mLastSWMovieTime = 0;
-        private bool mSeekAlreadyApplied = false;
+        private bool mSeekAlreadyApplied = true;
         #endregion
 
         #region Initialize

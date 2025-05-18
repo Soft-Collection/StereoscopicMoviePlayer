@@ -29,6 +29,8 @@ BOOL CFFDecodeBase::AllocateResources(AVFormatContext* formatContext, AVPacket* 
 	if (!mCodecContext) return FALSE;
 	//-------------------------------------------------------
 	if (avcodec_parameters_to_context(mCodecContext, formatContext->streams[packet->stream_index]->codecpar) < 0) return FALSE;
+	mCodecContext->thread_count = 0; // Let FFmpeg decide
+	mCodecContext->thread_type = FF_THREAD_FRAME; // or FF_THREAD_SLICE
 	//-------------------------------------------------------
 	AVDictionary* opts = SetOpts();
 	if (avcodec_open2(mCodecContext, mCodec, &opts) < 0) return FALSE;

@@ -424,7 +424,7 @@ void CFFMpegPlayer::OnNewDecodedVideoFrame(AVFrame* decodedFrame)
 	{
 		AVFrame* convertedFrame = NULL;
 		double widthHeightRatio = (double)decodedFrame->width / (double)decodedFrame->height;
-		int ResizedHeight = min(decodedFrame->height, 480);
+		int ResizedHeight = decodedFrame->height;
 		int ResizedWidth = (int)((double)ResizedHeight * widthHeightRatio);
 		ResizedWidth &= 0xFFFFFFF8;
 		mFFColorConversion->PerformColorConversion(mFormatContext, decodedFrame, convertedFrame, { AVPixelFormat::AV_PIX_FMT_RGB32, ResizedWidth, ResizedHeight });

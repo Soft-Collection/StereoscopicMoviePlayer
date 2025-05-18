@@ -42,6 +42,5 @@ BOOL CFFDecodeAudio::AreParamsChanged(AVFormatContext* formatContext, AVPacket* 
 AVDictionary* CFFDecodeAudio::SetOpts()
 {
 	AVDictionary* opts = NULL;
-	av_dict_set(&opts, "threads", "4", 0);
 	return opts;
 }
