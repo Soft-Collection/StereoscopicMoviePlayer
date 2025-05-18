@@ -60,6 +60,7 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.timerSendSettings = new System.Windows.Forms.Timer(this.components);
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.bVertical = new System.Windows.Forms.Button();
             this.tbVolume = new System.Windows.Forms.TrackBar();
             this.bSound = new System.Windows.Forms.Button();
             this.bRefresh = new System.Windows.Forms.Button();
@@ -164,7 +165,7 @@
             this.helpToolStripMenuItem1});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(584, 24);
+            this.menuStrip.Size = new System.Drawing.Size(604, 24);
             this.menuStrip.TabIndex = 26;
             this.menuStrip.Text = "menuStrip1";
             // 
@@ -229,7 +230,7 @@
             this.tsslFrequency});
             this.statusStrip.Location = new System.Drawing.Point(0, 473);
             this.statusStrip.Name = "statusStrip";
-            this.statusStrip.Size = new System.Drawing.Size(584, 22);
+            this.statusStrip.Size = new System.Drawing.Size(604, 22);
             this.statusStrip.TabIndex = 29;
             this.statusStrip.Text = "statusStrip1";
             // 
@@ -259,7 +260,7 @@
             this.pbVideoPanel.BackColor = System.Drawing.SystemColors.ControlDark;
             this.pbVideoPanel.Location = new System.Drawing.Point(0, 27);
             this.pbVideoPanel.Name = "pbVideoPanel";
-            this.pbVideoPanel.Size = new System.Drawing.Size(584, 297);
+            this.pbVideoPanel.Size = new System.Drawing.Size(604, 297);
             this.pbVideoPanel.TabIndex = 28;
             this.pbVideoPanel.TabStop = false;
             // 
@@ -271,7 +272,7 @@
             this.tbGlassesTimeOffset.Location = new System.Drawing.Point(6, 19);
             this.tbGlassesTimeOffset.Maximum = 100;
             this.tbGlassesTimeOffset.Name = "tbGlassesTimeOffset";
-            this.tbGlassesTimeOffset.Size = new System.Drawing.Size(318, 23);
+            this.tbGlassesTimeOffset.Size = new System.Drawing.Size(338, 23);
             this.tbGlassesTimeOffset.TabIndex = 30;
             this.tbGlassesTimeOffset.Scroll += new System.EventHandler(this.tbGlassesTimeOffset_Scroll);
             this.tbGlassesTimeOffset.MouseEnter += new System.EventHandler(this.tbGlassesTimeOffset_MouseEnter);
@@ -280,7 +281,7 @@
             // 
             this.lblGlassesTimeOffset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblGlassesTimeOffset.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblGlassesTimeOffset.Location = new System.Drawing.Point(321, 16);
+            this.lblGlassesTimeOffset.Location = new System.Drawing.Point(341, 16);
             this.lblGlassesTimeOffset.Name = "lblGlassesTimeOffset";
             this.lblGlassesTimeOffset.Size = new System.Drawing.Size(53, 23);
             this.lblGlassesTimeOffset.TabIndex = 31;
@@ -321,7 +322,7 @@
             this.groupBox1.Controls.Add(this.lblGlassesTimeOffset);
             this.groupBox1.Location = new System.Drawing.Point(198, 418);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(380, 52);
+            this.groupBox1.Size = new System.Drawing.Size(400, 52);
             this.groupBox1.TabIndex = 34;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Glasses Time Offset";
@@ -346,6 +347,7 @@
             // 
             this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox3.Controls.Add(this.bVertical);
             this.groupBox3.Controls.Add(this.tbVolume);
             this.groupBox3.Controls.Add(this.bSound);
             this.groupBox3.Controls.Add(this.bRefresh);
@@ -364,10 +366,24 @@
             this.groupBox3.Margin = new System.Windows.Forms.Padding(0);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Padding = new System.Windows.Forms.Padding(0);
-            this.groupBox3.Size = new System.Drawing.Size(573, 85);
+            this.groupBox3.Size = new System.Drawing.Size(593, 85);
             this.groupBox3.TabIndex = 35;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Player Controls";
+            // 
+            // bVertical
+            // 
+            this.bVertical.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.horizontal;
+            this.bVertical.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.bVertical.FlatAppearance.BorderSize = 0;
+            this.bVertical.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.bVertical.Location = new System.Drawing.Point(560, 45);
+            this.bVertical.Name = "bVertical";
+            this.bVertical.Size = new System.Drawing.Size(26, 26);
+            this.bVertical.TabIndex = 45;
+            this.bVertical.UseVisualStyleBackColor = true;
+            this.bVertical.Click += new System.EventHandler(this.bVertical_Click);
+            this.bVertical.MouseEnter += new System.EventHandler(this.bVertical_MouseEnter);
             // 
             // tbVolume
             // 
@@ -538,7 +554,7 @@
             this.tbMovieTime.Location = new System.Drawing.Point(3, 18);
             this.tbMovieTime.Maximum = 100;
             this.tbMovieTime.Name = "tbMovieTime";
-            this.tbMovieTime.Size = new System.Drawing.Size(484, 21);
+            this.tbMovieTime.Size = new System.Drawing.Size(504, 21);
             this.tbMovieTime.TabIndex = 30;
             this.tbMovieTime.TickStyle = System.Windows.Forms.TickStyle.None;
             this.tbMovieTime.Scroll += new System.EventHandler(this.tbMovieTime_Scroll);
@@ -548,7 +564,7 @@
             // 
             this.lblMovieTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblMovieTime.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblMovieTime.Location = new System.Drawing.Point(463, 18);
+            this.lblMovieTime.Location = new System.Drawing.Point(483, 18);
             this.lblMovieTime.Name = "lblMovieTime";
             this.lblMovieTime.Size = new System.Drawing.Size(104, 23);
             this.lblMovieTime.TabIndex = 31;
@@ -569,7 +585,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(584, 495);
+            this.ClientSize = new System.Drawing.Size(604, 495);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -577,7 +593,7 @@
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.menuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MinimumSize = new System.Drawing.Size(600, 400);
+            this.MinimumSize = new System.Drawing.Size(620, 450);
             this.Name = "MainFrm";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
@@ -651,6 +667,7 @@
         private System.Windows.Forms.Button bSound;
         private System.Windows.Forms.TrackBar tbVolume;
         private System.Windows.Forms.ToolTip ttControls;
+        private System.Windows.Forms.Button bVertical;
     }
 }
 

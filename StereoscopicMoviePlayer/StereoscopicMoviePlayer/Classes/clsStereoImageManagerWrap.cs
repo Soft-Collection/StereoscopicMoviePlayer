@@ -49,6 +49,9 @@ public class clsStereoImageManagerWrap
     public static extern void StereoImageManagerStereoSwapLR(IntPtr StereoImageManagerHandle, bool swaplr);
 
     [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void StereoImageManagerStereoVerticalLR(IntPtr StereoImageManagerHandle, bool verticallr);
+
+    [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
     public static extern void StereoImageManagerPlayerOpen(IntPtr StereoImageManagerHandle, [MarshalAs(UnmanagedType.LPWStr)] string fileName);
 
     [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]

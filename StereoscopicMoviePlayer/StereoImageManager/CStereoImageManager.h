@@ -55,6 +55,7 @@ public:
 	void StereoSetTransparentTimePercent(int percent);
 	void StereoLRBoth(int lrboth);
 	void StereoSwapLR(BOOL swaplr);
+	void StereoVerticalLR(BOOL verticallr);
 	void PlayerOpen(LPCWSTR fileName);
 	void PlayerClose();
 	void PlayerReopen();

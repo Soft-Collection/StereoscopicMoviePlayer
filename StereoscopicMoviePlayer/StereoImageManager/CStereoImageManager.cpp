@@ -192,6 +192,13 @@ void CStereoImageManager::StereoSwapLR(BOOL swaplr)
 		mStereoDirect3D->StereoSwapLR(swaplr);
 	}
 }
+void CStereoImageManager::StereoVerticalLR(BOOL verticallr)
+{
+	if (mStereoDirect3D != NULL)
+	{
+		mStereoDirect3D->StereoVerticalLR(verticallr);
+	}
+}
 void CStereoImageManager::PlayerOpen(LPCWSTR fileName)
 {
 	if (mPlayer != NULL)

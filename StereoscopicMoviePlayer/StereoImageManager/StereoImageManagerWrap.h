@@ -13,6 +13,7 @@ extern "C"
 	__declspec(dllexport) void StereoImageManagerStereoSetTransparentTimePercent(void* handle, int percent);
     __declspec(dllexport) void StereoImageManagerStereoLRBoth(void* handle, int lrboth);
     __declspec(dllexport) void StereoImageManagerStereoSwapLR(void* handle, BOOL swaplr);
+    __declspec(dllexport) void StereoImageManagerStereoVerticalLR(void* handle, BOOL verticallr);
     __declspec(dllexport) void StereoImageManagerPlayerOpen(void* handle, LPCWSTR fileName);
     __declspec(dllexport) void StereoImageManagerPlayerClose(void* handle);
     __declspec(dllexport) void StereoImageManagerPlayerReopen(void* handle);

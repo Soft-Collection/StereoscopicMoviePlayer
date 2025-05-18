@@ -323,6 +323,12 @@ namespace StereoscopicMoviePlayer
             SwapOn = 1,
             SwapOff = 2
         }
+        private enum eVerticalButtonStates
+        {
+            NotSetYet = 0,
+            VerticalOn = 1,
+            VerticalOff = 2
+        }
         #endregion
 
         #region Variables
@@ -338,6 +344,8 @@ namespace StereoscopicMoviePlayer
         private eSoundButtonStates mLastSoundButtonState = eSoundButtonStates.NotSetYet;
         private eSwapButtonStates mSwapButtonState = eSwapButtonStates.SwapOff;
         private eSwapButtonStates mLastSwapButtonState = eSwapButtonStates.NotSetYet;
+        private eVerticalButtonStates mVerticalButtonState = eVerticalButtonStates.VerticalOff;
+        private eVerticalButtonStates mLastVerticalButtonState = eVerticalButtonStates.NotSetYet;
         private bool mAlreadySent = true;
         private int mAlreadySentCounter = 0;
         private long mLastSWMovieTime = 0;
@@ -475,6 +483,27 @@ namespace StereoscopicMoviePlayer
                     }
                 }
                 mLastSwapButtonState = mSwapButtonState;
+            }
+            //-----------------------------------------------------
+            if (mLastVerticalButtonState != mVerticalButtonState)
+            {
+                SetVerticalButtonState(mVerticalButtonState);
+                if (mStereoImageManager != null)
+                {
+                    if (mStereoImageManager.PlayerIsOpened())
+                    {
+                        switch (mVerticalButtonState)
+                        {
+                            case eVerticalButtonStates.VerticalOn:
+                                mStereoImageManager.StereoVerticalLR(true);
+                                break;
+                            case eVerticalButtonStates.VerticalOff:
+                                mStereoImageManager.StereoVerticalLR(false);
+                                break;
+                        }
+                    }
+                }
+                mLastVerticalButtonState = mVerticalButtonState;
             }
             //-----------------------------------------------------
             if (mLastEnableDisableState != mEnableDisableState)
@@ -658,6 +687,19 @@ namespace StereoscopicMoviePlayer
                 Settings.SwapLR = true;
             }
         }
+        private void bVertical_Click(object sender, EventArgs e)
+        {
+            if (mVerticalButtonState == eVerticalButtonStates.VerticalOn)
+            {
+                mVerticalButtonState = eVerticalButtonStates.VerticalOff;
+                Settings.VerticalLR = false;
+            }
+            else if (mVerticalButtonState == eVerticalButtonStates.VerticalOff)
+            {
+                mVerticalButtonState = eVerticalButtonStates.VerticalOn;
+                Settings.VerticalLR = true;
+            }
+        }
         private void bOpen_Click(object sender, EventArgs e)
         {
             string tempFilePath = Settings.FilePath;
@@ -754,6 +796,10 @@ namespace StereoscopicMoviePlayer
         {
             ttControls.Show("Swap left eye and right eye pictures", (IWin32Window)sender, 5000);
         }
+        private void bVertical_MouseEnter(object sender, EventArgs e)
+        {
+            ttControls.Show("In original video the left picture is above the right picture or near it", (IWin32Window)sender, 5000);
+        }
         private void tbTransparentTimePercent_MouseEnter(object sender, EventArgs e)
         {
             ttControls.Show("Time in percents when glasses are transparent", (IWin32Window)sender, 5000);
@@ -785,6 +831,7 @@ namespace StereoscopicMoviePlayer
                             break;
                     }
                     mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
+                    mVerticalButtonState = (Settings.VerticalLR) ? eVerticalButtonStates.VerticalOn : eVerticalButtonStates.VerticalOff;
                     mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
                     tbVolume.Value = Settings.Volume;
                     tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
@@ -808,6 +855,7 @@ namespace StereoscopicMoviePlayer
                             break;
                     }
                     mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
+                    mVerticalButtonState = (Settings.VerticalLR) ? eVerticalButtonStates.VerticalOn : eVerticalButtonStates.VerticalOff;
                     mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
                     tbVolume.Value = Settings.Volume;
                     tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
@@ -831,6 +879,7 @@ namespace StereoscopicMoviePlayer
                             break;
                     }
                     mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
+                    mVerticalButtonState = (Settings.VerticalLR) ? eVerticalButtonStates.VerticalOn : eVerticalButtonStates.VerticalOff;
                     mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
                     tbVolume.Value = Settings.Volume;
                     tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
@@ -853,6 +902,7 @@ namespace StereoscopicMoviePlayer
                             break;
                     }
                     mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
+                    mVerticalButtonState = (Settings.VerticalLR) ? eVerticalButtonStates.VerticalOn : eVerticalButtonStates.VerticalOff;
                     mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
                     tbVolume.Value = Settings.Volume;
                     tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
@@ -879,6 +929,7 @@ namespace StereoscopicMoviePlayer
                     bLeftOnly.Enabled = false;
                     bRightOnly.Enabled = false;
                     bSwap.Enabled = false;
+                    bVertical.Enabled = false;
                     tbMovieTime.Enabled = false;
                     lblMovieTime.Enabled = false;
                     tbTransparentTimePercent.Enabled = false;
@@ -901,6 +952,7 @@ namespace StereoscopicMoviePlayer
                     bLeftOnly.Enabled = false;
                     bRightOnly.Enabled = false;
                     bSwap.Enabled = false;
+                    bVertical.Enabled = false;
                     tbMovieTime.Enabled = false;
                     lblMovieTime.Enabled = false;
                     tbTransparentTimePercent.Enabled = false;
@@ -923,6 +975,7 @@ namespace StereoscopicMoviePlayer
                     bLeftOnly.Enabled = false;
                     bRightOnly.Enabled = false;
                     bSwap.Enabled = false;
+                    bVertical.Enabled = false;
                     tbMovieTime.Enabled = true;
                     lblMovieTime.Enabled = true;
                     tbTransparentTimePercent.Enabled = false;
@@ -945,6 +998,7 @@ namespace StereoscopicMoviePlayer
                     bLeftOnly.Enabled = true;
                     bRightOnly.Enabled = true;
                     bSwap.Enabled = true;
+                    bVertical.Enabled = true;
                     tbMovieTime.Enabled = true;
                     lblMovieTime.Enabled = true;
                     tbTransparentTimePercent.Enabled = true;
@@ -1023,6 +1077,18 @@ namespace StereoscopicMoviePlayer
                     break;
                 case eSwapButtonStates.SwapOff:
                     bSwap.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.swap_unselected;
+                    break;
+            }
+        }
+        private void SetVerticalButtonState(eVerticalButtonStates verticalButtonStates)
+        {
+            switch (verticalButtonStates)
+            {
+                case eVerticalButtonStates.VerticalOn:
+                    bVertical.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.vertical;
+                    break;
+                case eVerticalButtonStates.VerticalOff:
+                    bVertical.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.horizontal;
                     break;
             }
         }

@@ -88,6 +88,13 @@ public class clsStereoImageManager
             clsStereoImageManagerWrap.StereoImageManagerStereoSwapLR(mHandle, swaplr);
         }
     }
+    public void StereoVerticalLR(bool verticallr)
+    {
+        if (mHandle != IntPtr.Zero)
+        {
+            clsStereoImageManagerWrap.StereoImageManagerStereoVerticalLR(mHandle, verticallr);
+        }
+    }
     public void PlayerOpen(string fileName)
     {
         if (mHandle != IntPtr.Zero)

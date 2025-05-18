@@ -105,6 +105,7 @@
     <Content Include="Images\astop.png" />
     <Content Include="Images\both_selected.png" />
     <Content Include="Images\both_unselected.png" />
+    <Content Include="Images\horizontal.png" />
     <Content Include="Images\left_only_selected.png" />
     <Content Include="Images\left_only_unselected.png" />
     <Content Include="Images\mylogo.jpg" />
@@ -116,6 +117,7 @@
     <Content Include="Images\sound.png" />
     <Content Include="Images\swap_selected.png" />
     <Content Include="Images\swap_unselected.png" />
+    <Content Include="Images\vertical.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

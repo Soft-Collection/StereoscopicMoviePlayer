@@ -29,6 +29,7 @@ private:
 	std::atomic<int> m_FrequencyInHz;
 	std::atomic<int> m_LRBoth;
 	std::atomic<BOOL> m_SwapLR;
+	std::atomic<BOOL> m_VerticalLR;
 private:
 	std::mutex* mMutexDrawBlt;
 	LPDIRECT3D9 m_D3D;
@@ -45,5 +46,6 @@ public:
 	INT GetFrequency();
 	void StereoLRBoth(int lrboth);
 	void StereoSwapLR(BOOL swaplr);
+	void StereoVerticalLR(BOOL verticallr);
 };
 #endif // __CSTEREODIRECT3D_H__

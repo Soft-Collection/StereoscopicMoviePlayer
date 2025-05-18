@@ -19,6 +19,7 @@ namespace StereoscopicMoviePlayer
         private static bool SoundOnValue = true;
         private static int VolumeValue = 32768;
         private static bool SwapLRValue = false;
+        private static bool VerticalLRValue = false;
         private static int LRBothValue = 0;
 
         //Location Property.
@@ -243,6 +244,24 @@ namespace StereoscopicMoviePlayer
                 SwapLRValue = value;
                 RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct, true);
                 key.SetValue("SwapLR", SwapLRValue.ToString());
+            }
+        }
+
+        //VerticalLR Property.
+        public static bool VerticalLR
+        {
+            get
+            {
+                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct);
+                if (key == null) key = Registry.CurrentUser.CreateSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct);
+                VerticalLRValue = Boolean.Parse((string)key.GetValue("VerticalLR", "False"));
+                return (VerticalLRValue);
+            }
+            set
+            {
+                VerticalLRValue = value;
+                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct, true);
+                key.SetValue("VerticalLR", VerticalLRValue.ToString());
             }
         }
 

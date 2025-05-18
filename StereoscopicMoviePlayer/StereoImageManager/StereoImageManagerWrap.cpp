@@ -66,6 +66,12 @@ void StereoImageManagerStereoSwapLR(void* handle, BOOL swaplr)
 	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
 	cStereoImageManager->StereoSwapLR(swaplr);
 }
+void StereoImageManagerStereoVerticalLR(void* handle, BOOL verticallr)
+{
+	if (handle == NULL) return;
+	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
+	cStereoImageManager->StereoVerticalLR(verticallr);
+}
 void StereoImageManagerPlayerOpen(void* handle, LPCWSTR fileName)
 {
 	if (handle == NULL) return;
