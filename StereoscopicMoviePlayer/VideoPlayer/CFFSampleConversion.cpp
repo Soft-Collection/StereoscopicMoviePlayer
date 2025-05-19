@@ -21,6 +21,7 @@ BOOL CFFSampleConversion::AllocateResources(AVFormatContext* formatContext, AVFr
 	// Set up SWR context once you've got codec information
 	mSwrContext = swr_alloc();
 	if (!mSwrContext) return FALSE;
+	av_channel_layout_default(&in_frame->ch_layout, in_frame->ch_layout.nb_channels);
 	if (swr_alloc_set_opts2(&mSwrContext,   // we're allocating a new context
 		&sampleTargetParams.ChannelLayout,  // out_ch_layout
 		sampleTargetParams.SampleFormatsID, // out_sample_fmt
@@ -92,6 +93,7 @@ int CFFSampleConversion::PerformSampleConversion(AVFormatContext* formatContext,
 		DeallocateResources();
 		AllocateResources(formatContext, in_frame, sampleTargetParams);
 	}
+	av_channel_layout_default(&in_frame->ch_layout, in_frame->ch_layout.nb_channels);
 	if (swr_convert_frame(mSwrContext, mOutFrame, in_frame) < 0) return (-1);
 	mOutFrame->pts = in_frame->pts;
 	mOutFrame->pkt_dts = in_frame->pkt_dts;

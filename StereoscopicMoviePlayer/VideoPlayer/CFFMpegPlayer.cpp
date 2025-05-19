@@ -409,10 +409,10 @@ void CFFMpegPlayer::OnNewDecodedVideoFrameStatic(void* user, AVFrame* decodedFra
 
 void CFFMpegPlayer::OnNewDecodedVideoFrame(AVFrame* decodedFrame)
 {
-	mCurrentPlayingTime.store(decodedFrame->pts);
+	mCurrentPlayingTime.store(decodedFrame->pkt_dts);
 	if (mPlayerIsSeeking.load())
 	{
-		if ((-500 < mSeekTime.load() - decodedFrame->pts) && (mSeekTime.load() - decodedFrame->pts < 500))
+		if ((-500 < mSeekTime.load() - decodedFrame->pkt_dts) && (mSeekTime.load() - decodedFrame->pkt_dts < 500))
 		{
 			mPlayerPaused.store(mPlayerPausedOnSeek.load());
 			mPlayerIsSeeking.store(false);
@@ -432,7 +432,7 @@ void CFFMpegPlayer::OnNewDecodedVideoFrame(AVFrame* decodedFrame)
 		{
 			if (mOnNewVideoFrame != NULL)
 			{
-				mOnNewVideoFrame(mUser, (BYTE*)convertedFrame->data[0], convertedFrame->width, convertedFrame->height, convertedFrame->linesize[0] / convertedFrame->width, convertedFrame->pts);
+				mOnNewVideoFrame(mUser, (BYTE*)convertedFrame->data[0], convertedFrame->width, convertedFrame->height, convertedFrame->linesize[0] / convertedFrame->width, convertedFrame->pkt_dts);
 			}
 		}
 	}
@@ -498,7 +498,7 @@ void CFFMpegPlayer::OnNewDecodedAudioFrame(AVFrame* decodedFrame)
 					bitsPerSample = 64;
 					break;
 				}
-				mOnNewAudioFrame(mUser, convertedFrame->data[0], convertedFrame->nb_samples, convertedFrame->sample_rate, bitsPerSample, convertedFrame->ch_layout.nb_channels, convertedFrame->pts);
+				mOnNewAudioFrame(mUser, convertedFrame->data[0], convertedFrame->nb_samples, convertedFrame->sample_rate, bitsPerSample, convertedFrame->ch_layout.nb_channels, convertedFrame->pkt_dts);
 			}
 		}
 	}
