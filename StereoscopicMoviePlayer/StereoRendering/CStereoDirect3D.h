@@ -20,23 +20,32 @@ public:
 		INT Channels;
 		BOOL IsLeft;
 	} ImageData;
+	typedef struct {
+		INT Width;
+		INT Height;
+		INT Channels;
+	} ImageDimensions;
 private:
 	HWND m_HWnd;
 	LPDIRECT3DSURFACE9 m_LeftSurface;
 	LPDIRECT3DSURFACE9 m_RightSurface;
 	LPDIRECT3DSURFACE9 m_BlackSurface;
+	LPDIRECT3DSURFACE9 m_SysMemSurface;
+	ImageDimensions m_LastImageDimensions;
 	std::chrono::high_resolution_clock::time_point m_LastTimeMeasuring;
 	std::atomic<int> m_FrequencyInHz;
 	std::atomic<int> m_LRBoth;
 	std::atomic<BOOL> m_SwapLR;
 	std::atomic<BOOL> m_VerticalLR;
+	std::atomic<BOOL> m_LastVerticalLR;
 private:
 	std::mutex* mMutexDrawBlt;
 	LPDIRECT3D9 m_D3D;
 	LPDIRECT3DDEVICE9 m_Device;
 private:
+	BOOL ReInit(ImageDimensions imageDimensions);
 	BOOL CreateBlackSurface();
-	BOOL CreateLRSurface(ImageData idat);
+	BOOL DrawOnLRSurface(ImageData idat);
 public:
 	CStereoDirect3D(HWND hWnd);
 	~CStereoDirect3D();

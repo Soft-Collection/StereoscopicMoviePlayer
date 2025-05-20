@@ -11,11 +11,14 @@ CStereoDirect3D::CStereoDirect3D(HWND hWnd)
 	m_LeftSurface = nullptr;
 	m_RightSurface = nullptr;
 	m_BlackSurface = nullptr;
+	m_SysMemSurface = nullptr;
+	m_LastImageDimensions = { 0, 0, 0 };
 	m_LastTimeMeasuring = std::chrono::high_resolution_clock::now();
 	m_FrequencyInHz.store(0);
 	m_LRBoth.store(0);
 	m_SwapLR.store(FALSE);
 	m_VerticalLR.store(FALSE);
+	m_LastVerticalLR.store(FALSE);
 	//--------------------------------------------------------
 	mMutexDrawBlt = new std::mutex();
 	//--------------------------------------------------------
@@ -44,6 +47,35 @@ CStereoDirect3D::~CStereoDirect3D()
 		mMutexDrawBlt = nullptr;
 	}
 }
+BOOL CStereoDirect3D::ReInit(ImageDimensions imageDimensions)
+{
+	if ((m_LastImageDimensions.Width != imageDimensions.Width) || 
+		(m_LastImageDimensions.Height != imageDimensions.Height) || 
+		(m_LastImageDimensions.Channels != imageDimensions.Channels) || 
+		(m_LastVerticalLR.load() != m_VerticalLR.load()))
+	{
+		if (m_LeftSurface) m_LeftSurface->Release();
+		if (m_RightSurface) m_RightSurface->Release();
+		if (m_SysMemSurface) m_RightSurface->Release();
+		//--------------------------------------------------------------------------------------------------------------------------------------------------------
+		if (m_VerticalLR.load())
+		{
+			m_Device->CreateOffscreenPlainSurface(imageDimensions.Width, imageDimensions.Height / 2, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &m_SysMemSurface, nullptr);
+			m_Device->CreateOffscreenPlainSurface(imageDimensions.Width, imageDimensions.Height / 2, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_LeftSurface, nullptr);
+			m_Device->CreateOffscreenPlainSurface(imageDimensions.Width, imageDimensions.Height / 2, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_RightSurface, nullptr);
+		}
+		else //HorizontalLR
+		{
+			m_Device->CreateOffscreenPlainSurface(imageDimensions.Width / 2, imageDimensions.Height, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &m_SysMemSurface, nullptr);
+			m_Device->CreateOffscreenPlainSurface(imageDimensions.Width / 2, imageDimensions.Height, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_LeftSurface, nullptr);
+			m_Device->CreateOffscreenPlainSurface(imageDimensions.Width / 2, imageDimensions.Height, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_RightSurface, nullptr);
+		}
+		//--------------------------------------------------------------------------------------------------------------------------------------------------------
+		m_LastImageDimensions = { imageDimensions.Width, imageDimensions.Height, imageDimensions.Channels };
+		m_LastVerticalLR.store(m_VerticalLR.load());
+	}
+	return TRUE;
+}
 BOOL CStereoDirect3D::CreateBlackSurface()
 {
 	HRESULT hr;
@@ -57,19 +89,10 @@ BOOL CStereoDirect3D::CreateBlackSurface()
 	if (oldRT) oldRT->Release();
 	return TRUE;
 }
-BOOL CStereoDirect3D::CreateLRSurface(ImageData idat)
+BOOL CStereoDirect3D::DrawOnLRSurface(ImageData idat)
 {
-	LPDIRECT3DSURFACE9 sysMemSurface = nullptr;
-	if (m_VerticalLR.load())
-	{
-		m_Device->CreateOffscreenPlainSurface(idat.Width, idat.Height / 2, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &sysMemSurface, nullptr);
-	}
-	else //HorizontalLR
-	{
-		m_Device->CreateOffscreenPlainSurface(idat.Width / 2, idat.Height, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &sysMemSurface, nullptr);
-	}
 	D3DLOCKED_RECT rect;
-	if (SUCCEEDED(sysMemSurface->LockRect(&rect, nullptr, 0))) {
+	if (SUCCEEDED(m_SysMemSurface->LockRect(&rect, nullptr, 0))) {
 		BYTE* pixels = (BYTE*)rect.pBits;
 		if (idat.Channels == 4)
 		{
@@ -99,32 +122,21 @@ BOOL CStereoDirect3D::CreateLRSurface(ImageData idat)
 				}
 			}
 		}
-		sysMemSurface->UnlockRect();
+		m_SysMemSurface->UnlockRect();
 	}
-
-	if (m_VerticalLR.load())
-	{
-		m_Device->CreateOffscreenPlainSurface(idat.Width, idat.Height / 2, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, (idat.IsLeft) ? &m_LeftSurface : &m_RightSurface, nullptr);
-	}
-	else //HorizontalLR
-	{
-		m_Device->CreateOffscreenPlainSurface(idat.Width / 2, idat.Height, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, (idat.IsLeft) ? &m_LeftSurface : &m_RightSurface, nullptr);
-	}
-	m_Device->UpdateSurface(sysMemSurface, nullptr, (idat.IsLeft) ? m_LeftSurface : m_RightSurface, nullptr);
-	sysMemSurface->Release();
+	m_Device->UpdateSurface(m_SysMemSurface, nullptr, (idat.IsLeft) ? m_LeftSurface : m_RightSurface, nullptr);
 	return TRUE;
 }
 BOOL CStereoDirect3D::DrawImageRGB(ImageData idat)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexDrawBlt); // Lock the mutex
-	if (m_LeftSurface) m_LeftSurface->Release();
-	if (m_RightSurface) m_RightSurface->Release();
+	ReInit({ idat.Width, idat.Height, idat.Channels });
 	idat.IsLeft = TRUE;
-	CreateLRSurface(idat);
+	DrawOnLRSurface(idat);
 	idat.IsLeft = FALSE;
-	CreateLRSurface(idat);
+	DrawOnLRSurface(idat);
 	lock1.unlock();
-	return m_LeftSurface && m_RightSurface;
+	return TRUE;
 }
 BOOL CStereoDirect3D::Blt(bool isLeft)
 {
