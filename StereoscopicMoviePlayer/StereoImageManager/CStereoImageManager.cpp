@@ -373,10 +373,12 @@ void CStereoImageManager::OnNewAudioFrameStatic(void* user, BYTE* frameData, int
 }
 void CStereoImageManager::OnNewVideoFrame(BYTE* frameData, int width, int height, int channels, INT64 pts)
 {
+	std::unique_lock<std::mutex> lock1(*mMutexRender); // Lock the mutex
 	if (mStereoDirect3D != NULL)
 	{
 		mStereoDirect3D->DrawImage({ frameData, width, height, channels });
 	}
+	lock1.unlock();
 }
 void CStereoImageManager::OnNewAudioFrame(BYTE* frameData, int nb_samples, int samplesPerSec, int bitsPerSample, int Channels, INT64 pts)
 {

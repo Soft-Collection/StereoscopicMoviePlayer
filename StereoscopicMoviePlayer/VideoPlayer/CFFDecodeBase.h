@@ -3,6 +3,8 @@
 
 #include "CFFCommon.h"
 
+typedef void(*dOnNewDecodedFrame)(void* user, AVFrame* decodedFrame);
+
 class CFFDecodeBase
 {
 protected:

@@ -34,8 +34,4 @@ public:
 	} SampleTargetParams;
 };
 
-typedef void(*dOnNewVideoFrame)(void* user, BYTE* frameData, int width, int height, int channels, INT64 pts);
-typedef void(*dOnNewAudioFrame)(void* user, BYTE* frameData, int nb_samples, int samplesPerSec, int bitsPerSample, int Channels, INT64 pts);
-typedef void(*dOnNewDecodedFrame)(void* user, AVFrame* decodedFrame);
-
 #endif //__CFFCOMMON_H__

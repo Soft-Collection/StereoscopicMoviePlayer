@@ -87,6 +87,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CAutoBuffer.h" />
     <ClInclude Include="CFFColorConversion.h" />
     <ClInclude Include="CFFCommon.h" />
     <ClInclude Include="CFFDecodeAudio.h" />
@@ -96,11 +97,13 @@
     <ClInclude Include="CFFSampleConversion.h" />
     <ClInclude Include="CWaveBase.h" />
     <ClInclude Include="CWavePlaying.h" />
+    <ClInclude Include="CZeroBuffer.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CAutoBuffer.cpp" />
     <ClCompile Include="CFFColorConversion.cpp" />
     <ClCompile Include="CFFDecodeAudio.cpp" />
     <ClCompile Include="CFFDecodeBase.cpp" />
@@ -109,6 +112,7 @@
     <ClCompile Include="CFFSampleConversion.cpp" />
     <ClCompile Include="CWaveBase.cpp" />
     <ClCompile Include="CWavePlaying.cpp" />
+    <ClCompile Include="CZeroBuffer.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
