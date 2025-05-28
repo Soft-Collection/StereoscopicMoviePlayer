@@ -95,6 +95,7 @@
     <ClInclude Include="CFFDecodeVideo.h" />
     <ClInclude Include="CFFMpegPlayer.h" />
     <ClInclude Include="CFFSampleConversion.h" />
+    <ClInclude Include="CVectorQueue.h" />
     <ClInclude Include="CWaveBase.h" />
     <ClInclude Include="CWavePlaying.h" />
     <ClInclude Include="CZeroBuffer.h" />
@@ -110,6 +111,7 @@
     <ClCompile Include="CFFDecodeVideo.cpp" />
     <ClCompile Include="CFFMpegPlayer.cpp" />
     <ClCompile Include="CFFSampleConversion.cpp" />
+    <ClCompile Include="CVectorQueue.cpp" />
     <ClCompile Include="CWaveBase.cpp" />
     <ClCompile Include="CWavePlaying.cpp" />
     <ClCompile Include="CZeroBuffer.cpp" />

@@ -7,7 +7,6 @@ class CFFSampleConversion
 {
 private:
 	SwrContext*                   mSwrContext;
-	AVFrame*                      mOutFrame;
 	BOOL                          mResourcesMustBeReallocated;
 	CFFCommon::SampleTargetParams mSampleTargetParams;
 private:

@@ -132,11 +132,11 @@ INT64 StereoImageManagerPlayerGetCurrentPlayingTime(void* handle)
 	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
 	return(cStereoImageManager->PlayerGetCurrentPlayingTime());
 }
-void StereoImageManagerPlayerSeek(void* handle, INT64 seek_target_seconds)
+void StereoImageManagerPlayerSeek(void* handle, INT64 seek_target_ms)
 {
 	if (handle == NULL) return;
 	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
-	cStereoImageManager->PlayerSeek(seek_target_seconds);
+	cStereoImageManager->PlayerSeek(seek_target_ms);
 }
 int StereoImageManagerPlayerGetNumberOfAudioTracks(void* handle)
 {

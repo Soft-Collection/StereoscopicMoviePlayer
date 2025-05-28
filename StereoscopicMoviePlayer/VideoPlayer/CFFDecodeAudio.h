@@ -13,7 +13,7 @@ private:
 	BOOL AreParamsChanged(AVFormatContext* formatContext, AVPacket* packet);
 	AVDictionary* SetOpts();
 public:
-	CFFDecodeAudio(void* user, dOnNewDecodedFrame onNewDecodedFrame);
+	CFFDecodeAudio();
 	~CFFDecodeAudio();
 };
 

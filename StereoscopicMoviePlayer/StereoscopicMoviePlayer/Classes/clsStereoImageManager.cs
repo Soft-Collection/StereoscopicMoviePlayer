@@ -169,11 +169,11 @@ public class clsStereoImageManager
         }
         return 0;
     }
-    public void PlayerSeek(Int64 seek_target_seconds)
+    public void PlayerSeek(Int64 seek_target_ms)
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerPlayerSeek(mHandle, seek_target_seconds);
+            clsStereoImageManagerWrap.StereoImageManagerPlayerSeek(mHandle, seek_target_ms);
         }
     }
     public int PlayerGetNumberOfAudioTracks()

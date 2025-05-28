@@ -6,9 +6,8 @@
 class CFFColorConversion
 {
 private:
-	SwsContext*                  mImg_Convert_Context;
 	uint8_t*                     mPicture_Buf_RGB;
-	AVFrame*                     mPicRGB;
+	SwsContext*                  mImg_Convert_Context;
 	CFFCommon::ColorTargetParams mColorTargetParams;
 	BOOL                         mResourcesMustBeReallocated;
 private:

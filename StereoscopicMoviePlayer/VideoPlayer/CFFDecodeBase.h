@@ -2,17 +2,13 @@
 #define __CFFDECODEBASE_H__
 
 #include "CFFCommon.h"
-
-typedef void(*dOnNewDecodedFrame)(void* user, AVFrame* decodedFrame);
+#include <vector>
 
 class CFFDecodeBase
 {
 protected:
-	dOnNewDecodedFrame mOnNewDecodedFrame;
-	void*              mUser;
 	AVCodec*           mCodec;
 	AVCodecContext*    mCodecContext;
-	AVFrame*           mDecodedFrame;
 	BOOL               mResourcesMustBeReallocated;
 protected:
 	BOOL AllocateResources(AVFormatContext* formatContext, AVPacket* packet);
@@ -21,10 +17,11 @@ protected:
 	virtual AVDictionary* SetOpts() = 0;
 public:
 	void ReallocateResources();
+	void FlushBuffers();
 public:
-	CFFDecodeBase(void* user, dOnNewDecodedFrame onNewDecodedFrame);
+	CFFDecodeBase();
 	~CFFDecodeBase();
-	int Decode(AVFormatContext* formatContext, AVPacket* packet);
+	int Decode(AVFormatContext* formatContext, AVPacket* packet, std::vector<AVFrame*>& decodedFrames);
 };
 
 #endif //__CFFDECODEBASE_H__

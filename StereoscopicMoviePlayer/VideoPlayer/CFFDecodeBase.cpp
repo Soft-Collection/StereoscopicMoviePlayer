@@ -2,12 +2,9 @@
 #include "CFFDecodeBase.h"
 #include <tchar.h>
 
-CFFDecodeBase::CFFDecodeBase(void* user, dOnNewDecodedFrame onNewDecodedFrame)
+CFFDecodeBase::CFFDecodeBase()
 {
-	mUser = user;
-	mOnNewDecodedFrame = onNewDecodedFrame;
 	mCodec = NULL;
-	mDecodedFrame = NULL;
 	mCodecContext = NULL;
 	mResourcesMustBeReallocated = FALSE;
 }
@@ -35,17 +32,11 @@ BOOL CFFDecodeBase::AllocateResources(AVFormatContext* formatContext, AVPacket* 
 	AVDictionary* opts = SetOpts();
 	if (avcodec_open2(mCodecContext, mCodec, &opts) < 0) return FALSE;
 	//-------------------------------------------------------
-	mDecodedFrame = av_frame_alloc();
 	return TRUE;
 }
 
 BOOL CFFDecodeBase::DeallocateResources()
 {
-	if (mDecodedFrame != NULL)
-	{
-		av_free(mDecodedFrame);
-		mDecodedFrame = NULL;
-	}
 	if (mCodecContext != NULL)
 	{
 		avcodec_free_context(&mCodecContext);
@@ -60,7 +51,12 @@ void CFFDecodeBase::ReallocateResources()
 	mResourcesMustBeReallocated = TRUE;
 }
 
-int CFFDecodeBase::Decode(AVFormatContext* formatContext, AVPacket* packet)
+void CFFDecodeBase::FlushBuffers()
+{
+	if (mCodecContext) avcodec_flush_buffers(mCodecContext);
+}
+
+int CFFDecodeBase::Decode(AVFormatContext* formatContext, AVPacket* packet, std::vector<AVFrame*>& decodedFrames)
 {
 	BOOL wasReallocated = FALSE;
 	if (AreParamsChanged(formatContext, packet))
@@ -71,23 +67,24 @@ int CFFDecodeBase::Decode(AVFormatContext* formatContext, AVPacket* packet)
 	}
 	//-------------------------------------------------------
 	if (!mCodecContext) return (-1);
-	if (!mDecodedFrame) return (-1);
 	if (avcodec_send_packet(mCodecContext, packet) < 0) return (-1);
-	while (avcodec_receive_frame(mCodecContext, mDecodedFrame) >= 0)
+	while (TRUE)
 	{
-		if (mOnNewDecodedFrame) 
+		AVFrame* tempFrame = av_frame_alloc();
+		if (!tempFrame) return -1;
+		int res = avcodec_receive_frame(mCodecContext, tempFrame);
+		if (res == AVERROR(EAGAIN) || res == AVERROR_EOF)
 		{
-			if (wasReallocated)
-			{
-				av_dict_set(&mDecodedFrame->metadata, "WasReallocated", "True", 0);
-			}
-			else
-			{
-				av_dict_set(&mDecodedFrame->metadata, "WasReallocated", "False", 0);
-			}
-			mOnNewDecodedFrame(mUser, mDecodedFrame);
-			wasReallocated = FALSE;
+			av_frame_free(&tempFrame);
+			break;
 		}
+		else if (res < 0)
+		{
+			av_frame_free(&tempFrame);
+			return res;
+		}
+		av_dict_set(&tempFrame->metadata, "WasReallocated", wasReallocated ? "True" : "False", 0);
+		decodedFrames.push_back(tempFrame);
 	}
 	return 0;
 }

@@ -82,7 +82,7 @@ public class clsStereoImageManagerWrap
     public static extern Int64 StereoImageManagerPlayerGetCurrentPlayingTime(IntPtr StereoImageManagerHandle);
 
     [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void StereoImageManagerPlayerSeek(IntPtr StereoImageManagerHandle, Int64 seek_target_seconds);
+    public static extern void StereoImageManagerPlayerSeek(IntPtr StereoImageManagerHandle, Int64 seek_target_ms);
 
     [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
     public static extern int StereoImageManagerPlayerGetNumberOfAudioTracks(IntPtr StereoImageManagerHandle);

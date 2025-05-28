@@ -5,6 +5,8 @@
 #include "CFFMpegPlayer.h"
 #include "CZeroBuffer.h"
 #include "CZeroBuffer.cpp"
+#include "CAutoBuffer.h"
+#include "CAutoBuffer.cpp"
 #include "CFFDecodeVideo.h"
 #include "CFFDecodeAudio.h"
 #include "CFFSampleConversion.h"
@@ -13,15 +15,24 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include <chrono>
 
-typedef void(*dOnNewVideoFrame)(void* user, BYTE* frameData, int width, int height, int channels, INT64 pts);
-typedef void(*dOnNewAudioFrame)(void* user, BYTE* frameData, int nb_samples, int samplesPerSec, int bitsPerSample, int Channels, INT64 pts);
+typedef void(*dOnNewVideoFrame)(void* user, AVFrame* frame);
+typedef void(*dOnNewAudioFrame)(void* user, AVFrame* frame);
 
 class CFFMpegPlayer
 {
 private:
+	typedef struct {
+		std::chrono::steady_clock::time_point Time;
+		INT64 MS;
+	} TimeData;
+private:
 	std::mutex*                   mMutexVideoPacketBuffer;
 	std::mutex*                   mMutexAudioPacketBuffer;
+	std::mutex*                   mMutexVideoFrameBuffer;
+	std::mutex*                   mMutexAudioFrameBuffer;
+	//------------------------------------------------
 	std::mutex*                   mMutexDecodeVideo;
 	std::mutex*                   mMutexDecodeAudio;
 	std::mutex*                   mMutexSampleConversion;
@@ -33,11 +44,12 @@ private:
 	std::atomic<bool>             mPlayerPausedOnSeek;
 	std::atomic<bool>             mPlayerIsSeeking;
 	std::atomic<bool>             mPlayerSeekRequest;
+	std::atomic<bool>             mClosing;
 	//------------------------------------------------
 	std::wstring                  mFileName;
 	static BOOL                   mStaticInitialized;
 	//------------------------------------------------
-	void* mUser;				  
+	void*                         mUser;				  
 	dOnNewVideoFrame              mOnNewVideoFrame;
 	dOnNewAudioFrame              mOnNewAudioFrame;
 	//------------------------------------------------
@@ -51,8 +63,13 @@ private:
 	std::atomic<INT64>            mCurrentPlayingTime;
 	std::atomic<INT64>            mSeekTime;
 	//------------------------------------------------
+	TimeData                      mLastVideoTime;
+	TimeData                      mLastAudioTime;
+	//------------------------------------------------
 	class CZeroBuffer<AVPacket*>* mVideoPacketBuffer;
 	class CZeroBuffer<AVPacket*>* mAudioPacketBuffer;
+	class CAutoBuffer<AVFrame*>*  mVideoFrameBuffer;
+	class CAutoBuffer<AVFrame*>*  mAudioFrameBuffer;
 	//------------------------------------------------
 	class CFFDecodeVideo*         mFFDecodeVideo;
 	class CFFDecodeAudio*         mFFDecodeAudio;
@@ -71,22 +88,28 @@ public:
 	BOOL IsPlaying();
 	INT64 GetDuration();
 	INT64 GetCurrentPlayingTime();
-	void Seek(INT64 seek_target_seconds);
+	void Seek(INT64 seek_target_ms);
 	INT GetNumberOfVideoTracks();
 	void SetVideoTrack(INT video_track_index);
 	INT GetNumberOfAudioTracks();
 	void SetAudioTrack(INT audio_track_index);
+private:
+	INT64 PtsToMS(BOOL isVideo, INT64 pts);
+	INT64 MSToPts(BOOL isVideo, INT64 ms);
+	void WaitBetweenFrames(BOOL isVideo, TimeData& lastTime, INT64 pts);
 private:
 	void MyPlayerThreadFunction();
 	static void OnVideoPacketReceivedStatic(void* user, AVPacket* packet);
 	void OnVideoPacketReceived(AVPacket* packet);
 	static void OnAudioPacketReceivedStatic(void* user, AVPacket* packet);
 	void OnAudioPacketReceived(AVPacket* packet);
-	static void OnNewDecodedVideoFrameStatic(void* user, AVFrame* decodedFrame);
-	void OnNewDecodedVideoFrame(AVFrame* decodedFrame);
-	static void OnNewDecodedAudioFrameStatic(void* user, AVFrame* decodedFrame);
-	void OnNewDecodedAudioFrame(AVFrame* decodedFrame);
+	static void OnVideoFrameReceivedStatic(void* user, AVFrame* frame);
+	void OnVideoFrameReceived(AVFrame* frame);
+	static void OnAudioFrameReceivedStatic(void* user, AVFrame* frame);
+	void OnAudioFrameReceived(AVFrame* frame);
 	static void MyLogCallbackFunctionStatic(void* ptr, int level, const char* fmt, va_list vl);
+	static void FramePTS(AVFrame* a, INT64** pts);
+	void ClearAllBuffers();
 private:
 	static void InitStatic();
 };

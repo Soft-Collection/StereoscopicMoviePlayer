@@ -5,7 +5,6 @@
 CFFSampleConversion::CFFSampleConversion()
 {
 	mSwrContext = NULL;
-	mOutFrame = NULL;
 	mSampleTargetParams = {};
 }
 
@@ -32,23 +31,11 @@ BOOL CFFSampleConversion::AllocateResources(AVFormatContext* formatContext, AVFr
 		0,                                  // log_offset
 		NULL) < 0) return FALSE;            // log_ctx
 	if (swr_init(mSwrContext) < 0) return FALSE;
-	//-------------------------------------------------------
-	mOutFrame = av_frame_alloc();
-	if (!mOutFrame) return FALSE;
-	mOutFrame->ch_layout = sampleTargetParams.ChannelLayout;
-	mOutFrame->format = sampleTargetParams.SampleFormatsID;
-	mOutFrame->sample_rate = sampleTargetParams.SampleRate;
-	if (av_frame_get_buffer(mOutFrame, 0) < 0) return FALSE;
 	return TRUE;
 }
 
 BOOL CFFSampleConversion::DeallocateResources()
 {
-	if (mOutFrame != NULL)
-	{
-		av_frame_free(&mOutFrame);
-		mOutFrame = NULL;
-	}
 	if (mSwrContext != NULL)
 	{
 		swr_free(&mSwrContext);
@@ -93,10 +80,28 @@ int CFFSampleConversion::PerformSampleConversion(AVFormatContext* formatContext,
 		DeallocateResources();
 		AllocateResources(formatContext, in_frame, sampleTargetParams);
 	}
+	AVFrame* tempFrame = av_frame_alloc();
+	if (!tempFrame) return (-1);
 	av_channel_layout_default(&in_frame->ch_layout, in_frame->ch_layout.nb_channels);
-	if (swr_convert_frame(mSwrContext, mOutFrame, in_frame) < 0) return (-1);
-	mOutFrame->pts = in_frame->pts;
-	mOutFrame->pkt_dts = in_frame->pkt_dts;
-	out_frame = mOutFrame;
+	tempFrame->ch_layout = sampleTargetParams.ChannelLayout;
+	tempFrame->format = sampleTargetParams.SampleFormatsID;
+	tempFrame->sample_rate = sampleTargetParams.SampleRate;
+	tempFrame->nb_samples = in_frame->nb_samples;
+	int res = 0;
+	res = av_frame_get_buffer(tempFrame, 0);
+	if (res < 0)
+	{
+		av_frame_free(&tempFrame);
+		return res;
+	}
+	res = swr_convert_frame(mSwrContext, tempFrame, in_frame);
+	if (res < 0)
+	{
+		av_frame_free(&tempFrame);
+		return res;
+	}
+	tempFrame->pts = in_frame->pts;
+	tempFrame->pkt_dts = in_frame->pkt_dts;
+	out_frame = tempFrame;
 	return 0;
 }

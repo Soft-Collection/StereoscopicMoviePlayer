@@ -13,7 +13,7 @@ private:
 	BOOL AreParamsChanged(AVFormatContext* formatContext, AVPacket* packet);
 	AVDictionary* SetOpts();
 public:
-	CFFDecodeVideo(void* user, dOnNewDecodedFrame onNewDecodedFrame);
+	CFFDecodeVideo();
 	~CFFDecodeVideo();
 };
 

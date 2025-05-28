@@ -2,7 +2,8 @@
 #define __CAUTOBUFFER_H__
 
 #include "CFFCommon.h"
-#include <queue>
+#include "CVectorQueue.h"
+#include "CVectorQueue.cpp"
 #include <mutex>
 #include <thread>
 #include <atomic>
@@ -13,16 +14,19 @@ class CAutoBuffer
 private:
 	typedef void(*dOnTReceived)(void* user, T t);
 	typedef void(*dOnClear)(T* t);
+	typedef void(*dProperty1)(T a, INT64** b);
 private:
 	std::mutex*       mMutexBuffer;
 	std::thread*      mBufferThread;
 	std::atomic<bool> mBufferThreadRunning;
+	HANDLE            mQueueEmptyEvent;
+	HANDLE            mQueueFullEvent;
 	void*             mUser;
 	dOnTReceived      mOnTReceived;
 	dOnClear          mOnClear;
-	std::queue<T>*    mQueue;
+	CVectorQueue<T>*  mQueue;
 public:
-	CAutoBuffer(void* user, dOnTReceived onTReceived, dOnClear onClear);
+	CAutoBuffer(void* user, dOnTReceived onTReceived, dOnClear onClear, dProperty1 prop1);
 	~CAutoBuffer();
 	void Enqueue(T packet);
 	void Clear();

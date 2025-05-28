@@ -7,18 +7,19 @@
 
 CStereoDirect3D::CStereoDirect3D(HWND hWnd)
 {
-	m_HWnd = NULL;
 	m_LeftSurface = nullptr;
 	m_RightSurface = nullptr;
 	m_BlackSurface = nullptr;
 	m_SysMemSurface = nullptr;
 	m_LastImageDimensions = { 0, 0, 0 };
+	m_Frame = nullptr;
 	m_LastTimeMeasuring = std::chrono::high_resolution_clock::now();
 	m_FrequencyInHz.store(0);
 	m_LRBoth.store(0);
 	m_SwapLR.store(FALSE);
 	m_VerticalLR.store(FALSE);
 	m_LastVerticalLR.store(FALSE);
+	m_ImageDataUpdated.store(FALSE);
 	//--------------------------------------------------------
 	mMutexDrawBlt = new std::mutex();
 	//--------------------------------------------------------
@@ -71,6 +72,8 @@ BOOL CStereoDirect3D::ReInit(ImageDimensions imageDimensions)
 			m_Device->CreateOffscreenPlainSurface(imageDimensions.Width / 2, imageDimensions.Height, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_RightSurface, nullptr);
 		}
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------
+		m_ImageDataUpdated.store(FALSE);
+		//--------------------------------------------------------------------------------------------------------------------------------------------------------
 		m_LastImageDimensions = { imageDimensions.Width, imageDimensions.Height, imageDimensions.Channels };
 		m_LastVerticalLR.store(m_VerticalLR.load());
 	}
@@ -89,61 +92,78 @@ BOOL CStereoDirect3D::CreateBlackSurface()
 	if (oldRT) oldRT->Release();
 	return TRUE;
 }
-BOOL CStereoDirect3D::DrawOnLRSurface(ImageData idat)
+BOOL CStereoDirect3D::DrawOnLRSurface(AVFrame* frame, BOOL isLeft)
 {
 	D3DLOCKED_RECT rect;
 	if (SUCCEEDED(m_SysMemSurface->LockRect(&rect, nullptr, 0))) {
 		BYTE* pixels = (BYTE*)rect.pBits;
-		if (idat.Channels == 4)
+		int channels = frame->linesize[0] / frame->width;
+		if (channels == 4)
 		{
 			if (m_VerticalLR.load())
 			{
-				if (idat.IsLeft)
+				if (isLeft)
 				{
-					memcpy(pixels, idat.DataPtr, idat.Height * idat.Width * idat.Channels / 2); //Left
+					memcpy(pixels, frame->data[0], frame->height * frame->width * channels / 2); //Left
 				}
 				else //IsRight
 				{
-					memcpy(pixels, idat.DataPtr + (idat.Height * idat.Width * idat.Channels / 2), idat.Height * idat.Width * idat.Channels / 2); //Right
+					memcpy(pixels, frame->data[0] + (frame->height * frame->width * channels / 2), frame->height * frame->width * channels / 2); //Right
 				}
 			}
 			else //HorizontalLR
 			{
-				for (int y = 0; y < idat.Height; y++)
+				for (int y = 0; y < frame->height; y++)
 				{
-					if (idat.IsLeft)
+					if (isLeft)
 					{
-						memcpy(pixels + (y * idat.Width / 2 * idat.Channels), idat.DataPtr + (y * idat.Width * idat.Channels), idat.Width / 2 * idat.Channels); //Left
+						memcpy(pixels + (y * frame->width / 2 * channels), frame->data[0] + (y * frame->width * channels), frame->width / 2 * channels); //Left
 					}
 					else //IsRight
 					{
-						memcpy(pixels + (y * idat.Width / 2 * idat.Channels), idat.DataPtr + (y * idat.Width * idat.Channels + idat.Width / 2 * idat.Channels), idat.Width / 2 * idat.Channels); //Right
+						memcpy(pixels + (y * frame->width / 2 * channels), frame->data[0] + (y * frame->width * channels + frame->width / 2 * channels), frame->width / 2 * channels); //Right
 					}
 				}
 			}
 		}
 		m_SysMemSurface->UnlockRect();
 	}
-	m_Device->UpdateSurface(m_SysMemSurface, nullptr, (idat.IsLeft) ? m_LeftSurface : m_RightSurface, nullptr);
+	m_Device->UpdateSurface(m_SysMemSurface, nullptr, isLeft ? m_LeftSurface : m_RightSurface, nullptr);
 	return TRUE;
 }
-BOOL CStereoDirect3D::DrawImageRGB(ImageData idat)
+BOOL CStereoDirect3D::DrawImageRGB(AVFrame* frame)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexDrawBlt); // Lock the mutex
-	ReInit({ idat.Width, idat.Height, idat.Channels });
-	idat.IsLeft = TRUE;
-	DrawOnLRSurface(idat);
-	idat.IsLeft = FALSE;
-	DrawOnLRSurface(idat);
+	if (!m_ImageDataUpdated.load())
+	{
+		m_Frame = frame;
+		m_ImageDataUpdated.store(TRUE);
+	}
+	else
+	{
+		av_frame_free(&m_Frame);
+	}
 	lock1.unlock();
 	return TRUE;
 }
 BOOL CStereoDirect3D::Blt(bool isLeft)
 {
+	std::unique_lock<std::mutex> lock1(*mMutexDrawBlt); // Lock the mutex
+	if (m_ImageDataUpdated.load())
+	{
+		if (m_Frame)
+		{
+			ReInit({ m_Frame->width, m_Frame->height, m_Frame->linesize[0] / m_Frame->width });
+			DrawOnLRSurface(m_Frame, TRUE);
+			DrawOnLRSurface(m_Frame, FALSE);
+			av_frame_free(&m_Frame);
+		}
+		m_ImageDataUpdated.store(FALSE);
+	}
+	lock1.unlock();
 	LPDIRECT3DSURFACE9 backBuffer = nullptr;
 	m_Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &backBuffer);
 	if (backBuffer) {
-		std::unique_lock<std::mutex> lock1(*mMutexDrawBlt); // Lock the mutex
 		LPDIRECT3DSURFACE9 surface = m_BlackSurface;
 		if (isLeft)
 		{
@@ -177,14 +197,13 @@ BOOL CStereoDirect3D::Blt(bool isLeft)
 		m_Device->StretchRect(surface, nullptr, backBuffer, nullptr, D3DTEXF_LINEAR);
 		m_Device->EndScene();
 		m_Device->Present(nullptr, nullptr, nullptr, nullptr); //Blocks until new vsync.
-		lock1.unlock();
 		std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
 		std::chrono::microseconds duration = std::chrono::duration_cast<std::chrono::microseconds>(now - m_LastTimeMeasuring);
 		if (duration.count() > 0)
 		{
 			m_FrequencyInHz.store((INT)(1000000.0 / (double)duration.count()));
 		}
-		m_LastTimeMeasuring = std::chrono::high_resolution_clock::now();
+		m_LastTimeMeasuring = now;
 		backBuffer->Release();
 	}
 	return TRUE;

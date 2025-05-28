@@ -2,7 +2,7 @@
 #include "CFFDecodeAudio.h"
 #include <tchar.h>
 
-CFFDecodeAudio::CFFDecodeAudio(void* user, dOnNewDecodedFrame onNewDecodedFrame) : CFFDecodeBase(user, onNewDecodedFrame)
+CFFDecodeAudio::CFFDecodeAudio() : CFFDecodeBase()
 {
 	mLastCodecID = AVCodecID::AV_CODEC_ID_AAC;
 	mLastSampleRate = 0;

@@ -38,10 +38,10 @@ private:
 private:
 	void ThreadRenderFunction();
 	void ThreadCOMPortFunction();
-	static void OnNewVideoFrameStatic(void* user, BYTE* frameData, int width, int height, int channels, INT64 pts);
-	void OnNewVideoFrame(BYTE* frameData, int width, int height, int channels, INT64 pts);
-	static void OnNewAudioFrameStatic(void* user, BYTE* frameData, int nb_samples, int samplesPerSec, int bitsPerSample, int Channels, INT64 pts);
-	void OnNewAudioFrame(BYTE* frameData, int nb_samples, int samplesPerSec, int bitsPerSample, int Channels, INT64 pts);
+	static void OnNewVideoFrameStatic(void* user, AVFrame* frame);
+	void OnNewVideoFrame(AVFrame* frame);
+	static void OnNewAudioFrameStatic(void* user, AVFrame* frame);
+	void OnNewAudioFrame(AVFrame* frame);
 public:
 	CStereoImageManager(HWND hWnd);
 	~CStereoImageManager();
@@ -66,7 +66,7 @@ public:
 	BOOL PlayerIsPlaying();
 	INT64 PlayerGetDuration();
 	INT64 PlayerGetCurrentPlayingTime();
-	void PlayerSeek(INT64 seek_target_seconds);
+	void PlayerSeek(INT64 seek_target_ms);
 	int PlayerGetNumberOfAudioTracks();
 	void PlayerSetAudioTrack(int audio_track_index);
 	void PlayerMute(BOOL mute);

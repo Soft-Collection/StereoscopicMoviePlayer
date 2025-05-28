@@ -5,7 +5,6 @@
 CFFColorConversion::CFFColorConversion()
 {
 	mPicture_Buf_RGB = NULL;
-	mPicRGB = NULL;
 	mImg_Convert_Context = NULL;
 	mColorTargetParams = {};
 	mResourcesMustBeReallocated = FALSE;
@@ -20,18 +19,6 @@ BOOL CFFColorConversion::AllocateResources(AVFormatContext* formatContext, AVFra
 {
 	if (!formatContext) return FALSE;
 	if (!in_frame) return FALSE;
-	int sizeRGB = av_image_get_buffer_size(colorTargetParams.PixelFormatsID, in_frame->width, in_frame->height, 1);
-	//-------------------------------------------------------
-	mPicture_Buf_RGB = (uint8_t*)(av_malloc(sizeRGB));
-	mPicRGB = av_frame_alloc();
-	//-------------------------------------------------------
-	if (av_image_fill_arrays(mPicRGB->data,
-		mPicRGB->linesize,
-		mPicture_Buf_RGB,
-		colorTargetParams.PixelFormatsID,
-		colorTargetParams.ResizedWidth,
-		colorTargetParams.ResizedHeight,
-		1) < 0) return FALSE;  // alignment
 	//-------------------------------------------------------
 	mImg_Convert_Context = sws_getContext(in_frame->width,
 		in_frame->height,
@@ -40,28 +27,29 @@ BOOL CFFColorConversion::AllocateResources(AVFormatContext* formatContext, AVFra
 		colorTargetParams.ResizedHeight,
 		colorTargetParams.PixelFormatsID,
 		SWS_BICUBIC, NULL, NULL, NULL);
-	//-------------------------------------------------------
 	if (!mImg_Convert_Context) return FALSE;
+	//-------------------------------------------------------
+	int sizeRGB = av_image_get_buffer_size(colorTargetParams.PixelFormatsID, colorTargetParams.ResizedWidth, colorTargetParams.ResizedHeight, 1);
+	mPicture_Buf_RGB = (uint8_t*)(av_malloc(sizeRGB));
+	if (!mPicture_Buf_RGB) return FALSE;
+	//-------------------------------------------------------
 	return TRUE;
 }
 
 BOOL CFFColorConversion::DeallocateResources()
 {
-	if (mImg_Convert_Context != NULL)
-	{
-		av_free(mImg_Convert_Context);
-		mImg_Convert_Context = NULL;
-	}
-	if (mPicRGB != NULL)
-	{
-		av_free(mPicRGB);
-		mPicRGB = NULL;
-	}
 	if (mPicture_Buf_RGB != NULL)
 	{
 		av_free(mPicture_Buf_RGB);
 		mPicture_Buf_RGB = NULL;
 	}
+	//-------------------------------------------------------
+	if (mImg_Convert_Context != NULL)
+	{
+		av_free(mImg_Convert_Context);
+		mImg_Convert_Context = NULL;
+	}
+	//-------------------------------------------------------
 	return TRUE;
 }
 
@@ -101,11 +89,25 @@ int CFFColorConversion::PerformColorConversion(AVFormatContext* formatContext, A
 		DeallocateResources();
 		AllocateResources(formatContext, in_frame, colorTargetParams);
 	}
-	if (sws_scale(mImg_Convert_Context, in_frame->data, in_frame->linesize, 0, in_frame->height, mPicRGB->data, mPicRGB->linesize) < 0) return (-1);
-	mPicRGB->width = colorTargetParams.ResizedWidth;
-	mPicRGB->height = colorTargetParams.ResizedHeight;
-	mPicRGB->pts = in_frame->pts;
-	mPicRGB->pkt_dts = in_frame->pkt_dts;
-	out_frame = mPicRGB;
+	AVFrame* tempFrame = av_frame_alloc();
+	int res = 0;
+	res = av_image_fill_arrays(tempFrame->data, tempFrame->linesize, mPicture_Buf_RGB, colorTargetParams.PixelFormatsID, colorTargetParams.ResizedWidth, colorTargetParams.ResizedHeight, 1);
+	if (res < 0)
+	{
+		av_frame_free(&tempFrame);
+		return res;
+	}
+	res = sws_scale(mImg_Convert_Context, in_frame->data, in_frame->linesize, 0, in_frame->height, tempFrame->data, tempFrame->linesize);
+	if (res < 0)
+	{
+		av_frame_free(&tempFrame);
+		return res;
+	}
+	tempFrame->width = colorTargetParams.ResizedWidth;
+	tempFrame->height = colorTargetParams.ResizedHeight;
+	tempFrame->format = colorTargetParams.PixelFormatsID;
+	tempFrame->pts = in_frame->pts;
+	tempFrame->pkt_dts = in_frame->pkt_dts;
+	out_frame = tempFrame;
 	return 0;
 }

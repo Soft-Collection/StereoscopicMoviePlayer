@@ -10,20 +10,57 @@ int vidcnt = 0;
 int aucnt = 0;
 CWavePlaying* wave = NULL;
 
-void OnNewVideoFrame(void* user, BYTE* frameData, int width, int height, int channels, INT64 pts)
+void OnNewVideoFrame(void* user, AVFrame* frame)
 {
-    std::cout << "Video: " << pts << std::endl;
+    std::cout << "Video: " << frame->pts << std::endl;
 }
 
-void OnNewAudioFrame(void* user, BYTE* frameData, int lineSize, int samplesPerSec, int bitsPerSample, int Channels, INT64 pts)
+void OnNewAudioFrame(void* user, AVFrame* frame)
 {
+    int bitsPerSample = 0;
+    switch (frame->format)
+    {
+    case AV_SAMPLE_FMT_U8:
+        bitsPerSample = 8;
+        break;
+    case AV_SAMPLE_FMT_S16:
+        bitsPerSample = 16;
+        break;
+    case AV_SAMPLE_FMT_S32:
+        bitsPerSample = 32;
+        break;
+    case AV_SAMPLE_FMT_FLT:
+        bitsPerSample = 32;
+        break;
+    case AV_SAMPLE_FMT_DBL:
+        bitsPerSample = 64;
+        break;
+    case AV_SAMPLE_FMT_U8P:
+        bitsPerSample = 8;
+        break;
+    case AV_SAMPLE_FMT_S16P:
+        bitsPerSample = 16;
+        break;
+    case AV_SAMPLE_FMT_S32P:
+        bitsPerSample = 32;
+        break;
+    case AV_SAMPLE_FMT_FLTP:
+        bitsPerSample = 32;
+        break;
+    case AV_SAMPLE_FMT_DBLP:
+        bitsPerSample = 64;
+        break;
+    }
     if (wave == NULL)
     {
-        wave = new CWavePlaying(10, 100000, samplesPerSec, bitsPerSample, Channels);
+        wave = new CWavePlaying(10, 100000, frame->sample_rate, bitsPerSample, frame->ch_layout.nb_channels);
         wave->Open();
     }
-    wave->Play((char*)frameData, 0, lineSize / Channels);
-    std::cout << "Audio: " << pts << std::endl;
+    if (wave != NULL)
+    {
+        wave->Play((char*)frame->data[0], 0, frame->nb_samples * (bitsPerSample / 8));
+    }
+    std::cout << "Audio: " << frame->pts << std::endl;
 }
 
 int main()

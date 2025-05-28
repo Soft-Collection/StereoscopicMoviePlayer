@@ -1,16 +1,22 @@
 #include "stdafx.h"
 #include "CAutoBuffer.h"
 
+#define BUFFER_SIZE 20
+#define LOWER_SIZE 10
+
 template<typename T>
-CAutoBuffer<T>::CAutoBuffer(void* user, dOnTReceived onTReceived, dOnClear onClear)
+CAutoBuffer<T>::CAutoBuffer(void* user, dOnTReceived onTReceived, dOnClear onClear, dProperty1 prop1)
 {
 	mMutexBuffer = new std::mutex();
 	//-------------------------------------------------------
-	mUser = user;	
+	mQueueEmptyEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	mQueueFullEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
+	//-------------------------------------------------------
+	mUser = user;
 	mOnTReceived = onTReceived;
 	mOnClear = onClear;
 	//-------------------------------------------------------
-	mQueue = new std::queue<T>();
+	mQueue = new CVectorQueue<T>(prop1);
 	//-------------------------------------------------------
 	mBufferThreadRunning.store(true);
 	mBufferThread = new std::thread(&CAutoBuffer::MyBufferThreadFunction, this);
@@ -19,8 +25,10 @@ CAutoBuffer<T>::CAutoBuffer(void* user, dOnTReceived onTReceived, dOnClear onCle
 template<typename T>
 CAutoBuffer<T>::~CAutoBuffer()
 {
+	Clear();
 	if (mBufferThreadRunning.load())
 	{
+		SetEvent(mQueueEmptyEvent);
 		mBufferThreadRunning.store(false);
 		if (mBufferThread && mBufferThread->joinable())
 		{
@@ -29,11 +37,20 @@ CAutoBuffer<T>::~CAutoBuffer()
 		delete mBufferThread;
 		mBufferThread = nullptr;
 	}
-	Clear();	
 	if (mQueue != NULL)
 	{
 		delete mQueue;
 		mQueue = NULL;
+	}
+	if (mQueueFullEvent != nullptr)
+	{
+		CloseHandle(mQueueFullEvent);
+		mQueueFullEvent = nullptr;
+	}
+	if (mQueueEmptyEvent != nullptr)
+	{
+		CloseHandle(mQueueEmptyEvent);
+		mQueueEmptyEvent = nullptr;
 	}
 	if (mMutexBuffer != nullptr)
 	{
@@ -45,8 +62,11 @@ CAutoBuffer<T>::~CAutoBuffer()
 template<typename T>
 void CAutoBuffer<T>::Enqueue(T t)
 {
+	WaitForSingleObject(mQueueFullEvent, INFINITE);
 	std::unique_lock<std::mutex> lock1(*mMutexBuffer); // Lock the mutex
 	if (mQueue != NULL) mQueue->push(t);
+	if (mQueue->size() >= BUFFER_SIZE) ResetEvent(mQueueFullEvent);
+	if (mQueue->size() >= LOWER_SIZE) SetEvent(mQueueEmptyEvent);
 	lock1.unlock();
 }
 
@@ -55,15 +75,20 @@ void CAutoBuffer<T>::Clear()
 {
 	if (mQueue != NULL)
 	{
+		std::unique_lock<std::mutex> lock1(*mMutexBuffer); // Lock the mutex
 		while (TRUE)
 		{
-			std::unique_lock<std::mutex> lock1(*mMutexBuffer); // Lock the mutex
-			if (mQueue->empty()) break;
+			if (mQueue->empty())
+			{
+				ResetEvent(mQueueEmptyEvent);
+				break;
+			}
 			T temp = mQueue->front();
 			mQueue->pop();
+			SetEvent(mQueueFullEvent);
 			if (mOnClear != NULL) mOnClear(&temp);
-			lock1.unlock();
 		}
+		lock1.unlock();
 	}
 }
 
@@ -72,27 +97,18 @@ void CAutoBuffer<T>::MyBufferThreadFunction()
 {
 	while (mBufferThreadRunning.load())
 	{
+		WaitForSingleObject(mQueueEmptyEvent, INFINITE);
 		if (mQueue != NULL)
 		{
-			BOOL sleepNeeded = FALSE;
 			std::unique_lock<std::mutex> lock1(*mMutexBuffer); // Lock the mutex
 			if (!mQueue->empty())
 			{
 				T temp = mQueue->front();
 				mQueue->pop();
-				if (mOnTReceived != NULL)
-				{
-					mOnTReceived(mUser, temp);
-				}
-			}
-			else
-			{
-				sleepNeeded = TRUE;
-			}
-			lock1.unlock();
-			if (sleepNeeded)
-			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				if (mQueue->size() < LOWER_SIZE) ResetEvent(mQueueEmptyEvent);
+				SetEvent(mQueueFullEvent);
+				lock1.unlock();
+				if (mOnTReceived != NULL) mOnTReceived(mUser, temp);
 			}
 		}
 	}

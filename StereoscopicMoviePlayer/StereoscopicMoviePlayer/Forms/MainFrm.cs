@@ -375,7 +375,7 @@ namespace StereoscopicMoviePlayer
                     if (!mStereoImageManager.PlayerIsOpened())
                     {
                         mStereoImageManager.PlayerOpen(Settings.FilePath);
-                        Int64 duration = mStereoImageManager.PlayerGetDuration();
+                        Int64 duration = mStereoImageManager.PlayerGetDuration() / 1000;
                         tbMovieTime.Maximum = (int)duration;
                         LoadTracks();
                         mMainState = (cbComPort.SelectedIndex >= 0) ? eMainStates.Stopped : eMainStates.COMPortNotSelected;
@@ -514,7 +514,7 @@ namespace StereoscopicMoviePlayer
             //-----------------------------------------------------
             if (mStereoImageManager != null)
             {
-                Int64 currentPlayingTime = mStereoImageManager.PlayerGetCurrentPlayingTime();
+                Int64 currentPlayingTime = mStereoImageManager.PlayerGetCurrentPlayingTime() / 1000;
                 int hours = (int)currentPlayingTime / 3600;
                 int minutes = (int)currentPlayingTime / 60 % 60;
                 int seconds = (int)currentPlayingTime % 60;
@@ -525,7 +525,7 @@ namespace StereoscopicMoviePlayer
             {
                 if (mStereoImageManager != null)
                 {
-                    Int64 currentPlayingTime = mStereoImageManager.PlayerGetCurrentPlayingTime();
+                    Int64 currentPlayingTime = mStereoImageManager.PlayerGetCurrentPlayingTime() / 1000;
                     if ((int)currentPlayingTime > tbMovieTime.Maximum) currentPlayingTime = 0;
                     tbMovieTime.Value = (int)currentPlayingTime;
                 }
@@ -539,7 +539,7 @@ namespace StereoscopicMoviePlayer
                     {
                         if (mStereoImageManager.PlayerIsOpened())
                         {
-                            mStereoImageManager.PlayerSeek(tbMovieTime.Value);
+                            mStereoImageManager.PlayerSeek(tbMovieTime.Value * 1000);
                             PerformStereoStart();
                             if (mPlayerButtonsState == ePlayerButtonsStates.Stopped) mPlayerButtonsState = ePlayerButtonsStates.Paused;
                         }
@@ -717,7 +717,7 @@ namespace StereoscopicMoviePlayer
                             mStereoImageManager.PlayerClose();
                         }
                         mStereoImageManager.PlayerOpen(Settings.FilePath);
-                        Int64 duration = mStereoImageManager.PlayerGetDuration();
+                        Int64 duration = mStereoImageManager.PlayerGetDuration() / 1000;
                         tbMovieTime.Value = 0;
                         tbMovieTime.Maximum = (int)duration;
                     }

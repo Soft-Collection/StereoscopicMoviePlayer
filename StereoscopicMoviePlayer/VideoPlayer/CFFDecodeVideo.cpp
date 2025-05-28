@@ -2,7 +2,7 @@
 #include "CFFDecodeVideo.h"
 #include <tchar.h>
 
-CFFDecodeVideo::CFFDecodeVideo(void* user, dOnNewDecodedFrame onNewDecodedFrame) : CFFDecodeBase(user, onNewDecodedFrame)
+CFFDecodeVideo::CFFDecodeVideo() : CFFDecodeBase()
 {
 	mLastWidth = 0;
 	mLastHeight = 0;
