@@ -3,6 +3,8 @@
 #include <tchar.h>
 #include "../Common/CTools.h"
 
+#define SEEKING_FRAME_NUMBER 5
+
 BOOL CFFMpegPlayer::mStaticInitialized = FALSE;
 
 CFFMpegPlayer::CFFMpegPlayer(void* user, dOnNewVideoFrame onNewVideoFrame, dOnNewAudioFrame onNewAudioFrame)
@@ -19,6 +21,8 @@ CFFMpegPlayer::CFFMpegPlayer(void* user, dOnNewVideoFrame onNewVideoFrame, dOnNe
 	mMutexSampleConversion = new std::mutex();
 	mMutexColorConversion = new std::mutex();
 	//-------------------------------------------------------
+	mPlayerPausedEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	//-------------------------------------------------------
 	mUser = user;
 	mOnNewVideoFrame = onNewVideoFrame;
 	mOnNewAudioFrame = onNewAudioFrame;
@@ -30,6 +34,11 @@ CFFMpegPlayer::CFFMpegPlayer(void* user, dOnNewVideoFrame onNewVideoFrame, dOnNe
 CFFMpegPlayer::~CFFMpegPlayer()
 {
 	Close();
+	if (mPlayerPausedEvent != nullptr)
+	{
+		CloseHandle(mPlayerPausedEvent);
+		mPlayerPausedEvent = nullptr;
+	}
 	if (mMutexColorConversion != nullptr)
 	{
 		delete mMutexColorConversion;
@@ -85,16 +94,14 @@ void CFFMpegPlayer::InitStatic()
 
 void CFFMpegPlayer::Open(std::wstring fileName)
 {
-	mPlayerPaused.store(true);
 	mPlayerPausedOnSeek.store(false);
 	mPlayerIsSeeking.store(false);
-	mPlayerSeekRequest.store(false);
+	mPlayerIsSeekingFrameCounter.store(0);
 	//-------------------------------------------------------
 	mVideoDuration.store(0);
 	mVideoStreamIndex.store(-1);
 	mAudioStreamIndex.store(-1);
 	mCurrentPlayingTime.store(0);
-	mSeekTime.store(0);
 	//-------------------------------------------------------
 	mVideoPacketBuffer = new CZeroBuffer<AVPacket*>(this, OnVideoPacketReceivedStatic);
 	mAudioPacketBuffer = new CZeroBuffer<AVPacket*>(this, OnAudioPacketReceivedStatic);
@@ -145,7 +152,7 @@ void CFFMpegPlayer::Close()
 	mClosing.store(true);
 	if (mPlayerThreadRunning.load())
 	{
-		mPlayerPaused.store(false);
+		SetEvent(mPlayerPausedEvent);
 		mPlayerThreadRunning.store(false);
 		if (mPlayerThread && mPlayerThread->joinable())
 		{
@@ -237,7 +244,7 @@ void CFFMpegPlayer::Play()
 {
 	if (mPlayerThreadRunning.load())
 	{
-		mPlayerPaused.store(false);
+		SetEvent(mPlayerPausedEvent);
 	}
 }
 
@@ -245,7 +252,7 @@ void CFFMpegPlayer::Pause()
 {
 	if (mPlayerThreadRunning.load())
 	{
-		mPlayerPaused.store(true);
+		ResetEvent(mPlayerPausedEvent);
 	}
 }
 
@@ -260,7 +267,7 @@ void CFFMpegPlayer::Stop()
 
 BOOL CFFMpegPlayer::IsPlaying()
 {
-	return mPlayerThreadRunning.load() && !mPlayerPaused.load();
+	return mPlayerThreadRunning.load() && IsEventSet(mPlayerPausedEvent);
 }
 
 INT64 CFFMpegPlayer::GetDuration()
@@ -297,11 +304,13 @@ void CFFMpegPlayer::Seek(INT64 seek_target_ms)
 	{
 		if (mFormatContext != NULL)
 		{
-			mPlayerSeekRequest.store(true);
+			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, MSToPts(TRUE, seek_target_ms), INT64_MAX, 0);
+			ClearAllBuffers();
 			mPlayerIsSeeking.store(true);
-			mPlayerPausedOnSeek.store(mPlayerPaused.load());
-			mPlayerPaused.store(false);
-			mSeekTime.store(MSToPts(TRUE, seek_target_ms));
+			mPlayerIsSeekingFrameCounter.store(SEEKING_FRAME_NUMBER);
+			mPlayerPausedOnSeek.store(!IsEventSet(mPlayerPausedEvent));
+			SetEvent(mPlayerPausedEvent);
+			mCurrentPlayingTime.store(MSToPts(TRUE, seek_target_ms));
 		}
 	}
 }
@@ -394,14 +403,13 @@ void CFFMpegPlayer::MyPlayerThreadFunction()
 {
 	while (mPlayerThreadRunning.load())
 	{
+		WaitForSingleObject(mPlayerPausedEvent, INFINITE);
 		AVPacket* packet = NULL;
 		packet = av_packet_alloc();
-		if (!packet) continue;
-		if (mPlayerSeekRequest.load())
+		if (!packet)
 		{
-			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, mSeekTime.load(), INT64_MAX, 0);
-			ClearAllBuffers();
-			mPlayerSeekRequest.store(false);
+			av_packet_free(&packet);
+			continue;
 		}
 		if (av_read_frame(mFormatContext, packet) >= 0)
 		{
@@ -441,10 +449,6 @@ void CFFMpegPlayer::MyPlayerThreadFunction()
 		else
 		{
 			av_packet_free(&packet);
-		}
-		while (mPlayerPaused.load())
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(30));
 		}
 	}
 }
@@ -509,14 +513,27 @@ void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame)
 	}
 	if (mPlayerIsSeeking.load())
 	{
-		mPlayerPaused.store(mPlayerPausedOnSeek.load());
-		mPlayerIsSeeking.store(false);
-	}
-	else
-	{
-		mCurrentPlayingTime.store(frame->pts);
+		if (mPlayerIsSeekingFrameCounter.load() > 0)
+		{
+			mPlayerIsSeekingFrameCounter--;
+			av_frame_free(&frame);
+			return;
+		}
+		else
+		{
+			if (mPlayerPausedOnSeek.load())
+			{
+				ResetEvent(mPlayerPausedEvent);
+			}
+			else
+			{
+				SetEvent(mPlayerPausedEvent);
+			}
+			mPlayerIsSeeking.store(false);
+		}
 	}
 	WaitBetweenFrames(TRUE, mLastVideoTime, frame->pts);
+	mCurrentPlayingTime.store(frame->pts);
 	AVFrame* convertedFrame = NULL;
 	std::unique_lock<std::mutex> lock1(*mMutexColorConversion); // Lock the mutex
 	if (mFFColorConversion != NULL)
@@ -673,4 +690,9 @@ void CFFMpegPlayer::ClearAllBuffers()
 		mVideoFrameBuffer->Clear();
 	}
 	lock4.unlock();
+}
+
+BOOL CFFMpegPlayer::IsEventSet(HANDLE event)
+{
+	return (WaitForSingleObject(event, 0) == WAIT_OBJECT_0);
 }

@@ -40,10 +40,9 @@ private:
 	//------------------------------------------------
 	std::thread*                  mPlayerThread;
 	std::atomic<bool>             mPlayerThreadRunning;
-	std::atomic<bool>             mPlayerPaused;
 	std::atomic<bool>             mPlayerPausedOnSeek;
 	std::atomic<bool>             mPlayerIsSeeking;
-	std::atomic<bool>             mPlayerSeekRequest;
+	std::atomic<int>              mPlayerIsSeekingFrameCounter;
 	std::atomic<bool>             mClosing;
 	//------------------------------------------------
 	std::wstring                  mFileName;
@@ -61,10 +60,11 @@ private:
 	std::atomic<int>              mAudioTracksNumber;
 	std::atomic<int>              mAudioStreamIndex;
 	std::atomic<INT64>            mCurrentPlayingTime;
-	std::atomic<INT64>            mSeekTime;
 	//------------------------------------------------
 	TimeData                      mLastVideoTime;
 	TimeData                      mLastAudioTime;
+	//------------------------------------------------
+	HANDLE                        mPlayerPausedEvent;
 	//------------------------------------------------
 	class CZeroBuffer<AVPacket*>* mVideoPacketBuffer;
 	class CZeroBuffer<AVPacket*>* mAudioPacketBuffer;
@@ -110,6 +110,7 @@ private:
 	static void MyLogCallbackFunctionStatic(void* ptr, int level, const char* fmt, va_list vl);
 	static void FramePTS(AVFrame* a, INT64** pts);
 	void ClearAllBuffers();
+	BOOL IsEventSet(HANDLE event);
 private:
 	static void InitStatic();
 };

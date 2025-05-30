@@ -30,17 +30,18 @@ CStereoDirect3D::CStereoDirect3D(HWND hWnd)
 	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
 	d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
 	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; //Enable vsync
-	m_D3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &m_Device);
+	m_D3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &m_Device);
 	//--------------------------------------------------------
 	CreateBlackSurface();
 }
 CStereoDirect3D::~CStereoDirect3D()
 {
-	if (m_BlackSurface) m_BlackSurface->Release();
-	if (m_LeftSurface) m_LeftSurface->Release();
-	if (m_RightSurface) m_RightSurface->Release();
-	if (m_Device) m_Device->Release();
-	if (m_D3D) m_D3D->Release();
+	if (m_BlackSurface) { m_BlackSurface->Release(); m_BlackSurface = nullptr; }
+	if (m_LeftSurface) { m_LeftSurface->Release(); m_LeftSurface = nullptr; }
+	if (m_RightSurface) { m_RightSurface->Release(); m_RightSurface = nullptr; }
+	if (m_SysMemSurface) { m_SysMemSurface->Release(); m_SysMemSurface = nullptr; }
+	if (m_Device) { m_Device->Release(); m_Device = nullptr; }
+	if (m_D3D) { m_D3D->Release(); m_D3D = nullptr; }
 	//--------------------------------------------------------
 	if (mMutexDrawBlt != nullptr)
 	{
@@ -55,9 +56,9 @@ BOOL CStereoDirect3D::ReInit(ImageDimensions imageDimensions)
 		(m_LastImageDimensions.Channels != imageDimensions.Channels) || 
 		(m_LastVerticalLR.load() != m_VerticalLR.load()))
 	{
-		if (m_LeftSurface) m_LeftSurface->Release();
-		if (m_RightSurface) m_RightSurface->Release();
-		if (m_SysMemSurface) m_RightSurface->Release();
+		if (m_LeftSurface) { m_LeftSurface->Release(); m_LeftSurface = nullptr; }
+		if (m_RightSurface) { m_RightSurface->Release(); m_RightSurface = nullptr; }
+		if (m_SysMemSurface) { m_SysMemSurface->Release(); m_SysMemSurface = nullptr; }
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------
 		if (m_VerticalLR.load())
 		{

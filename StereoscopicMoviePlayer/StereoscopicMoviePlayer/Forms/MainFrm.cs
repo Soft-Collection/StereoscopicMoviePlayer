@@ -741,6 +741,11 @@ namespace StereoscopicMoviePlayer
         }
         private void tbMovieTime_Scroll(object sender, EventArgs e)
         {
+            if (mMainState == eMainStates.Stopped)
+            {
+                mMainState = eMainStates.PlayingPaused;
+                mPlayerButtonsState = ePlayerButtonsStates.Paused;
+            }
             mLastSWMovieTime = Stopwatch.GetTimestamp();
             mSeekAlreadyApplied = false;
         }
