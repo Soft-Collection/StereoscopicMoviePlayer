@@ -7,6 +7,7 @@
 
 CStereoDirect3D::CStereoDirect3D(HWND hWnd)
 {
+	m_HWnd = hWnd;
 	m_LeftSurface = nullptr;
 	m_RightSurface = nullptr;
 	m_BlackSurface = nullptr;
@@ -25,22 +26,11 @@ CStereoDirect3D::CStereoDirect3D(HWND hWnd)
 	//--------------------------------------------------------
 	m_D3D = Direct3DCreate9(D3D_SDK_VERSION);
 	//--------------------------------------------------------
-	D3DPRESENT_PARAMETERS d3dpp = {};
-	d3dpp.Windowed = TRUE;
-	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
-	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; //Enable vsync
-	m_D3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &m_Device);
-	//--------------------------------------------------------
-	CreateBlackSurface();
+	CreateDevice();
 }
 CStereoDirect3D::~CStereoDirect3D()
 {
-	if (m_BlackSurface) { m_BlackSurface->Release(); m_BlackSurface = nullptr; }
-	if (m_LeftSurface) { m_LeftSurface->Release(); m_LeftSurface = nullptr; }
-	if (m_RightSurface) { m_RightSurface->Release(); m_RightSurface = nullptr; }
-	if (m_SysMemSurface) { m_SysMemSurface->Release(); m_SysMemSurface = nullptr; }
-	if (m_Device) { m_Device->Release(); m_Device = nullptr; }
+	ReleaseDevice();
 	if (m_D3D) { m_D3D->Release(); m_D3D = nullptr; }
 	//--------------------------------------------------------
 	if (mMutexDrawBlt != nullptr)
@@ -49,6 +39,34 @@ CStereoDirect3D::~CStereoDirect3D()
 		mMutexDrawBlt = nullptr;
 	}
 }
+BOOL CStereoDirect3D::CreateDevice()
+{
+	D3DPRESENT_PARAMETERS d3dpp = {};
+	d3dpp.Windowed = TRUE;
+	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
+	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; //Enable vsync
+	m_D3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_HWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &m_Device);
+	return TRUE;
+}
+BOOL CStereoDirect3D::ReleaseDevice()
+{
+	m_Device->SetTexture(0, nullptr);
+	m_Device->SetTexture(1, nullptr);
+	m_Device->SetRenderTarget(0, nullptr);
+	m_Device->SetStreamSource(0, nullptr, 0, 0);
+	ReleaseSurfaces();
+	if (m_Device) { m_Device->Release(); m_Device = nullptr; }
+	return TRUE;
+}
+BOOL CStereoDirect3D::ReleaseSurfaces()
+{ 
+	if (m_LeftSurface) { m_LeftSurface->Release(); m_LeftSurface = nullptr; }
+	if (m_RightSurface) { m_RightSurface->Release(); m_RightSurface = nullptr; }
+	if (m_SysMemSurface) { m_SysMemSurface->Release(); m_SysMemSurface = nullptr; }
+	if (m_BlackSurface) { m_BlackSurface->Release(); m_BlackSurface = nullptr; }
+	return TRUE;
+}
 BOOL CStereoDirect3D::ReInit(ImageDimensions imageDimensions)
 {
 	if ((m_LastImageDimensions.Width != imageDimensions.Width) || 
@@ -56,9 +74,8 @@ BOOL CStereoDirect3D::ReInit(ImageDimensions imageDimensions)
 		(m_LastImageDimensions.Channels != imageDimensions.Channels) || 
 		(m_LastVerticalLR.load() != m_VerticalLR.load()))
 	{
-		if (m_LeftSurface) { m_LeftSurface->Release(); m_LeftSurface = nullptr; }
-		if (m_RightSurface) { m_RightSurface->Release(); m_RightSurface = nullptr; }
-		if (m_SysMemSurface) { m_SysMemSurface->Release(); m_SysMemSurface = nullptr; }
+		ReleaseSurfaces();
+		CreateBlackSurface();
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------
 		if (m_VerticalLR.load())
 		{
@@ -197,7 +214,18 @@ BOOL CStereoDirect3D::Blt(bool isLeft)
 		m_Device->BeginScene();
 		m_Device->StretchRect(surface, nullptr, backBuffer, nullptr, D3DTEXF_LINEAR);
 		m_Device->EndScene();
-		m_Device->Present(nullptr, nullptr, nullptr, nullptr); //Blocks until new vsync.
+		HRESULT hr = m_Device->Present(nullptr, nullptr, nullptr, nullptr); //Blocks until new vsync.
+		backBuffer->Release();
+		if (hr == D3DERR_DEVICELOST)
+		{
+			while (m_Device->TestCooperativeLevel() == D3DERR_DEVICELOST) std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			if (m_Device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET)
+			{
+				ReleaseDevice();
+				CreateDevice();
+				m_LastImageDimensions = { 0, 0, 0 };
+			}
+		}
 		std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
 		std::chrono::microseconds duration = std::chrono::duration_cast<std::chrono::microseconds>(now - m_LastTimeMeasuring);
 		if (duration.count() > 0)
@@ -205,7 +233,6 @@ BOOL CStereoDirect3D::Blt(bool isLeft)
 			m_FrequencyInHz.store((INT)(1000000.0 / (double)duration.count()));
 		}
 		m_LastTimeMeasuring = now;
-		backBuffer->Release();
 	}
 	return TRUE;
 }

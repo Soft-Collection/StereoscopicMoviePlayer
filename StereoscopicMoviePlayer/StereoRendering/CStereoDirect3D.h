@@ -28,6 +28,7 @@ private:
 		INT Channels;
 	} ImageDimensions;
 private:
+	HWND               m_HWnd;
 	LPDIRECT3DSURFACE9 m_LeftSurface;
 	LPDIRECT3DSURFACE9 m_RightSurface;
 	LPDIRECT3DSURFACE9 m_BlackSurface;
@@ -46,6 +47,9 @@ private:
 	LPDIRECT3D9        m_D3D;
 	LPDIRECT3DDEVICE9  m_Device;
 private:
+	BOOL CreateDevice();
+	BOOL ReleaseDevice();
+	BOOL ReleaseSurfaces();
 	BOOL ReInit(ImageDimensions imageDimensions);
 	BOOL CreateBlackSurface();
 	BOOL DrawOnLRSurface(AVFrame* frame, BOOL isLeft);
