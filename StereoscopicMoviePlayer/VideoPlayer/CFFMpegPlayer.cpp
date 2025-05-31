@@ -21,6 +21,8 @@ CFFMpegPlayer::CFFMpegPlayer(void* user, dOnNewVideoFrame onNewVideoFrame, dOnNe
 	mMutexSampleConversion = new std::mutex();
 	mMutexColorConversion = new std::mutex();
 	//-------------------------------------------------------
+	mMutexSeek = new std::mutex();
+	//-------------------------------------------------------
 	mPlayerPausedEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	//-------------------------------------------------------
 	mUser = user;
@@ -38,6 +40,11 @@ CFFMpegPlayer::~CFFMpegPlayer()
 	{
 		CloseHandle(mPlayerPausedEvent);
 		mPlayerPausedEvent = nullptr;
+	}
+	if (mMutexSeek != nullptr)
+	{
+		delete mMutexSeek;
+		mMutexSeek = nullptr;
 	}
 	if (mMutexColorConversion != nullptr)
 	{
@@ -288,10 +295,12 @@ void CFFMpegPlayer::Seek(INT64 seek_target_ms)
 	{
 		if (mFormatContext != NULL)
 		{
+			std::unique_lock<std::mutex> lock1(*mMutexSeek); // Lock the mutex
 			mPlayerIsSeeking.store(true);
 			mPlayerIsSeekingFrameCounter.store(SEEKING_FRAME_NUMBER);
 			mPlayerPausedOnSeek.store(!IsEventSet(mPlayerPausedEvent));
 			mCurrentPlayingTime.store(MSToPts(TRUE, seek_target_ms));
+			lock1.unlock();
 			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, MSToPts(TRUE, seek_target_ms), INT64_MAX, 0);
 			ClearAllBuffers();
 			SetEvent(mPlayerPausedEvent);
@@ -481,6 +490,7 @@ void CFFMpegPlayer::OnVideoFrameReceivedStatic(void* user, AVFrame* frame)
 
 void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame)
 {
+	std::unique_lock<std::mutex> lock2(*mMutexSeek); // Lock the mutex
 	if (frame->pts == AV_NOPTS_VALUE) 
 	{
 		av_frame_free(&frame);
@@ -507,8 +517,9 @@ void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame)
 			mPlayerIsSeeking.store(false);
 		}
 	}
-	WaitBetweenFrames(TRUE, mLastVideoTime, frame->pts);
 	mCurrentPlayingTime.store(frame->pts);
+	lock2.unlock();
+	WaitBetweenFrames(TRUE, mLastVideoTime, frame->pts);
 	AVFrame* convertedFrame = NULL;
 	std::unique_lock<std::mutex> lock1(*mMutexColorConversion); // Lock the mutex
 	if (mFFColorConversion != NULL)

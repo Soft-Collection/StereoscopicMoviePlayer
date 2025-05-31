@@ -36,6 +36,8 @@ private:
 	std::mutex*                   mMutexSampleConversion;
 	std::mutex*                   mMutexColorConversion;
 	//------------------------------------------------
+	std::mutex*                   mMutexSeek;
+	//------------------------------------------------
 	std::thread*                  mPlayerThread;
 	std::atomic<bool>             mPlayerThreadRunning;
 	std::atomic<bool>             mPlayerPausedOnSeek;
