@@ -3,8 +3,6 @@
 
 #include "CFFCommon.h"
 #include "CFFMpegPlayer.h"
-#include "CZeroBuffer.h"
-#include "CZeroBuffer.cpp"
 #include "CAutoBuffer.h"
 #include "CAutoBuffer.cpp"
 #include "CFFDecodeVideo.h"
@@ -66,8 +64,6 @@ private:
 	//------------------------------------------------
 	HANDLE                        mPlayerPausedEvent;
 	//------------------------------------------------
-	class CZeroBuffer<AVPacket*>* mVideoPacketBuffer;
-	class CZeroBuffer<AVPacket*>* mAudioPacketBuffer;
 	class CAutoBuffer<AVFrame*>*  mVideoFrameBuffer;
 	class CAutoBuffer<AVFrame*>*  mAudioFrameBuffer;
 	//------------------------------------------------
@@ -99,9 +95,7 @@ private:
 	void WaitBetweenFrames(BOOL isVideo, TimeData& lastTime, INT64 pts);
 private:
 	void MyPlayerThreadFunction();
-	static void OnVideoPacketReceivedStatic(void* user, AVPacket* packet);
 	void OnVideoPacketReceived(AVPacket* packet);
-	static void OnAudioPacketReceivedStatic(void* user, AVPacket* packet);
 	void OnAudioPacketReceived(AVPacket* packet);
 	static void OnVideoFrameReceivedStatic(void* user, AVFrame* frame);
 	void OnVideoFrameReceived(AVFrame* frame);

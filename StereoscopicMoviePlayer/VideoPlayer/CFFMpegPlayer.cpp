@@ -103,8 +103,6 @@ void CFFMpegPlayer::Open(std::wstring fileName)
 	mAudioStreamIndex.store(-1);
 	mCurrentPlayingTime.store(0);
 	//-------------------------------------------------------
-	mVideoPacketBuffer = new CZeroBuffer<AVPacket*>(this, OnVideoPacketReceivedStatic);
-	mAudioPacketBuffer = new CZeroBuffer<AVPacket*>(this, OnAudioPacketReceivedStatic);
 	mVideoFrameBuffer = new CAutoBuffer<AVFrame*>(this, OnVideoFrameReceivedStatic, av_frame_free, FramePTS);
 	mAudioFrameBuffer = new CAutoBuffer<AVFrame*>(this, OnAudioFrameReceivedStatic, av_frame_free, FramePTS);
 	//-------------------------------------------------------
@@ -213,20 +211,6 @@ void CFFMpegPlayer::Close()
 		mVideoFrameBuffer = NULL;
 	}
 	lock6.unlock();
-	std::unique_lock<std::mutex> lock7(*mMutexAudioPacketBuffer); // Lock the mutex
-	if (mAudioPacketBuffer != NULL)
-	{
-		delete mAudioPacketBuffer;
-		mAudioPacketBuffer = NULL;
-	}
-	lock7.unlock();
-	std::unique_lock<std::mutex> lock8(*mMutexVideoPacketBuffer); // Lock the mutex
-	if (mVideoPacketBuffer != NULL)
-	{
-		delete mVideoPacketBuffer;
-		mVideoPacketBuffer = NULL;
-	}
-	lock8.unlock();
 }
 
 void CFFMpegPlayer::Reopen()
@@ -304,13 +288,13 @@ void CFFMpegPlayer::Seek(INT64 seek_target_ms)
 	{
 		if (mFormatContext != NULL)
 		{
-			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, MSToPts(TRUE, seek_target_ms), INT64_MAX, 0);
-			ClearAllBuffers();
 			mPlayerIsSeeking.store(true);
 			mPlayerIsSeekingFrameCounter.store(SEEKING_FRAME_NUMBER);
 			mPlayerPausedOnSeek.store(!IsEventSet(mPlayerPausedEvent));
-			SetEvent(mPlayerPausedEvent);
 			mCurrentPlayingTime.store(MSToPts(TRUE, seek_target_ms));
+			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, MSToPts(TRUE, seek_target_ms), INT64_MAX, 0);
+			ClearAllBuffers();
+			SetEvent(mPlayerPausedEvent);
 		}
 	}
 }
@@ -414,13 +398,18 @@ void CFFMpegPlayer::MyPlayerThreadFunction()
 		if (av_read_frame(mFormatContext, packet) >= 0)
 		{
 			packet->pts = packet->dts;
+			if (packet->pts == AV_NOPTS_VALUE)
+			{
+				av_packet_free(&packet);
+				continue;
+			}
 			AVMediaType mediaType = (AVMediaType)mFormatContext->streams[packet->stream_index]->codecpar->codec_type;
 			if (mediaType == AVMEDIA_TYPE_AUDIO)
 			{
 				if (packet->stream_index == mAudioStreamIndex)
 				{
 					std::unique_lock<std::mutex> lock1(*mMutexAudioPacketBuffer); // Lock the mutex
-					if (mAudioPacketBuffer != NULL) mAudioPacketBuffer->Enqueue(packet);
+					OnAudioPacketReceived(packet);
 					lock1.unlock();
 				}
 				else
@@ -433,7 +422,7 @@ void CFFMpegPlayer::MyPlayerThreadFunction()
 				if (packet->stream_index == mVideoStreamIndex)
 				{
 					std::unique_lock<std::mutex> lock1(*mMutexVideoPacketBuffer); // Lock the mutex
-					if (mVideoPacketBuffer != NULL) mVideoPacketBuffer->Enqueue(packet);
+					OnVideoPacketReceived(packet);
 					lock1.unlock();
 				}
 				else
@@ -453,13 +442,6 @@ void CFFMpegPlayer::MyPlayerThreadFunction()
 	}
 }
 
-void CFFMpegPlayer::OnVideoPacketReceivedStatic(void* user, AVPacket* packet)
-{
-	if (user == NULL) return;
-	CFFMpegPlayer* cFFMpegPlayer = (CFFMpegPlayer*)user;
-	cFFMpegPlayer->OnVideoPacketReceived(packet);
-}
-
 void CFFMpegPlayer::OnVideoPacketReceived(AVPacket* packet)
 {
 	std::vector<AVFrame*> decodedFrames;
@@ -473,13 +455,6 @@ void CFFMpegPlayer::OnVideoPacketReceived(AVPacket* packet)
 		lock2.unlock();
 	}
 	av_packet_free(&packet);
-}
-
-void CFFMpegPlayer::OnAudioPacketReceivedStatic(void* user, AVPacket* packet)
-{
-	if (user == NULL) return;
-	CFFMpegPlayer* cFFMpegPlayer = (CFFMpegPlayer*)user;
-	cFFMpegPlayer->OnAudioPacketReceived(packet);
 }
 
 void CFFMpegPlayer::OnAudioPacketReceived(AVPacket* packet)
@@ -581,8 +556,8 @@ void CFFMpegPlayer::OnAudioFrameReceived(AVFrame* frame)
 {
 	if (frame->pts == AV_NOPTS_VALUE)
 	{
-		av_frame_free(&frame);
-		return;
+		//av_frame_free(&frame);
+		//return;
 	}
 	if (mPlayerIsSeeking.load())
 	{
