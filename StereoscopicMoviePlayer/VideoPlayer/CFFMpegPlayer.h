@@ -26,8 +26,6 @@ private:
 		INT64 MS;
 	} TimeData;
 private:
-	std::mutex*                   mMutexVideoPacketBuffer;
-	std::mutex*                   mMutexAudioPacketBuffer;
 	std::mutex*                   mMutexVideoFrameBuffer;
 	std::mutex*                   mMutexAudioFrameBuffer;
 	//------------------------------------------------

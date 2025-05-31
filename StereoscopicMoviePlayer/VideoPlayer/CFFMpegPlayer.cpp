@@ -3,6 +3,7 @@
 #include <tchar.h>
 #include "../Common/CTools.h"
 
+#define DEBUG_MODE 0
 #define SEEKING_FRAME_NUMBER 5
 
 BOOL CFFMpegPlayer::mStaticInitialized = FALSE;
@@ -11,8 +12,6 @@ CFFMpegPlayer::CFFMpegPlayer(void* user, dOnNewVideoFrame onNewVideoFrame, dOnNe
 {
 	InitStatic();
 	//-------------------------------------------------------
-	mMutexVideoPacketBuffer = new std::mutex();
-	mMutexAudioPacketBuffer = new std::mutex();
 	mMutexVideoFrameBuffer = new std::mutex();
 	mMutexAudioFrameBuffer = new std::mutex();
 	//-------------------------------------------------------
@@ -76,16 +75,6 @@ CFFMpegPlayer::~CFFMpegPlayer()
 		delete mMutexVideoFrameBuffer;
 		mMutexVideoFrameBuffer = nullptr;
 	}
-	if (mMutexAudioPacketBuffer != nullptr)
-	{
-		delete mMutexAudioPacketBuffer;
-		mMutexAudioPacketBuffer = nullptr;
-	}
-	if (mMutexVideoPacketBuffer != nullptr)
-	{
-		delete mMutexVideoPacketBuffer;
-		mMutexVideoPacketBuffer = nullptr;
-	}
 }
 
 void CFFMpegPlayer::InitStatic()
@@ -101,6 +90,7 @@ void CFFMpegPlayer::InitStatic()
 
 void CFFMpegPlayer::Open(std::wstring fileName)
 {
+	ResetEvent(mPlayerPausedEvent);
 	mPlayerPausedOnSeek.store(false);
 	mPlayerIsSeeking.store(false);
 	mPlayerIsSeekingFrameCounter.store(0);
@@ -300,10 +290,10 @@ void CFFMpegPlayer::Seek(INT64 seek_target_ms)
 			mPlayerIsSeekingFrameCounter.store(SEEKING_FRAME_NUMBER);
 			mPlayerPausedOnSeek.store(!IsEventSet(mPlayerPausedEvent));
 			mCurrentPlayingTime.store(MSToPts(TRUE, seek_target_ms));
-			lock1.unlock();
 			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, MSToPts(TRUE, seek_target_ms), INT64_MAX, 0);
 			ClearAllBuffers();
 			SetEvent(mPlayerPausedEvent);
+			lock1.unlock();
 		}
 	}
 }
@@ -409,17 +399,16 @@ void CFFMpegPlayer::MyPlayerThreadFunction()
 			packet->pts = packet->dts;
 			if (packet->pts == AV_NOPTS_VALUE)
 			{
-				av_packet_free(&packet);
-				continue;
+				//Must be commented
+				//av_packet_free(&packet);
+				//continue;
 			}
 			AVMediaType mediaType = (AVMediaType)mFormatContext->streams[packet->stream_index]->codecpar->codec_type;
 			if (mediaType == AVMEDIA_TYPE_AUDIO)
 			{
 				if (packet->stream_index == mAudioStreamIndex)
 				{
-					std::unique_lock<std::mutex> lock1(*mMutexAudioPacketBuffer); // Lock the mutex
 					OnAudioPacketReceived(packet);
-					lock1.unlock();
 				}
 				else
 				{
@@ -430,9 +419,7 @@ void CFFMpegPlayer::MyPlayerThreadFunction()
 			{
 				if (packet->stream_index == mVideoStreamIndex)
 				{
-					std::unique_lock<std::mutex> lock1(*mMutexVideoPacketBuffer); // Lock the mutex
 					OnVideoPacketReceived(packet);
-					lock1.unlock();
 				}
 				else
 				{
@@ -567,6 +554,7 @@ void CFFMpegPlayer::OnAudioFrameReceived(AVFrame* frame)
 {
 	if (frame->pts == AV_NOPTS_VALUE)
 	{
+		//Must be commented
 		//av_frame_free(&frame);
 		//return;
 	}
@@ -575,6 +563,7 @@ void CFFMpegPlayer::OnAudioFrameReceived(AVFrame* frame)
 		av_frame_free(&frame);
 		return;
 	}
+	//Must be commented
 	//WaitBetweenFrames(TRUE, mLastAudioTime, frame->pts);
 	AVFrame* convertedFrame = NULL;
 	std::unique_lock<std::mutex> lock1(*mMutexSampleConversion); // Lock the mutex
@@ -632,6 +621,7 @@ void CFFMpegPlayer::WaitBetweenFrames(BOOL isVideo, TimeData& lastTime, INT64 pt
 
 void CFFMpegPlayer::MyLogCallbackFunctionStatic(void* ptr, int level, const char* fmt, va_list vl)
 {
+#if DEBUG_MODE
 	va_list vl2;
 	char line[1024];
 	int print_prefix = 1;
@@ -643,6 +633,7 @@ void CFFMpegPlayer::MyLogCallbackFunctionStatic(void* ptr, int level, const char
 	{
 		OutputDebugString(line);
 	}
+#endif // DEBUG_MODE
 }
 
 void CFFMpegPlayer::FramePTS(AVFrame* frame, INT64** pts)
