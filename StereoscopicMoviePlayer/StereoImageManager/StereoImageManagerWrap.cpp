@@ -84,12 +84,6 @@ void StereoImageManagerPlayerClose(void* handle)
 	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
 	cStereoImageManager->PlayerClose();
 }
-void StereoImageManagerPlayerReopen(void* handle)
-{
-	if (handle == NULL) return;
-	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
-	cStereoImageManager->PlayerReopen();
-}
 BOOL StereoImageManagerPlayerIsOpened(void* handle)
 {
 	if (handle == NULL) return false;

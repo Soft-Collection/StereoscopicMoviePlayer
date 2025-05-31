@@ -210,12 +210,6 @@ void CFFMpegPlayer::Close()
 	lock6.unlock();
 }
 
-void CFFMpegPlayer::Reopen()
-{
-	if (mPlayerThreadRunning.load()) Close();
-	Open(mFileName);
-}
-
 BOOL CFFMpegPlayer::IsOpened()
 {
 	return mPlayerThreadRunning.load();

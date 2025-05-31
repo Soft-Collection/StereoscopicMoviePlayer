@@ -16,7 +16,6 @@ extern "C"
     __declspec(dllexport) void StereoImageManagerStereoVerticalLR(void* handle, BOOL verticallr);
     __declspec(dllexport) void StereoImageManagerPlayerOpen(void* handle, LPCWSTR fileName);
     __declspec(dllexport) void StereoImageManagerPlayerClose(void* handle);
-    __declspec(dllexport) void StereoImageManagerPlayerReopen(void* handle);
     __declspec(dllexport) BOOL StereoImageManagerPlayerIsOpened(void* handle);
     __declspec(dllexport) void StereoImageManagerPlayerPlay(void* handle);
     __declspec(dllexport) void StereoImageManagerPlayerPause(void* handle);

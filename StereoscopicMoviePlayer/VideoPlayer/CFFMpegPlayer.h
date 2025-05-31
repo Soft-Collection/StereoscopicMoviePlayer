@@ -76,7 +76,6 @@ public:
 	~CFFMpegPlayer();
 	void Open(std::wstring fileName);
 	void Close();
-	void Reopen();
 	BOOL IsOpened();
 	void Play();
 	void Pause();

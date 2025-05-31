@@ -58,9 +58,6 @@ public class clsStereoImageManagerWrap
     public static extern void StereoImageManagerPlayerClose(IntPtr StereoImageManagerHandle);
 
     [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void StereoImageManagerPlayerReopen(IntPtr StereoImageManagerHandle);
-
-    [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
     public static extern bool StereoImageManagerPlayerIsOpened(IntPtr StereoImageManagerHandle);
 
     [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]

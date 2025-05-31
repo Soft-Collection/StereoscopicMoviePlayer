@@ -109,13 +109,6 @@ public class clsStereoImageManager
             clsStereoImageManagerWrap.StereoImageManagerPlayerClose(mHandle);
         }
     }
-    public void PlayerReopen()
-    {
-        if (mHandle != IntPtr.Zero)
-        {
-            clsStereoImageManagerWrap.StereoImageManagerPlayerReopen(mHandle);
-        }
-    }
     public bool PlayerIsOpened()
     {
         if (mHandle != IntPtr.Zero)

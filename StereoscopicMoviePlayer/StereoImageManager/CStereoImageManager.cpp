@@ -216,24 +216,18 @@ void CStereoImageManager::PlayerOpen(LPCWSTR fileName)
 }
 void CStereoImageManager::PlayerClose()
 {
+	std::unique_lock<std::mutex> lock2(*mMutexRender); // Lock the mutex
+	if (mStereoDirect3D != NULL)
+	{
+		mStereoDirect3D->DrawImage(NULL);
+	}
+	lock2.unlock();
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
 	{
 		if (mPlayer->IsOpened())
 		{
 			mPlayer->Close();
-		}
-	}
-	lock1.unlock();
-}
-void CStereoImageManager::PlayerReopen()
-{
-	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
-	if (mPlayer != NULL)
-	{
-		if (mPlayer->IsOpened())
-		{
-			mPlayer->Reopen();
 		}
 	}
 	lock1.unlock();

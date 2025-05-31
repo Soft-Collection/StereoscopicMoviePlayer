@@ -58,7 +58,6 @@ public:
 	void StereoVerticalLR(BOOL verticallr);
 	void PlayerOpen(LPCWSTR fileName);
 	void PlayerClose();
-	void PlayerReopen();
 	BOOL PlayerIsOpened();
 	void PlayerPlay();
 	void PlayerPause();
