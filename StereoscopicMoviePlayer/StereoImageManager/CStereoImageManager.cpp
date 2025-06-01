@@ -14,9 +14,11 @@ CStereoImageManager::CStereoImageManager(HWND hWnd)
 	mLeftImage = NULL;
 	mRightImage = NULL;
 	//----------------------------------------------------
-	mMutexWave = new std::mutex();
+	mMutexWave1 = new std::mutex();
+	mMutexWave2 = new std::mutex();
 	mMutexPlayer = new std::mutex();
-	mMutexRender = new std::mutex();
+	mMutexRender1 = new std::mutex();
+	mMutexRender2 = new std::mutex();
 	mThreadRenderRunning.store(false);
 	mThreadRender = nullptr;
 	mMutexCOMPort = new std::mutex();
@@ -33,12 +35,14 @@ CStereoImageManager::~CStereoImageManager()
 {
 	StereoStop();
 	//----------------------------------------------------
-	std::unique_lock<std::mutex> lock3(*mMutexWave); // Lock the mutex
+	std::unique_lock<std::mutex> lock3(*mMutexWave1); // Lock the mutex
+	std::unique_lock<std::mutex> lock6(*mMutexWave2); // Lock the mutex
 	if (mWave != NULL)
 	{
 		delete mWave;
 		mWave = NULL;
 	}
+	lock6.unlock();
 	lock3.unlock();
 	//----------------------------------------------------
 	std::unique_lock<std::mutex> lock4(*mMutexPlayer); // Lock the mutex
@@ -76,12 +80,14 @@ CStereoImageManager::~CStereoImageManager()
 	}
 	lock1.unlock();
 	//----------------------------------------------------
-	std::unique_lock<std::mutex> lock2(*mMutexRender); // Lock the mutex
+	std::unique_lock<std::mutex> lock2(*mMutexRender1); // Lock the mutex
+	std::unique_lock<std::mutex> lock5(*mMutexRender2); // Lock the mutex
 	if (mStereoDirect3D != NULL)
 	{
 		delete mStereoDirect3D;
 		mStereoDirect3D = NULL;
 	}
+	lock5.unlock();
 	lock2.unlock();
 	//----------------------------------------------------
 	if (mMutexCOMPort != nullptr)
@@ -90,10 +96,10 @@ CStereoImageManager::~CStereoImageManager()
 		mMutexCOMPort = nullptr;
 	}
 	//----------------------------------------------------
-	if (mMutexRender != nullptr)
+	if (mMutexRender1 != nullptr)
 	{
-		delete mMutexRender;
-		mMutexRender = nullptr;
+		delete mMutexRender1;
+		mMutexRender1 = nullptr;
 	}
 	//----------------------------------------------------
 	if (mMutexPlayer != nullptr)
@@ -102,10 +108,10 @@ CStereoImageManager::~CStereoImageManager()
 		mMutexPlayer = nullptr;
 	}
 	//----------------------------------------------------
-	if (mMutexWave != nullptr)
+	if (mMutexWave1 != nullptr)
 	{
-		delete mMutexWave;
-		mMutexWave = nullptr;
+		delete mMutexWave1;
+		mMutexWave1 = nullptr;
 	}
 }
 void CStereoImageManager::StereoStart()
@@ -216,7 +222,7 @@ void CStereoImageManager::PlayerOpen(LPCWSTR fileName)
 }
 void CStereoImageManager::PlayerClose()
 {
-	std::unique_lock<std::mutex> lock2(*mMutexRender); // Lock the mutex
+	std::unique_lock<std::mutex> lock2(*mMutexRender2); // Lock the mutex
 	if (mStereoDirect3D != NULL)
 	{
 		mStereoDirect3D->DrawImage(NULL);
@@ -371,7 +377,7 @@ void CStereoImageManager::ThreadRenderFunction()
 {
 	while (mThreadRenderRunning.load())
 	{
-		std::unique_lock<std::mutex> lock1(*mMutexRender); // Lock the mutex
+		std::unique_lock<std::mutex> lock1(*mMutexRender1); // Lock the mutex
 		mImageToPlayIsLeft = !mImageToPlayIsLeft;
 		if (mStereoDirect3D != NULL)
 		{
@@ -382,7 +388,6 @@ void CStereoImageManager::ThreadRenderFunction()
 			SetEvent(mCOMPortEvent);
 		}
 		lock1.unlock();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 }
 void CStereoImageManager::ThreadCOMPortFunction()
@@ -406,7 +411,7 @@ void CStereoImageManager::OnNewVideoFrameStatic(void* user, AVFrame* frame)
 }
 void CStereoImageManager::OnNewVideoFrame(AVFrame* frame)
 {
-	std::unique_lock<std::mutex> lock1(*mMutexRender); // Lock the mutex
+	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
 	if (mStereoDirect3D != NULL)
 	{
 		mStereoDirect3D->DrawImage(frame);
@@ -455,7 +460,7 @@ void CStereoImageManager::OnNewAudioFrame(AVFrame* frame)
 		bitsPerSample = 64;
 		break;
 	}
-	std::unique_lock<std::mutex> lock1(*mMutexWave); // Lock the mutex
+	std::unique_lock<std::mutex> lock1(*mMutexWave2); // Lock the mutex
 	if (mWave == NULL)
 	{
 		mWave = new CWavePlaying(10, 100000, frame->sample_rate, bitsPerSample, frame->ch_layout.nb_channels);
@@ -469,7 +474,7 @@ void CStereoImageManager::OnNewAudioFrame(AVFrame* frame)
 }
 void CStereoImageManager::PlayerMute(BOOL mute)
 {
-	std::unique_lock<std::mutex> lock1(*mMutexWave); // Lock the mutex
+	std::unique_lock<std::mutex> lock1(*mMutexWave1); // Lock the mutex
 	if (mWave != NULL)
 	{
 		if (mute)
@@ -485,7 +490,7 @@ void CStereoImageManager::PlayerMute(BOOL mute)
 }
 UINT16 CStereoImageManager::PlayerGetVolume()
 {
-	std::unique_lock<std::mutex> lock1(*mMutexWave); // Lock the mutex
+	std::unique_lock<std::mutex> lock1(*mMutexWave1); // Lock the mutex
 	if (mWave != NULL)
 	{
 		WORD leftVolume;
@@ -498,7 +503,7 @@ UINT16 CStereoImageManager::PlayerGetVolume()
 }
 void CStereoImageManager::PlayerSetVolume(UINT16 volume)
 {
-	std::unique_lock<std::mutex> lock1(*mMutexWave); // Lock the mutex
+	std::unique_lock<std::mutex> lock1(*mMutexWave1); // Lock the mutex
 	if (mWave != NULL)
 	{
 		mWave->SetVolume(volume, volume);
