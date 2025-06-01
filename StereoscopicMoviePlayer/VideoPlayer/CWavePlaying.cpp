@@ -155,7 +155,9 @@ BOOL CWavePlaying::UnprepareHeaders()
 }
 BOOL CWavePlaying::Play(char* pData, ULONG offset, ULONG size)
 {
-	DWORD dwObject = WaitForSingleObject(m_hevBufferArrived, mBufferLength * 10000 / (mPCMfmt.nSamplesPerSec * mPCMfmt.nChannels));
+	DWORD bytesPerSecond = mPCMfmt.nSamplesPerSec * mPCMfmt.nChannels * (mPCMfmt.wBitsPerSample / 8);
+	DWORD timeoutMS = mBufferLength * 1000 / bytesPerSecond;
+	DWORD dwObject = WaitForSingleObject(m_hevBufferArrived, timeoutMS);
 	if (dwObject == WAIT_TIMEOUT) return FALSE;
 	if ((mPlayingState != Opened) && (mPlayingState != PlayingStarted)) return FALSE;
 	if (!mHeadersAreReady) return FALSE;
