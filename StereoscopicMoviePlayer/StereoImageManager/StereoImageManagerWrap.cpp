@@ -114,6 +114,12 @@ BOOL StereoImageManagerPlayerIsPlaying(void* handle)
 	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
 	return(cStereoImageManager->PlayerIsPlaying());
 }
+BOOL StereoImageManagerPlayerIsEOF(void* handle)
+{
+	if (handle == NULL) return false;
+	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
+	return(cStereoImageManager->PlayerIsEOF());
+}
 INT64 StereoImageManagerPlayerGetDuration(void* handle)
 {
 	if (handle == NULL) return 0;

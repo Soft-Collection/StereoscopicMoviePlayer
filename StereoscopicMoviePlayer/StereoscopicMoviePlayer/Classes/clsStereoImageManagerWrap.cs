@@ -73,6 +73,9 @@ public class clsStereoImageManagerWrap
     public static extern bool StereoImageManagerPlayerIsPlaying(IntPtr StereoImageManagerHandle);
 
     [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern bool StereoImageManagerPlayerIsEOF(IntPtr StereoImageManagerHandle);
+
+    [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
     public static extern Int64 StereoImageManagerPlayerGetDuration(IntPtr StereoImageManagerHandle);
 
     [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]

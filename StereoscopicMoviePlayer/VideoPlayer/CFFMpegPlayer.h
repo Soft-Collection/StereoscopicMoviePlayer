@@ -42,6 +42,7 @@ private:
 	std::atomic<bool>             mPlayerIsSeeking;
 	std::atomic<int>              mPlayerIsSeekingFrameCounter;
 	std::atomic<bool>             mClosing;
+	std::atomic<bool>             mIsEOF;
 	//------------------------------------------------
 	std::wstring                  mFileName;
 	static BOOL                   mStaticInitialized;
@@ -81,6 +82,7 @@ public:
 	void Pause();
 	void Stop();
 	BOOL IsPlaying();
+	BOOL IsEOF();
 	INT64 GetDuration();
 	INT64 GetCurrentPlayingTime();
 	void Seek(INT64 seek_target_ms);

@@ -21,6 +21,7 @@ extern "C"
     __declspec(dllexport) void StereoImageManagerPlayerPause(void* handle);
     __declspec(dllexport) void StereoImageManagerPlayerStop(void* handle);
     __declspec(dllexport) BOOL StereoImageManagerPlayerIsPlaying(void* handle);
+    __declspec(dllexport) BOOL StereoImageManagerPlayerIsEOF(void* handle);
     __declspec(dllexport) INT64 StereoImageManagerPlayerGetDuration(void* handle);
     __declspec(dllexport) INT64 StereoImageManagerPlayerGetCurrentPlayingTime(void* handle);
     __declspec(dllexport) void StereoImageManagerPlayerSeek(void* handle, INT64 seek_target_ms);

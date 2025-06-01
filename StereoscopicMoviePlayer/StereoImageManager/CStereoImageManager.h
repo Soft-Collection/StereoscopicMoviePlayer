@@ -63,6 +63,7 @@ public:
 	void PlayerPause();
 	void PlayerStop();
 	BOOL PlayerIsPlaying();
+	BOOL PlayerIsEOF();
 	INT64 PlayerGetDuration();
 	INT64 PlayerGetCurrentPlayingTime();
 	void PlayerSeek(INT64 seek_target_ms);

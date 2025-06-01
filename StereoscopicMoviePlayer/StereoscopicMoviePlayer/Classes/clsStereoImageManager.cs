@@ -146,6 +146,14 @@ public class clsStereoImageManager
         }
         return false;
     }
+    public bool PlayerIsEOF()
+    {
+        if (mHandle != IntPtr.Zero)
+        {
+            return clsStereoImageManagerWrap.StereoImageManagerPlayerIsEOF(mHandle);
+        }
+        return false;
+    }
     public Int64 PlayerGetDuration()
     {
         if (mHandle != IntPtr.Zero)

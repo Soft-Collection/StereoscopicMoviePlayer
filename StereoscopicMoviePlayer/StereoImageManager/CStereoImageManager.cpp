@@ -291,6 +291,19 @@ BOOL CStereoImageManager::PlayerIsPlaying()
 	lock1.unlock();
 	return false;
 }
+BOOL CStereoImageManager::PlayerIsEOF()
+{
+	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
+	if (mPlayer != NULL)
+	{
+		if (mPlayer->IsOpened())
+		{
+			return mPlayer->IsEOF();
+		}
+	}
+	lock1.unlock();
+	return false;
+}
 INT64 CStereoImageManager::PlayerGetDuration()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex

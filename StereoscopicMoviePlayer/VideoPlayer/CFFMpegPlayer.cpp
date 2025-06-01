@@ -94,6 +94,7 @@ void CFFMpegPlayer::Open(std::wstring fileName)
 	mPlayerPausedOnSeek.store(false);
 	mPlayerIsSeeking.store(false);
 	mPlayerIsSeekingFrameCounter.store(0);
+	mIsEOF.store(false);
 	//-------------------------------------------------------
 	mVideoDuration.store(0);
 	mVideoStreamIndex.store(-1);
@@ -245,6 +246,11 @@ BOOL CFFMpegPlayer::IsPlaying()
 	return mPlayerThreadRunning.load() && IsEventSet(mPlayerPausedEvent);
 }
 
+BOOL CFFMpegPlayer::IsEOF()
+{
+	return mPlayerThreadRunning.load() && mIsEOF.load();
+}
+
 INT64 CFFMpegPlayer::GetDuration()
 {
 	if (mPlayerThreadRunning.load())
@@ -284,6 +290,7 @@ void CFFMpegPlayer::Seek(INT64 seek_target_ms)
 			mPlayerIsSeekingFrameCounter.store(SEEKING_FRAME_NUMBER);
 			mPlayerPausedOnSeek.store(!IsEventSet(mPlayerPausedEvent));
 			mCurrentPlayingTime.store(MSToPts(TRUE, seek_target_ms));
+			mIsEOF.store(false);
 			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, MSToPts(TRUE, seek_target_ms), INT64_MAX, 0);
 			ClearAllBuffers();
 			SetEvent(mPlayerPausedEvent);
@@ -388,7 +395,8 @@ void CFFMpegPlayer::MyPlayerThreadFunction()
 			av_packet_free(&packet);
 			continue;
 		}
-		if (av_read_frame(mFormatContext, packet) >= 0)
+		int res = av_read_frame(mFormatContext, packet);
+		if (res >= 0)
 		{
 			packet->pts = packet->dts;
 			if (packet->pts == AV_NOPTS_VALUE)
@@ -427,6 +435,7 @@ void CFFMpegPlayer::MyPlayerThreadFunction()
 		}
 		else
 		{
+			if (res == AVERROR_EOF)	mIsEOF.store(true);
 			av_packet_free(&packet);
 		}
 	}

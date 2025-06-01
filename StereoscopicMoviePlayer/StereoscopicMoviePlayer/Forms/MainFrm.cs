@@ -350,6 +350,7 @@ namespace StereoscopicMoviePlayer
         private int mAlreadySentCounter = 0;
         private long mLastSWMovieTime = 0;
         private bool mSeekAlreadyApplied = true;
+        private bool mIsEOFApplied = false;
         #endregion
 
         #region Initialize
@@ -385,6 +386,26 @@ namespace StereoscopicMoviePlayer
             else
             {
                 mMainState = eMainStates.VideoFileNotOpened;
+            }
+            //-----------------------------------------------------
+            if (mStereoImageManager != null)
+            {
+                if (mStereoImageManager.PlayerIsOpened())
+                {
+                    if (mStereoImageManager.PlayerIsEOF())
+                    {
+                        if (!mIsEOFApplied)
+                        {
+                            mMainState = eMainStates.PlayingPaused;
+                            mPlayerButtonsState = ePlayerButtonsStates.Paused;
+                            mIsEOFApplied = true;
+                        }
+                    }
+                    else
+                    {
+                        mIsEOFApplied = false;
+                    }
+                }
             }
             //-----------------------------------------------------
             if (mLastMainState != mMainState)
@@ -627,6 +648,7 @@ namespace StereoscopicMoviePlayer
             }
             else if (mPlayerButtonsState == ePlayerButtonsStates.Paused)
             {
+                mIsEOFApplied = false;
                 mPlayerButtonsState = ePlayerButtonsStates.Playing;
             }
             else if (mPlayerButtonsState == ePlayerButtonsStates.Stopped)
