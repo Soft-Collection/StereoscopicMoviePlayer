@@ -4,7 +4,7 @@
 #include "../Common/CTools.h"
 
 #define DEBUG_MODE 0
-#define SEEKING_FRAME_NUMBER 5
+#define SEEKING_FRAME_NUMBER 6
 
 BOOL CFFMpegPlayer::mStaticInitialized = FALSE;
 
@@ -488,14 +488,15 @@ void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame)
 	}
 	if (mPlayerIsSeeking.load())
 	{
-		if (mPlayerIsSeekingFrameCounter.load() > 0)
+		if (mPlayerIsSeekingFrameCounter.load() > 1)
 		{
 			mPlayerIsSeekingFrameCounter--;
 			av_frame_free(&frame);
 			return;
 		}
-		else
+		else if (mPlayerIsSeekingFrameCounter.load() == 1)
 		{
+			mPlayerIsSeekingFrameCounter--;
 			if (mPlayerPausedOnSeek.load())
 			{
 				ResetEvent(mPlayerPausedEvent);
@@ -504,6 +505,9 @@ void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame)
 			{
 				SetEvent(mPlayerPausedEvent);
 			}
+		}
+		else //if (mPlayerIsSeekingFrameCounter.load() == 0)
+		{
 			mPlayerIsSeeking.store(false);
 		}
 	}
