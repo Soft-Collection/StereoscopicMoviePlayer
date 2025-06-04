@@ -27,7 +27,37 @@ CFFMpegPlayer::CFFMpegPlayer(void* user, dOnNewVideoFrame onNewVideoFrame, dOnNe
 	mUser = user;
 	mOnNewVideoFrame = onNewVideoFrame;
 	mOnNewAudioFrame = onNewAudioFrame;
-	//-------------------------------------------------------
+	//------------------------------------------------
+	mPlayerThread = NULL;
+	mPlayerThreadRunning.store(false);
+	mPlayerPausedOnSeek.store(false);
+	mPlayerIsSeeking.store(false);
+	mPlayerIsSeekingFrameCounter.store(0);
+	mClosing.store(false);
+	mIsEOF.store(false);
+	//------------------------------------------------
+	mFileName = std::wstring(L"");
+	//------------------------------------------------
+	mFormatContext = NULL;
+	//------------------------------------------------
+	mVideoDuration.store(0);
+	mVideoTracksNumber.store(0);
+	mVideoStreamIndex.store(-1);
+	mAudioTracksNumber.store(0);
+	mAudioStreamIndex.store(-1);
+	mCurrentPlayingTime.store(0);
+	//------------------------------------------------
+	mLastVideoTime = { std::chrono::steady_clock::time_point(), 0 };
+	mLastAudioTime = { std::chrono::steady_clock::time_point(), 0 };
+	//------------------------------------------------
+	mVideoFrameBuffer = NULL;
+	mAudioFrameBuffer = NULL;
+	//------------------------------------------------
+	mFFDecodeVideo = NULL;
+	mFFDecodeAudio = NULL;
+	mFFSampleConversion = NULL;
+	mFFColorConversion = NULL;
+	//------------------------------------------------
 	avformat_network_init();
 	avdevice_register_all();
 }
@@ -109,8 +139,8 @@ void CFFMpegPlayer::Open(std::wstring fileName)
 	mFFColorConversion = new CFFColorConversion();
 	mFFSampleConversion = new CFFSampleConversion();
 	//-------------------------------------------------------
-	mFFDecodeVideo->ReallocateResources();
-	mFFDecodeAudio->ReallocateResources();
+	if (mFFDecodeVideo != NULL) mFFDecodeVideo->ReallocateResources();
+	if (mFFDecodeAudio != NULL) mFFDecodeAudio->ReallocateResources();
 	if (mFFColorConversion != NULL) mFFColorConversion->ReallocateResources();
 	if (mFFSampleConversion != NULL) mFFSampleConversion->ReallocateResources();
 	//-------------------------------------------------------
@@ -513,7 +543,7 @@ void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame)
 	}
 	mCurrentPlayingTime.store(frame->pts);
 	lock2.unlock();
-	WaitBetweenFrames(TRUE, mLastVideoTime, frame->pts);
+	WaitBetweenFrames(TRUE, mLastVideoTime, (INT64)((double)frame->pts * 0.9));
 	AVFrame* convertedFrame = NULL;
 	std::unique_lock<std::mutex> lock1(*mMutexColorConversion); // Lock the mutex
 	if (mFFColorConversion != NULL)
@@ -570,8 +600,7 @@ void CFFMpegPlayer::OnAudioFrameReceived(AVFrame* frame)
 		av_frame_free(&frame);
 		return;
 	}
-	//Must be commented
-	//WaitBetweenFrames(TRUE, mLastAudioTime, frame->pts);
+	WaitBetweenFrames(TRUE, mLastAudioTime, (INT64)((double)frame->pts * 0.9));
 	AVFrame* convertedFrame = NULL;
 	std::unique_lock<std::mutex> lock1(*mMutexSampleConversion); // Lock the mutex
 	if (mFFSampleConversion != NULL)

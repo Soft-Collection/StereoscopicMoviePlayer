@@ -5,7 +5,7 @@ CWavePlaying::CWavePlaying(DWORD buffersCount, DWORD bufferLength, DWORD nSample
 {
 	mQueueMutex = new std::mutex();
 	mHWaveOut = NULL;
-	mPlayingState =  Initialized;
+	mPlayingState = Initialized;
 	mLeftVolume = 0;
 	mRightVolume = 0;
 	mIsMuted = FALSE;
@@ -15,7 +15,7 @@ CWavePlaying::CWavePlaying(DWORD buffersCount, DWORD bufferLength, DWORD nSample
 	mPCMfmt.nChannels = nChannels;
 	mPCMfmt.nSamplesPerSec = nSamplesPerSec;
 	mPCMfmt.wBitsPerSample = wBitsPerSample;
-	mPCMfmt.nBlockAlign =     mPCMfmt.nChannels * (mPCMfmt.wBitsPerSample / 8);
+	mPCMfmt.nBlockAlign = mPCMfmt.nChannels * (mPCMfmt.wBitsPerSample / 8);
 	mPCMfmt.nAvgBytesPerSec = mPCMfmt.nBlockAlign * mPCMfmt.nSamplesPerSec;
 	mPCMfmt.cbSize = 0;
 	mBuffersCount = buffersCount;

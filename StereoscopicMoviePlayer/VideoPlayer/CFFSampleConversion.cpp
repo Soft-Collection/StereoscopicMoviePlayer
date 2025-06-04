@@ -5,6 +5,7 @@
 CFFSampleConversion::CFFSampleConversion()
 {
 	mSwrContext = NULL;
+	mResourcesMustBeReallocated = FALSE;
 	mSampleTargetParams = {};
 }
 

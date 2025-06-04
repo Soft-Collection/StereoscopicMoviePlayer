@@ -64,18 +64,21 @@ void CAutoBuffer<T>::Enqueue(T t)
 {
 	WaitForSingleObject(mQueueFullEvent, INFINITE);
 	std::unique_lock<std::mutex> lock1(*mMutexBuffer); // Lock the mutex
-	if (mQueue != NULL) mQueue->push(t);
-	if (mQueue->size() >= BUFFER_SIZE) ResetEvent(mQueueFullEvent);
-	if (mQueue->size() >= LOWER_SIZE) SetEvent(mQueueEmptyEvent);
+	if (mQueue != NULL)
+	{
+		mQueue->push(t);
+		if (mQueue->size() >= BUFFER_SIZE) ResetEvent(mQueueFullEvent);
+		if (mQueue->size() >= LOWER_SIZE) SetEvent(mQueueEmptyEvent);
+	}
 	lock1.unlock();
 }
 
 template<typename T>
 void CAutoBuffer<T>::Clear()
 {
+	std::unique_lock<std::mutex> lock1(*mMutexBuffer); // Lock the mutex
 	if (mQueue != NULL)
 	{
-		std::unique_lock<std::mutex> lock1(*mMutexBuffer); // Lock the mutex
 		while (TRUE)
 		{
 			if (mQueue->empty())
@@ -88,8 +91,8 @@ void CAutoBuffer<T>::Clear()
 			SetEvent(mQueueFullEvent);
 			if (mOnClear != NULL) mOnClear(&temp);
 		}
-		lock1.unlock();
 	}
+	lock1.unlock();
 }
 
 template<typename T>
@@ -98,9 +101,9 @@ void CAutoBuffer<T>::MyBufferThreadFunction()
 	while (mBufferThreadRunning.load())
 	{
 		WaitForSingleObject(mQueueEmptyEvent, INFINITE);
+		std::unique_lock<std::mutex> lock1(*mMutexBuffer); // Lock the mutex
 		if (mQueue != NULL)
 		{
-			std::unique_lock<std::mutex> lock1(*mMutexBuffer); // Lock the mutex
 			if (!mQueue->empty())
 			{
 				T temp = mQueue->front();
