@@ -58,6 +58,7 @@ public:
 	void StereoLRBoth(int lrboth);
 	void StereoSwapLR(BOOL swaplr);
 	void StereoVerticalLR(BOOL verticallr);
+	void StereoWindowSizeChanged();
 	void PlayerOpen(LPCWSTR fileName);
 	void PlayerClose();
 	BOOL PlayerIsOpened();

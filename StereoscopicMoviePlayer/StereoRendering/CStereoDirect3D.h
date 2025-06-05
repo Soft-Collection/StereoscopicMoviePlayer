@@ -42,6 +42,7 @@ private:
 	std::atomic<BOOL>  m_VerticalLR;
 	std::atomic<BOOL>  m_LastVerticalLR;
 	std::atomic<BOOL>  m_ImageDataUpdated;
+	std::atomic<BOOL>  m_WindowSizeChanged;
 private:
 	std::mutex*        mMutexDrawBlt;
 	LPDIRECT3D9        m_D3D;
@@ -50,7 +51,8 @@ private:
 	BOOL CreateDevice();
 	BOOL ReleaseDevice();
 	BOOL ReleaseSurfaces();
-	BOOL ReInit(ImageDimensions imageDimensions);
+	BOOL ReInitSurfaces(ImageDimensions imageDimensions);
+	BOOL ResetDevice();
 	BOOL CreateBlackSurface();
 	BOOL DrawOnLRSurface(AVFrame* frame, BOOL isLeft);
 public:
@@ -63,5 +65,6 @@ public:
 	void StereoLRBoth(int lrboth);
 	void StereoSwapLR(BOOL swaplr);
 	void StereoVerticalLR(BOOL verticallr);
+	void StereoWindowSizeChanged();
 };
 #endif // __CSTEREODIRECT3D_H__

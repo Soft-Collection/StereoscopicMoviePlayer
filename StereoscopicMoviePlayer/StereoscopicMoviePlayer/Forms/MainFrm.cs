@@ -350,6 +350,8 @@ namespace StereoscopicMoviePlayer
         private int mAlreadySentCounter = 0;
         private long mLastSWMovieTime = 0;
         private bool mSeekAlreadyApplied = true;
+        private long mLastWindowResizeTime = 0;
+        private bool mResizeAlreadyApplied = true;
         private bool mIsEOFApplied = false;
         #endregion
 
@@ -568,6 +570,21 @@ namespace StereoscopicMoviePlayer
                     mSeekAlreadyApplied = true;
                 }
             }
+            //-----------------------------------------------------
+            if (((double)(Stopwatch.GetTimestamp() - mLastWindowResizeTime)) / ((double)Stopwatch.Frequency / 1000.0) > 200)
+            {
+                if (!mResizeAlreadyApplied)
+                {
+                    if (mStereoImageManager != null)
+                    {
+                        if (mStereoImageManager.PlayerIsOpened())
+                        {
+                            mStereoImageManager.StereoWindowSizeChanged();
+                        }
+                    }
+                    mResizeAlreadyApplied = true;
+                }
+            }
         }
         private void cbComPort_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -770,6 +787,11 @@ namespace StereoscopicMoviePlayer
             }
             mLastSWMovieTime = Stopwatch.GetTimestamp();
             mSeekAlreadyApplied = false;
+        }
+        private void pbVideoPanel_SizeChanged(object sender, EventArgs e)
+        {
+            mLastWindowResizeTime = Stopwatch.GetTimestamp();
+            mResizeAlreadyApplied = false;
         }
         private void tbMovieTime_MouseEnter(object sender, EventArgs e)
         {

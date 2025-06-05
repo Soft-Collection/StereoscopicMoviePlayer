@@ -21,6 +21,7 @@ CStereoDirect3D::CStereoDirect3D(HWND hWnd)
 	m_VerticalLR.store(FALSE);
 	m_LastVerticalLR.store(FALSE);
 	m_ImageDataUpdated.store(FALSE);
+	m_WindowSizeChanged.store(FALSE);
 	//--------------------------------------------------------
 	mMutexDrawBlt = new std::mutex();
 	//--------------------------------------------------------
@@ -67,7 +68,7 @@ BOOL CStereoDirect3D::ReleaseSurfaces()
 	if (m_BlackSurface) { m_BlackSurface->Release(); m_BlackSurface = nullptr; }
 	return TRUE;
 }
-BOOL CStereoDirect3D::ReInit(ImageDimensions imageDimensions)
+BOOL CStereoDirect3D::ReInitSurfaces(ImageDimensions imageDimensions)
 {
 	if ((m_LastImageDimensions.Width != imageDimensions.Width) || 
 		(m_LastImageDimensions.Height != imageDimensions.Height) || 
@@ -95,6 +96,13 @@ BOOL CStereoDirect3D::ReInit(ImageDimensions imageDimensions)
 		m_LastImageDimensions = { imageDimensions.Width, imageDimensions.Height, imageDimensions.Channels };
 		m_LastVerticalLR.store(m_VerticalLR.load());
 	}
+	return TRUE;
+}
+BOOL CStereoDirect3D::ResetDevice()
+{
+	ReleaseDevice();
+	CreateDevice();
+	m_LastImageDimensions = { 0, 0, 0 };
 	return TRUE;
 }
 BOOL CStereoDirect3D::CreateBlackSurface()
@@ -171,7 +179,7 @@ BOOL CStereoDirect3D::Blt(bool isLeft)
 	{
 		if (m_Frame)
 		{
-			ReInit({ m_Frame->width, m_Frame->height, m_Frame->linesize[0] / m_Frame->width });
+			ReInitSurfaces({ m_Frame->width, m_Frame->height, m_Frame->linesize[0] / m_Frame->width });
 			DrawOnLRSurface(m_Frame, TRUE);
 			DrawOnLRSurface(m_Frame, FALSE);
 			av_frame_free(&m_Frame);
@@ -219,12 +227,12 @@ BOOL CStereoDirect3D::Blt(bool isLeft)
 		if (hr == D3DERR_DEVICELOST)
 		{
 			while (m_Device->TestCooperativeLevel() == D3DERR_DEVICELOST) std::this_thread::sleep_for(std::chrono::milliseconds(1));
-			if (m_Device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET)
-			{
-				ReleaseDevice();
-				CreateDevice();
-				m_LastImageDimensions = { 0, 0, 0 };
-			}
+			if (m_Device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET) ResetDevice();
+		}
+		if (m_WindowSizeChanged.load())
+		{
+			ResetDevice();
+			m_WindowSizeChanged.store(FALSE);
 		}
 		std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
 		std::chrono::microseconds duration = std::chrono::duration_cast<std::chrono::microseconds>(now - m_LastTimeMeasuring);
@@ -251,4 +259,8 @@ void CStereoDirect3D::StereoSwapLR(BOOL swaplr)
 void CStereoDirect3D::StereoVerticalLR(BOOL verticallr)
 {
 	m_VerticalLR.store(verticallr);
+}
+void CStereoDirect3D::StereoWindowSizeChanged()
+{
+	m_WindowSizeChanged.store(TRUE);
 }

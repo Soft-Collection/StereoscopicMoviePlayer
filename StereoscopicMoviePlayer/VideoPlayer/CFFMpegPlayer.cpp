@@ -543,7 +543,7 @@ void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame)
 	}
 	mCurrentPlayingTime.store(frame->pts);
 	lock2.unlock();
-	WaitBetweenFrames(TRUE, mLastVideoTime, (INT64)((double)frame->pts * 0.9));
+	WaitBetweenFrames(TRUE, mLastVideoTime, (INT64)((double)frame->pts * 0.95));
 	AVFrame* convertedFrame = NULL;
 	std::unique_lock<std::mutex> lock1(*mMutexColorConversion); // Lock the mutex
 	if (mFFColorConversion != NULL)
@@ -600,7 +600,7 @@ void CFFMpegPlayer::OnAudioFrameReceived(AVFrame* frame)
 		av_frame_free(&frame);
 		return;
 	}
-	WaitBetweenFrames(TRUE, mLastAudioTime, (INT64)((double)frame->pts * 0.9));
+	WaitBetweenFrames(TRUE, mLastAudioTime, (INT64)((double)frame->pts * 0.95));
 	AVFrame* convertedFrame = NULL;
 	std::unique_lock<std::mutex> lock1(*mMutexSampleConversion); // Lock the mutex
 	if (mFFSampleConversion != NULL)

@@ -211,6 +211,13 @@ void CStereoImageManager::StereoVerticalLR(BOOL verticallr)
 		mStereoDirect3D->StereoVerticalLR(verticallr);
 	}
 }
+void CStereoImageManager::StereoWindowSizeChanged()
+{
+	if (mStereoDirect3D != NULL)
+	{
+		mStereoDirect3D->StereoWindowSizeChanged();
+	}
+}
 void CStereoImageManager::PlayerOpen(LPCWSTR fileName)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex

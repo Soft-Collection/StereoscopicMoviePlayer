@@ -263,6 +263,7 @@
             this.pbVideoPanel.Size = new System.Drawing.Size(604, 297);
             this.pbVideoPanel.TabIndex = 28;
             this.pbVideoPanel.TabStop = false;
+            this.pbVideoPanel.SizeChanged += new System.EventHandler(this.pbVideoPanel_SizeChanged);
             // 
             // tbGlassesTimeOffset
             // 

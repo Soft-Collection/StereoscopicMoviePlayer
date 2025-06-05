@@ -95,6 +95,13 @@ public class clsStereoImageManager
             clsStereoImageManagerWrap.StereoImageManagerStereoVerticalLR(mHandle, verticallr);
         }
     }
+    public void StereoWindowSizeChanged()
+    {
+        if (mHandle != IntPtr.Zero)
+        {
+            clsStereoImageManagerWrap.StereoImageManagerStereoWindowSizeChanged(mHandle);
+        }
+    }
     public void PlayerOpen(string fileName)
     {
         if (mHandle != IntPtr.Zero)
