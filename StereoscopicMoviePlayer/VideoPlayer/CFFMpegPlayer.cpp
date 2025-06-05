@@ -302,7 +302,7 @@ INT64 CFFMpegPlayer::GetCurrentPlayingTime()
 	{
 		if (mFormatContext != NULL)
 		{
-			return PtsToMS(TRUE, mCurrentPlayingTime.load());
+			return PtsToMS(AVMEDIA_TYPE_VIDEO, mCurrentPlayingTime.load());
 		}
 	}
 	return 0;
@@ -319,9 +319,9 @@ void CFFMpegPlayer::Seek(INT64 seek_target_ms)
 			mPlayerIsSeeking.store(true);
 			mPlayerIsSeekingFrameCounter.store(SEEKING_FRAME_NUMBER);
 			mPlayerPausedOnSeek.store(!IsEventSet(mPlayerPausedEvent));
-			mCurrentPlayingTime.store(MSToPts(TRUE, seek_target_ms));
+			mCurrentPlayingTime.store(MSToPts(AVMEDIA_TYPE_VIDEO, seek_target_ms));
 			mIsEOF.store(false);
-			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, MSToPts(TRUE, seek_target_ms), INT64_MAX, 0);
+			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, MSToPts(AVMEDIA_TYPE_VIDEO, seek_target_ms), INT64_MAX, 0);
 			ClearAllBuffers();
 			SetEvent(mPlayerPausedEvent);
 			lock1.unlock();
@@ -543,7 +543,7 @@ void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame)
 	}
 	mCurrentPlayingTime.store(frame->pts);
 	lock2.unlock();
-	WaitBetweenFrames(TRUE, mLastVideoTime, (INT64)((double)frame->pts * 0.95));
+	WaitBetweenFrames(AVMEDIA_TYPE_VIDEO, mLastVideoTime, (INT64)((double)frame->pts * 0.95));
 	AVFrame* convertedFrame = NULL;
 	std::unique_lock<std::mutex> lock1(*mMutexColorConversion); // Lock the mutex
 	if (mFFColorConversion != NULL)
@@ -600,7 +600,7 @@ void CFFMpegPlayer::OnAudioFrameReceived(AVFrame* frame)
 		av_frame_free(&frame);
 		return;
 	}
-	WaitBetweenFrames(TRUE, mLastAudioTime, (INT64)((double)frame->pts * 0.95));
+	WaitBetweenFrames(AVMEDIA_TYPE_AUDIO, mLastAudioTime, (INT64)((double)frame->pts * 0.95));
 	AVFrame* convertedFrame = NULL;
 	std::unique_lock<std::mutex> lock1(*mMutexSampleConversion); // Lock the mutex
 	if (mFFSampleConversion != NULL)
@@ -628,25 +628,25 @@ void CFFMpegPlayer::OnAudioFrameReceived(AVFrame* frame)
 	av_frame_free(&frame);
 }
 
-INT64 CFFMpegPlayer::PtsToMS(BOOL isVideo, INT64 pts)
+INT64 CFFMpegPlayer::PtsToMS(AVMediaType mediaType, INT64 pts)
 {
 	if (!mFormatContext) return 0;
-	AVRational time_base = mFormatContext->streams[isVideo ? mVideoStreamIndex : mAudioStreamIndex]->time_base;
+	AVRational time_base = mFormatContext->streams[(mediaType == AVMEDIA_TYPE_VIDEO) ? mVideoStreamIndex : mAudioStreamIndex]->time_base;
 	INT64 ms = (INT64)((double)pts * av_q2d(time_base) * 1000.0);
 	return ms;
 }
 
-INT64 CFFMpegPlayer::MSToPts(BOOL isVideo, INT64 ms)
+INT64 CFFMpegPlayer::MSToPts(AVMediaType mediaType, INT64 ms)
 {
 	if (!mFormatContext) return 0;
-	AVRational time_base = mFormatContext->streams[isVideo ? mVideoStreamIndex : mAudioStreamIndex]->time_base;
+	AVRational time_base = mFormatContext->streams[(mediaType == AVMEDIA_TYPE_VIDEO) ? mVideoStreamIndex : mAudioStreamIndex]->time_base;
 	int64_t pts = (INT64)((double)ms / av_q2d(time_base) / 1000.0);
 	return pts;
 }
 
-void CFFMpegPlayer::WaitBetweenFrames(BOOL isVideo, TimeData& lastTime, INT64 pts)
+void CFFMpegPlayer::WaitBetweenFrames(AVMediaType mediaType, TimeData& lastTime, INT64 pts)
 {
-	INT64 ms = PtsToMS(isVideo, pts);
+	INT64 ms = PtsToMS(mediaType, pts);
 	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 	std::chrono::steady_clock::duration diffMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTime.Time);
 	std::chrono::steady_clock::duration ms50 = std::chrono::milliseconds(50);

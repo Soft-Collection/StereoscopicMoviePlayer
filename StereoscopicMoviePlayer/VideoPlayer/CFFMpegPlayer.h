@@ -91,9 +91,9 @@ public:
 	INT GetNumberOfAudioTracks();
 	void SetAudioTrack(INT audio_track_index);
 private:
-	INT64 PtsToMS(BOOL isVideo, INT64 pts);
-	INT64 MSToPts(BOOL isVideo, INT64 ms);
-	void WaitBetweenFrames(BOOL isVideo, TimeData& lastTime, INT64 pts);
+	INT64 PtsToMS(AVMediaType mediaType, INT64 pts);
+	INT64 MSToPts(AVMediaType mediaType, INT64 ms);
+	void WaitBetweenFrames(AVMediaType mediaType, TimeData& lastTime, INT64 pts);
 private:
 	void MyPlayerThreadFunction();
 	void OnVideoPacketReceived(AVPacket* packet);
