@@ -29,10 +29,11 @@ private:
 	} ImageDimensions;
 private:
 	HWND               m_HWnd;
-	LPDIRECT3DSURFACE9 m_LeftSurface;
-	LPDIRECT3DSURFACE9 m_RightSurface;
+	LPDIRECT3DSURFACE9 m_LRSurface;
 	LPDIRECT3DSURFACE9 m_BlackSurface;
 	LPDIRECT3DSURFACE9 m_SysMemSurface;
+	LPDIRECT3DSURFACE9 m_SourceSurface;
+	RECT               m_SourceRect;
 	ImageDimensions    m_LastImageDimensions;
 	AVFrame*           m_Frame;
 	std::chrono::high_resolution_clock::time_point m_LastTimeMeasuring;
@@ -40,7 +41,6 @@ private:
 	std::atomic<int>   m_LRBoth;
 	std::atomic<BOOL>  m_SwapLR;
 	std::atomic<BOOL>  m_VerticalLR;
-	std::atomic<BOOL>  m_LastVerticalLR;
 	std::atomic<BOOL>  m_ImageDataUpdated;
 	std::atomic<BOOL>  m_WindowSizeChanged;
 private:
@@ -48,19 +48,20 @@ private:
 	LPDIRECT3D9        m_D3D;
 	LPDIRECT3DDEVICE9  m_Device;
 private:
-	BOOL CreateDevice();
-	BOOL ReleaseDevice();
-	BOOL ReleaseSurfaces();
-	BOOL ReInitSurfaces(ImageDimensions imageDimensions);
-	BOOL ResetDevice();
-	BOOL CreateBlackSurface();
-	BOOL DrawOnLRSurface(AVFrame* frame, BOOL isLeft);
+	void CreateDevice();
+	void ReleaseDevice();
+	void ReleaseSurfaces();
+	void ReInitSurfaces(ImageDimensions imageDimensions);
+	void ResetDevice();
+	void CreateBlackSurface();
+	void SelectSurfaceAndRect(BOOL isLeft);
+	void DrawOnLRSurface(AVFrame* frame);
 public:
 	CStereoDirect3D(HWND hWnd);
 	~CStereoDirect3D();
-	BOOL DrawImageRGB(AVFrame* frame);
-	BOOL DrawImage(AVFrame* frame){ return(DrawImageRGB(frame)); }
-	BOOL Blt(bool isLeft);
+	void DrawImageRGB(AVFrame* frame);
+	void DrawImage(AVFrame* frame){ return(DrawImageRGB(frame)); }
+	void Blt(BOOL isLeft);
 	INT GetFrequency();
 	void StereoLRBoth(int lrboth);
 	void StereoSwapLR(BOOL swaplr);
