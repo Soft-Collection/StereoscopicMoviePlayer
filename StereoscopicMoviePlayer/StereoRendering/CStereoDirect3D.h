@@ -29,10 +29,9 @@ private:
 	} ImageDimensions;
 private:
 	HWND               m_HWnd;
-	LPDIRECT3DSURFACE9 m_LRSurface;
-	LPDIRECT3DSURFACE9 m_BlackSurface;
-	LPDIRECT3DSURFACE9 m_SysMemSurface;
-	LPDIRECT3DSURFACE9 m_SourceSurface;
+	IDirect3DTexture9* m_LRTexture;
+	IDirect3DTexture9* m_BlackTexture;
+	IDirect3DTexture9* m_SourceTexture;
 	RECT               m_SourceRect;
 	ImageDimensions    m_LastImageDimensions;
 	AVFrame*           m_Frame;
@@ -50,12 +49,12 @@ private:
 private:
 	void CreateDevice();
 	void ReleaseDevice();
-	void ReleaseSurfaces();
-	void ReInitSurfaces(ImageDimensions imageDimensions);
+	void ReleaseTextures();
+	void ReInitTextures(ImageDimensions imageDimensions);
 	void ResetDevice();
-	void CreateBlackSurface();
-	void SelectSurfaceAndRect(BOOL isLeft);
-	void DrawOnLRSurface(AVFrame* frame);
+	void CreateBlackTexture();
+	void SelectTextureAndRect(BOOL isLeft);
+	void DrawOnLRTexture(AVFrame* frame);
 public:
 	CStereoDirect3D(HWND hWnd);
 	~CStereoDirect3D();

@@ -8,10 +8,9 @@
 CStereoDirect3D::CStereoDirect3D(HWND hWnd)
 {
 	m_HWnd = hWnd;
-	m_LRSurface = nullptr;
-	m_BlackSurface = nullptr;
-	m_SysMemSurface = nullptr;
-	m_SourceSurface = nullptr;
+	m_LRTexture = nullptr;
+	m_BlackTexture = nullptr;
+	m_SourceTexture = nullptr;
 	m_SourceRect = { 0, 0, 0, 0 };
 	m_LastImageDimensions = { 0, 0, 0 };
 	m_Frame = nullptr;
@@ -55,26 +54,24 @@ void CStereoDirect3D::ReleaseDevice()
 	m_Device->SetTexture(1, nullptr);
 	m_Device->SetRenderTarget(0, nullptr);
 	m_Device->SetStreamSource(0, nullptr, 0, 0);
-	ReleaseSurfaces();
+	ReleaseTextures();
 	if (m_Device) { m_Device->Release(); m_Device = nullptr; }
 }
-void CStereoDirect3D::ReleaseSurfaces()
+void CStereoDirect3D::ReleaseTextures()
 { 
-	if (m_LRSurface) { m_LRSurface->Release(); m_LRSurface = nullptr; }
-	if (m_SysMemSurface) { m_SysMemSurface->Release(); m_SysMemSurface = nullptr; }
-	if (m_BlackSurface) { m_BlackSurface->Release(); m_BlackSurface = nullptr; }
+	if (m_LRTexture) { m_LRTexture->Release(); m_LRTexture = nullptr; }
+	if (m_BlackTexture) { m_BlackTexture->Release(); m_BlackTexture = nullptr; }
 }
-void CStereoDirect3D::ReInitSurfaces(ImageDimensions imageDimensions)
+void CStereoDirect3D::ReInitTextures(ImageDimensions imageDimensions)
 {
 	if ((m_LastImageDimensions.Width != imageDimensions.Width) || 
 		(m_LastImageDimensions.Height != imageDimensions.Height) || 
 		(m_LastImageDimensions.Channels != imageDimensions.Channels))
 	{
-		ReleaseSurfaces();
-		CreateBlackSurface();
+		ReleaseTextures();
+		CreateBlackTexture();
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------
-		m_Device->CreateOffscreenPlainSurface(imageDimensions.Width, imageDimensions.Height, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &m_SysMemSurface, nullptr);
-		m_Device->CreateOffscreenPlainSurface(imageDimensions.Width, imageDimensions.Height, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_LRSurface, nullptr);
+		m_Device->CreateTexture(imageDimensions.Width, imageDimensions.Height, 1, D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_LRTexture, nullptr);
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------
 		m_ImageDataUpdated.store(FALSE);
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -87,17 +84,19 @@ void CStereoDirect3D::ResetDevice()
 	CreateDevice();
 	m_LastImageDimensions = { 0, 0, 0 };
 }
-void CStereoDirect3D::CreateBlackSurface()
+void CStereoDirect3D::CreateBlackTexture()
 {
-	m_Device->CreateRenderTarget(1, 1, D3DFMT_X8R8G8B8, D3DMULTISAMPLE_NONE, 0, FALSE, &m_BlackSurface, nullptr);
-	IDirect3DSurface9* oldRT = nullptr;
-	m_Device->GetRenderTarget(0, &oldRT);
-	m_Device->SetRenderTarget(0, m_BlackSurface);
-	m_Device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
-	m_Device->SetRenderTarget(0, oldRT);
-	if (oldRT) oldRT->Release();
+	// Create 1x1 black texture
+	m_Device->CreateTexture(1, 1, 1, D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_BlackTexture, nullptr);
+	// Fill the texture with black (ARGB: 0xFF000000)
+	D3DLOCKED_RECT rect;
+	if (SUCCEEDED(m_BlackTexture->LockRect(0, &rect, nullptr, D3DLOCK_DISCARD)))
+	{
+		*(DWORD*)rect.pBits = 0xFF000000;
+		m_BlackTexture->UnlockRect(0);
+	}
 }
-void CStereoDirect3D::SelectSurfaceAndRect(BOOL isLeft)
+void CStereoDirect3D::SelectTextureAndRect(BOOL isLeft)
 {
 	RECT sourceRectBlack = { 0, 0, 1, 1 };
 	RECT sourceRectLeftHorizontal = { 0, 0, m_LastImageDimensions.Width / 2, m_LastImageDimensions.Height };
@@ -112,12 +111,12 @@ void CStereoDirect3D::SelectSurfaceAndRect(BOOL isLeft)
 			{
 				if (m_SwapLR.load())
 				{
-					m_SourceSurface = m_LRSurface;
+					m_SourceTexture = m_LRTexture;
 					m_SourceRect = sourceRectRightVertical;
 				}
 				else
 				{
-					m_SourceSurface = m_LRSurface;
+					m_SourceTexture = m_LRTexture;
 					m_SourceRect = sourceRectLeftVertical;
 				}
 			}
@@ -125,19 +124,19 @@ void CStereoDirect3D::SelectSurfaceAndRect(BOOL isLeft)
 			{
 				if (m_SwapLR.load())
 				{
-					m_SourceSurface = m_LRSurface;
+					m_SourceTexture = m_LRTexture;
 					m_SourceRect = sourceRectRightHorizontal;
 				}
 				else
 				{
-					m_SourceSurface = m_LRSurface;
+					m_SourceTexture = m_LRTexture;
 					m_SourceRect = sourceRectLeftHorizontal;
 				}
 			}
 		}
 		else //m_LRBoth.load() == RIGHT_ONLY
 		{
-			m_SourceSurface = m_BlackSurface;
+			m_SourceTexture = m_BlackTexture;
 			m_SourceRect = sourceRectBlack;
 		}
 	}
@@ -149,12 +148,12 @@ void CStereoDirect3D::SelectSurfaceAndRect(BOOL isLeft)
 			{
 				if (m_SwapLR.load())
 				{
-					m_SourceSurface = m_LRSurface;
+					m_SourceTexture = m_LRTexture;
 					m_SourceRect = sourceRectLeftVertical;
 				}
 				else
 				{
-					m_SourceSurface = m_LRSurface;
+					m_SourceTexture = m_LRTexture;
 					m_SourceRect = sourceRectRightVertical;
 				}
 			}
@@ -162,32 +161,29 @@ void CStereoDirect3D::SelectSurfaceAndRect(BOOL isLeft)
 			{
 				if (m_SwapLR.load())
 				{
-					m_SourceSurface = m_LRSurface;
+					m_SourceTexture = m_LRTexture;
 					m_SourceRect = sourceRectLeftHorizontal;
 				}
 				else
 				{
-					m_SourceSurface = m_LRSurface;
+					m_SourceTexture = m_LRTexture;
 					m_SourceRect = sourceRectRightHorizontal;
 				}
 			}
 		}
 		else //m_LRBoth.load() == LEFT_ONLY
 		{
-			m_SourceSurface = m_BlackSurface;
+			m_SourceTexture = m_BlackTexture;
 			m_SourceRect = sourceRectBlack;
 		}
 	}
 }
-void CStereoDirect3D::DrawOnLRSurface(AVFrame* frame)
+void CStereoDirect3D::DrawOnLRTexture(AVFrame* frame)
 {
 	D3DLOCKED_RECT rect;
-	if (SUCCEEDED(m_SysMemSurface->LockRect(&rect, nullptr, 0))) {
-		BYTE* pixels = (BYTE*)rect.pBits;
-		memcpy(pixels, frame->data[0], frame->height * frame->linesize[0]);
-		m_SysMemSurface->UnlockRect();
-	}
-	m_Device->UpdateSurface(m_SysMemSurface, nullptr, m_LRSurface, nullptr);
+	m_LRTexture->LockRect(0, &rect, nullptr, D3DLOCK_DISCARD);
+	memcpy(rect.pBits, frame->data[0], frame->height * frame->linesize[0]);
+	m_LRTexture->UnlockRect(0);
 }
 void CStereoDirect3D::DrawImageRGB(AVFrame* frame)
 {
@@ -210,8 +206,8 @@ void CStereoDirect3D::Blt(BOOL isLeft)
 	{
 		if (m_Frame)
 		{
-			ReInitSurfaces({ m_Frame->width, m_Frame->height, m_Frame->linesize[0] / m_Frame->width });
-			DrawOnLRSurface(m_Frame);
+			ReInitTextures({ m_Frame->width, m_Frame->height, m_Frame->linesize[0] / m_Frame->width });
+			DrawOnLRTexture(m_Frame);
 			av_frame_free(&m_Frame);
 		}
 		m_ImageDataUpdated.store(FALSE);
@@ -221,9 +217,11 @@ void CStereoDirect3D::Blt(BOOL isLeft)
 	m_Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &backBuffer);
 	if (backBuffer) 
 	{
-		SelectSurfaceAndRect(isLeft);
+		SelectTextureAndRect(isLeft);
 		m_Device->BeginScene();
-		m_Device->StretchRect(m_SourceSurface, &m_SourceRect, backBuffer, nullptr, D3DTEXF_LINEAR);
+		IDirect3DSurface9* sourceSurface = nullptr;
+		if (m_SourceTexture) m_SourceTexture->GetSurfaceLevel(0, &sourceSurface);
+		m_Device->StretchRect(sourceSurface, &m_SourceRect, backBuffer, nullptr, D3DTEXF_LINEAR);
 		m_Device->EndScene();
 		HRESULT hr = m_Device->Present(nullptr, nullptr, nullptr, nullptr); //Blocks until new vsync.
 		backBuffer->Release();
