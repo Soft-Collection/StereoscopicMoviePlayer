@@ -22,9 +22,6 @@ CStereoImageManager::CStereoImageManager(HWND hWnd)
 	mThreadRenderRunning.store(false);
 	mThreadRender = nullptr;
 	mMutexCOMPort = new std::mutex();
-	mThreadCOMPortRunning.store(false);
-	mThreadCOMPort = nullptr;
-	mCOMPortEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	//----------------------------------------------------
 	mImageToPlayIsLeft = true;
 	//----------------------------------------------------
@@ -53,12 +50,6 @@ CStereoImageManager::~CStereoImageManager()
 		mPlayer = NULL;
 	}
 	lock4.unlock();
-	//----------------------------------------------------
-	if (mCOMPortEvent != nullptr)
-	{
-		CloseHandle(mCOMPortEvent);
-		mCOMPortEvent = nullptr;
-	}
 	//----------------------------------------------------
 	if (mRightImage != NULL)
 	{
@@ -121,25 +112,9 @@ void CStereoImageManager::StereoStart()
 		mThreadRenderRunning = true;
 		mThreadRender = new std::thread(&CStereoImageManager::ThreadRenderFunction, this);
 	}
-	if (!mThreadCOMPortRunning.load())
-	{
-		mThreadCOMPortRunning = true;
-		mThreadCOMPort = new std::thread(&CStereoImageManager::ThreadCOMPortFunction, this);
-	}
 }
 void CStereoImageManager::StereoStop()
 {
-	SetEvent(mCOMPortEvent);
-	if (mThreadCOMPortRunning.load())
-	{
-		mThreadCOMPortRunning.store(false);
-		if (mThreadCOMPort && mThreadCOMPort->joinable())
-		{
-			mThreadCOMPort->join();
-		}
-		delete mThreadCOMPort;
-		mThreadCOMPort = nullptr;
-	}
 	if (mThreadRenderRunning.load())
 	{
 		mThreadRenderRunning.store(false);
@@ -390,24 +365,16 @@ void CStereoImageManager::ThreadRenderFunction()
 		{
 			mStereoDirect3D->Blt(mImageToPlayIsLeft);
 		}
+		lock1.unlock();
+		std::unique_lock<std::mutex> lock2(*mMutexCOMPort); // Lock the mutex
 		if (mImageToPlayIsLeft)
 		{
-			SetEvent(mCOMPortEvent);
+			if (mComPort != NULL)
+			{
+				mComPort->SendSync();
+			}
 		}
-		lock1.unlock();
-	}
-}
-void CStereoImageManager::ThreadCOMPortFunction()
-{
-	while (mThreadCOMPortRunning.load())
-	{
-		WaitForSingleObject(mCOMPortEvent, INFINITE);
-		std::unique_lock<std::mutex> lock1(*mMutexCOMPort); // Lock the mutex
-		if (mComPort != NULL)
-		{
-			mComPort->SendSync();
-		}
-		lock1.unlock();
+		lock2.unlock();
 	}
 }
 void CStereoImageManager::OnNewVideoFrameStatic(void* user, AVFrame* frame)

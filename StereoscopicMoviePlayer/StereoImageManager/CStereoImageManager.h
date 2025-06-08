@@ -29,9 +29,6 @@ private:
 	std::atomic<bool> mThreadRenderRunning;
 	std::thread* mThreadRender;
 	std::mutex* mMutexCOMPort;
-	std::atomic<bool> mThreadCOMPortRunning;
-	std::thread* mThreadCOMPort;
-	HANDLE mCOMPortEvent;
 	//----------------------------------------
 	bool mImageToPlayIsLeft;
 	//----------------------------------------
@@ -39,7 +36,6 @@ private:
 	CWavePlaying* mWave;
 private:
 	void ThreadRenderFunction();
-	void ThreadCOMPortFunction();
 	static void OnNewVideoFrameStatic(void* user, AVFrame* frame);
 	void OnNewVideoFrame(AVFrame* frame);
 	static void OnNewAudioFrameStatic(void* user, AVFrame* frame);
