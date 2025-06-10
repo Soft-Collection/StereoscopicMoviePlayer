@@ -369,6 +369,62 @@ namespace StereoscopicMoviePlayer
         #endregion
 
         #region Main Form Events
+        private void MainFrm_DragEnter(object sender, DragEventArgs e)
+        {
+            Array data = ((IDataObject)e.Data).GetData("FileDrop") as Array;
+            if (data != null)
+            {
+                if ((data.Length == 1) && (data.GetValue(0) is String))
+                {
+                    string filepath = ((string[])data)[0];
+                    string ext = Path.GetExtension(filepath).ToLower();
+                    if ((ext == ".mkv") || (ext == ".mp4") || (ext == ".wmv") || (ext == ".avi"))
+                    {
+                        e.Effect = DragDropEffects.Copy; //Will show small plus (+)
+                    }
+                    else
+                    {
+                        e.Effect = DragDropEffects.None; //Will show small prohibition symbol.
+                    }
+                }
+                else
+                {
+                    e.Effect = DragDropEffects.None; //Will show small prohibition symbol.
+                }
+            }
+        }
+        private void MainFrm_DragDrop(object sender, DragEventArgs e)
+        {
+            Array data = ((IDataObject)e.Data).GetData("FileDrop") as Array;
+            if (data != null)
+            {
+                if ((data.Length == 1) && (data.GetValue(0) is String))
+                {
+                    string filepath = ((string[])data)[0];
+                    string ext = Path.GetExtension(filepath).ToLower();
+                    if ((ext == ".mkv") || (ext == ".mp4") || (ext == ".wmv") || (ext == ".avi"))
+                    {
+                        if (Settings.FilePath != filepath)
+                        {
+                            Settings.FilePath = filepath;
+                            mMainState = (cbComPort.SelectedIndex >= 0) ? eMainStates.Stopped : eMainStates.COMPortNotSelected;
+                            if (mStereoImageManager != null)
+                            {
+                                if (mStereoImageManager.PlayerIsOpened())
+                                {
+                                    mStereoImageManager.PlayerClose();
+                                }
+                                mStereoImageManager.PlayerOpen(Settings.FilePath);
+                                Int64 duration = mStereoImageManager.PlayerGetDuration() / 1000;
+                                tbMovieTime.Value = 0;
+                                tbMovieTime.Maximum = (int)duration;
+                            }
+                            LoadTracks();
+                        }
+                    }
+                }
+            }
+        }
         private void timerGUIStereoPlayer_Tick(object sender, EventArgs e)
         {
             if (File.Exists(Settings.FilePath))
@@ -982,9 +1038,9 @@ namespace StereoscopicMoviePlayer
                     tbMovieTime.Enabled = false;
                     lblMovieTime.Enabled = false;
                     tbTransparentTimePercent.Enabled = false;
-                    lblTransparentTimePercent.Enabled = false;  
+                    lblTransparentTimePercent.Enabled = false;
                     tbGlassesTimeOffset.Enabled = false;
-                    lblGlassesTimeOffset.Enabled= false;
+                    lblGlassesTimeOffset.Enabled = false;
                     tsslFrequencyLabel.Visible = false;
                     tsslFrequency.Visible = false;
                     break;

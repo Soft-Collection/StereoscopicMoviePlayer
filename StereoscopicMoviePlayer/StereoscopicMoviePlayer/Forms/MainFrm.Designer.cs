@@ -584,6 +584,7 @@
             // 
             // MainFrm
             // 
+            this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(604, 495);
@@ -599,6 +600,8 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainFrm_FormClosing);
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.MainFrm_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.MainFrm_DragEnter);
             this.Move += new System.EventHandler(this.MainFrm_Move);
             this.Resize += new System.EventHandler(this.MainFrm_Resize);
             this.popUpMenu.ResumeLayout(false);
