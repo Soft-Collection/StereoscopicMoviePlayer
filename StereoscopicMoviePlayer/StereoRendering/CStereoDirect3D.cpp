@@ -182,7 +182,17 @@ void CStereoDirect3D::DrawOnLRTexture(AVFrame* frame)
 {
 	D3DLOCKED_RECT rect;
 	m_LRTexture->LockRect(0, &rect, nullptr, D3DLOCK_DISCARD);
-	memcpy(rect.pBits, frame->data[0], frame->height * frame->linesize[0]);
+	if (rect.Pitch == frame->linesize[0])
+	{
+		memcpy(rect.pBits, frame->data[0], frame->height * frame->linesize[0]);
+	}
+	else
+	{
+		for (int y = 0; y < frame->height; y++)
+		{
+			memcpy((BYTE*)rect.pBits + y * rect.Pitch, frame->data[0] + y * frame->linesize[0], frame->linesize[0]);
+		}
+	}
 	m_LRTexture->UnlockRect(0);
 }
 void CStereoDirect3D::DrawImageRGB(AVFrame* frame)
