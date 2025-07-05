@@ -23,7 +23,7 @@ It consists of two projects:
    This project gets information that was sent from the Windows project above and opens / closes shutters on 3D Glasses.  
    The shutters must be connected directly to Arduino board using cable  
 
-**Remember to copy FFMPEG DLLs from DLLs folder to Debug or / and Release folders of your project!**
+**Remember to copy FFMPEG DLLs from DLLs folder to Debug or / and Release folders of your project!**  
 **Please be aware that 3D Glasses may be incompatible with specific Monitor!**
 
 ![Connection Diagram](Images/StereoscopicMoviePlayer.png)
