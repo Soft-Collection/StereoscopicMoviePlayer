@@ -264,7 +264,7 @@ namespace StereoscopicMoviePlayer
         }
         private void arduinoProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start("https://github.com/Soft-Collection/StereoscopicMoviePlayer/blob/master/ArduinoProject/CableGlasses/CableGlasses.ino");
+            System.Diagnostics.Process.Start("https://github.com/Soft-Collection/StereoscopicMoviePlayer/tree/master/ArduinoProject/CableGlasses");
         }
         #endregion
 
