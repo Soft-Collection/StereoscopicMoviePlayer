@@ -252,7 +252,7 @@
             this.pbVideoPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.pbVideoPanel.BackColor = System.Drawing.SystemColors.ControlDark;
+            this.pbVideoPanel.BackColor = System.Drawing.Color.Gray;
             this.pbVideoPanel.Location = new System.Drawing.Point(0, 27);
             this.pbVideoPanel.Name = "pbVideoPanel";
             this.pbVideoPanel.Size = new System.Drawing.Size(604, 297);

@@ -260,14 +260,21 @@ void CStereoDirect2D::Blt(BOOL isLeft, void* user, dSendSync sendSync)
 	}
 	lock1.unlock();
 	m_D2DContext->BeginDraw();
-	m_D2DContext->Clear(D2D1::ColorF(D2D1::ColorF::Black));
-	if (!((isLeft && m_LRBoth.load() == RIGHT_ONLY) || (!isLeft && m_LRBoth.load() == LEFT_ONLY)))
+	if (sendSync)
 	{
-		SelectSourceRect(isLeft);
-		if (m_LRInBitmap)
+		m_D2DContext->Clear(D2D1::ColorF(D2D1::ColorF::Black));
+		if (!((isLeft && m_LRBoth.load() == RIGHT_ONLY) || (!isLeft && m_LRBoth.load() == LEFT_ONLY)))
 		{
-			m_D2DContext->DrawBitmap(m_LRInBitmap.Get(), m_D2DClientRect, 1.0f, D2D1_INTERPOLATION_MODE_LINEAR, &m_SourceRect);
+			SelectSourceRect(isLeft);
+			if (m_LRInBitmap)
+			{
+				m_D2DContext->DrawBitmap(m_LRInBitmap.Get(), m_D2DClientRect, 1.0f, D2D1_INTERPOLATION_MODE_LINEAR, &m_SourceRect);
+			}
 		}
+	}
+	else
+	{
+		m_D2DContext->Clear(D2D1::ColorF(D2D1::ColorF::Gray));
 	}
 	m_D2DContext->EndDraw();
 	if (sendSync) sendSync(user, isLeft ? SYNC_LEFT_TRANSPARENT : SYNC_RIGHT_TRANSPARENT);

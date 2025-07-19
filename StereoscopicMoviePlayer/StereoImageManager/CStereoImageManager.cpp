@@ -122,6 +122,12 @@ void CStereoImageManager::StereoStop()
 		delete mThreadRender;
 		mThreadRender = nullptr;
 	}
+	std::unique_lock<std::mutex> lock1(*mMutexRender1); // Lock the mutex
+	if (mStereoDirect2D != NULL)
+	{
+		mStereoDirect2D->Blt(TRUE, this, nullptr);
+	}
+	lock1.unlock();
 }
 BOOL CStereoImageManager::StereoIsStarted()
 {
