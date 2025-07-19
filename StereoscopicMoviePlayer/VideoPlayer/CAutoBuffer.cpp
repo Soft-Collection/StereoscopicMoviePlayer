@@ -111,7 +111,7 @@ void CAutoBuffer<T>::MyBufferThreadFunction()
 				if (mQueue->size() < LOWER_SIZE) ResetEvent(mQueueEmptyEvent);
 				SetEvent(mQueueFullEvent);
 				lock1.unlock();
-				if (mOnTReceived != NULL) mOnTReceived(mUser, temp);
+				if (mOnTReceived != NULL) mOnTReceived(mUser, temp, mQueue->size() - ((BUFFER_SIZE + LOWER_SIZE) / 2));
 			}
 		}
 	}

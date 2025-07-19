@@ -12,7 +12,7 @@ template<typename T>
 class CAutoBuffer
 {
 private:
-	typedef void(*dOnTReceived)(void* user, T t);
+	typedef void(*dOnTReceived)(void* user, T t, INT deviation);
 	typedef void(*dOnClear)(T* t);
 	typedef void(*dProperty1)(T a, INT64** b);
 private:

@@ -5,7 +5,7 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
-#include "../StereoRendering/CStereoDirect3D.h"
+#include "../StereoRendering/CStereoDirect2D.h"
 #include "../SerialPort/CComPort.h"
 #include "../VideoPlayer/CFFMpegPlayer.h"
 #include "../VideoPlayer/CWavePlaying.h"
@@ -16,10 +16,7 @@ private:
 	HWND mHWnd;
 	std::wstring mComPortName;
 	CComPort* mComPort;
-	CStereoDirect3D* mStereoDirect3D;
-	//----------------------------------------
-	CImage* mLeftImage;
-	CImage* mRightImage;
+	CStereoDirect2D* mStereoDirect2D;
 	//----------------------------------------
 	std::mutex* mMutexWave1;
 	std::mutex* mMutexWave2;
@@ -40,6 +37,8 @@ private:
 	void OnNewVideoFrame(AVFrame* frame);
 	static void OnNewAudioFrameStatic(void* user, AVFrame* frame);
 	void OnNewAudioFrame(AVFrame* frame);
+	static void SendSyncStatic(void* user, int syncType);
+	void SendSync(int syncType);
 public:
 	CStereoImageManager(HWND hWnd);
 	~CStereoImageManager();
@@ -50,7 +49,6 @@ public:
 	int StereoGetFrequency();
 	void StereoSetCOMPort(LPCWSTR comPort);
 	void StereoSetGlassesTimeOffset(int offset);
-	void StereoSetTransparentTimePercent(int percent);
 	void StereoLRBoth(int lrboth);
 	void StereoSwapLR(BOOL swaplr);
 	void StereoVerticalLR(BOOL verticallr);

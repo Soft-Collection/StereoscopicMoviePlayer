@@ -48,12 +48,6 @@ void StereoImageManagerStereoSetGlassesTimeOffset(void* handle, int offset)
 	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
 	cStereoImageManager->StereoSetGlassesTimeOffset(offset);
 }
-void StereoImageManagerStereoSetTransparentTimePercent(void* handle, int percent)
-{
-	if (handle == NULL) return;
-	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)handle;
-	cStereoImageManager->StereoSetTransparentTimePercent(percent);
-}
 void StereoImageManagerStereoLRBoth(void* handle, int lrboth)
 {
 	if (handle == NULL) return;

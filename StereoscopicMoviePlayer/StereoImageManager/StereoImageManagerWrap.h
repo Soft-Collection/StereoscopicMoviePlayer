@@ -10,7 +10,6 @@ extern "C"
 	__declspec(dllexport) int StereoImageManagerStereoGetFrequency(void* handle);
 	__declspec(dllexport) void StereoImageManagerStereoSetCOMPort(void* handle, LPCWSTR comPort);
 	__declspec(dllexport) void StereoImageManagerStereoSetGlassesTimeOffset(void* handle, int offset);
-	__declspec(dllexport) void StereoImageManagerStereoSetTransparentTimePercent(void* handle, int percent);
     __declspec(dllexport) void StereoImageManagerStereoLRBoth(void* handle, int lrboth);
     __declspec(dllexport) void StereoImageManagerStereoSwapLR(void* handle, BOOL swaplr);
     __declspec(dllexport) void StereoImageManagerStereoVerticalLR(void* handle, BOOL verticallr);

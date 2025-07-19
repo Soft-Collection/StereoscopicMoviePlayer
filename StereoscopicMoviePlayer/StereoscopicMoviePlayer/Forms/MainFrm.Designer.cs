@@ -54,10 +54,7 @@
             this.pbVideoPanel = new System.Windows.Forms.PictureBox();
             this.tbGlassesTimeOffset = new System.Windows.Forms.TrackBar();
             this.lblGlassesTimeOffset = new System.Windows.Forms.Label();
-            this.tbTransparentTimePercent = new System.Windows.Forms.TrackBar();
-            this.lblTransparentTimePercent = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.timerSendSettings = new System.Windows.Forms.Timer(this.components);
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.bVertical = new System.Windows.Forms.Button();
@@ -83,9 +80,7 @@
             this.statusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbVideoPanel)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbGlassesTimeOffset)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.tbTransparentTimePercent)).BeginInit();
             this.groupBox1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbVolume)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbMovieTime)).BeginInit();
@@ -273,7 +268,7 @@
             this.tbGlassesTimeOffset.Location = new System.Drawing.Point(6, 19);
             this.tbGlassesTimeOffset.Maximum = 100;
             this.tbGlassesTimeOffset.Name = "tbGlassesTimeOffset";
-            this.tbGlassesTimeOffset.Size = new System.Drawing.Size(338, 23);
+            this.tbGlassesTimeOffset.Size = new System.Drawing.Size(531, 23);
             this.tbGlassesTimeOffset.TabIndex = 30;
             this.tbGlassesTimeOffset.Scroll += new System.EventHandler(this.tbGlassesTimeOffset_Scroll);
             this.tbGlassesTimeOffset.MouseEnter += new System.EventHandler(this.tbGlassesTimeOffset_MouseEnter);
@@ -282,38 +277,12 @@
             // 
             this.lblGlassesTimeOffset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lblGlassesTimeOffset.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblGlassesTimeOffset.Location = new System.Drawing.Point(341, 16);
+            this.lblGlassesTimeOffset.Location = new System.Drawing.Point(534, 16);
             this.lblGlassesTimeOffset.Name = "lblGlassesTimeOffset";
             this.lblGlassesTimeOffset.Size = new System.Drawing.Size(53, 23);
             this.lblGlassesTimeOffset.TabIndex = 31;
             this.lblGlassesTimeOffset.Text = "0";
             this.lblGlassesTimeOffset.TextAlign = System.Drawing.ContentAlignment.TopRight;
-            // 
-            // tbTransparentTimePercent
-            // 
-            this.tbTransparentTimePercent.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbTransparentTimePercent.AutoSize = false;
-            this.tbTransparentTimePercent.Location = new System.Drawing.Point(6, 19);
-            this.tbTransparentTimePercent.Maximum = 100;
-            this.tbTransparentTimePercent.Name = "tbTransparentTimePercent";
-            this.tbTransparentTimePercent.Size = new System.Drawing.Size(125, 23);
-            this.tbTransparentTimePercent.TabIndex = 32;
-            this.tbTransparentTimePercent.TickFrequency = 5;
-            this.tbTransparentTimePercent.Value = 70;
-            this.tbTransparentTimePercent.Scroll += new System.EventHandler(this.tbTransparentTimePercent_Scroll);
-            this.tbTransparentTimePercent.MouseEnter += new System.EventHandler(this.tbTransparentTimePercent_MouseEnter);
-            // 
-            // lblTransparentTimePercent
-            // 
-            this.lblTransparentTimePercent.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblTransparentTimePercent.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTransparentTimePercent.Location = new System.Drawing.Point(133, 16);
-            this.lblTransparentTimePercent.Name = "lblTransparentTimePercent";
-            this.lblTransparentTimePercent.Size = new System.Drawing.Size(48, 23);
-            this.lblTransparentTimePercent.TabIndex = 33;
-            this.lblTransparentTimePercent.Text = "0";
-            this.lblTransparentTimePercent.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // groupBox1
             // 
@@ -321,24 +290,12 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.tbGlassesTimeOffset);
             this.groupBox1.Controls.Add(this.lblGlassesTimeOffset);
-            this.groupBox1.Location = new System.Drawing.Point(198, 418);
+            this.groupBox1.Location = new System.Drawing.Point(5, 418);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(400, 52);
+            this.groupBox1.Size = new System.Drawing.Size(593, 52);
             this.groupBox1.TabIndex = 34;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Glasses Time Offset";
-            // 
-            // groupBox2
-            // 
-            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.groupBox2.Controls.Add(this.tbTransparentTimePercent);
-            this.groupBox2.Controls.Add(this.lblTransparentTimePercent);
-            this.groupBox2.Location = new System.Drawing.Point(5, 418);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(187, 52);
-            this.groupBox2.TabIndex = 35;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Transparent Time Percent";
             // 
             // timerSendSettings
             // 
@@ -589,7 +546,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(604, 495);
             this.Controls.Add(this.groupBox3);
-            this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.pbVideoPanel);
             this.Controls.Add(this.statusStrip);
@@ -611,9 +567,7 @@
             this.statusStrip.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbVideoPanel)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbGlassesTimeOffset)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.tbTransparentTimePercent)).EndInit();
             this.groupBox1.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.tbVolume)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbMovieTime)).EndInit();
@@ -646,10 +600,7 @@
         private System.Windows.Forms.PictureBox pbVideoPanel;
         private System.Windows.Forms.TrackBar tbGlassesTimeOffset;
         private System.Windows.Forms.Label lblGlassesTimeOffset;
-        private System.Windows.Forms.TrackBar tbTransparentTimePercent;
-        private System.Windows.Forms.Label lblTransparentTimePercent;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Timer timerSendSettings;
         private System.Windows.Forms.ToolStripMenuItem gitHubToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem arduinoProjectToolStripMenuItem;

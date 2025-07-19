@@ -67,13 +67,6 @@ public class clsStereoImageManager
             clsStereoImageManagerWrap.StereoImageManagerStereoSetGlassesTimeOffset(mHandle, offset);
         }
     }
-    public void StereoSetTransparentTimePercent(int percent)
-    {
-        if (mHandle != IntPtr.Zero)
-        {
-            clsStereoImageManagerWrap.StereoImageManagerStereoSetTransparentTimePercent(mHandle, percent);
-        }
-    }
     public void StereoLRBoth(int lrboth)
     {
         if (mHandle != IntPtr.Zero)

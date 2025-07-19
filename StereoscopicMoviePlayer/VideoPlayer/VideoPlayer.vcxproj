@@ -88,6 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CAutoBuffer.h" />
+    <ClInclude Include="CDeviationBuffer.h" />
     <ClInclude Include="CFFColorConversion.h" />
     <ClInclude Include="CFFCommon.h" />
     <ClInclude Include="CFFDecodeAudio.h" />
@@ -104,6 +105,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CAutoBuffer.cpp" />
+    <ClCompile Include="CDeviationBuffer.cpp" />
     <ClCompile Include="CFFColorConversion.cpp" />
     <ClCompile Include="CFFDecodeAudio.cpp" />
     <ClCompile Include="CFFDecodeBase.cpp" />

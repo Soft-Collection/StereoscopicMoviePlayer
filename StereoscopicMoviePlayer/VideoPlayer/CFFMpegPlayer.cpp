@@ -53,6 +53,8 @@ CFFMpegPlayer::CFFMpegPlayer(void* user, dOnNewVideoFrame onNewVideoFrame, dOnNe
 	mVideoFrameBuffer = NULL;
 	mAudioFrameBuffer = NULL;
 	//------------------------------------------------
+	mDeviationBuffer = NULL;
+	//------------------------------------------------
 	mFFDecodeVideo = NULL;
 	mFFDecodeAudio = NULL;
 	mFFSampleConversion = NULL;
@@ -133,6 +135,8 @@ void CFFMpegPlayer::Open(std::wstring fileName)
 	//-------------------------------------------------------
 	mVideoFrameBuffer = new CAutoBuffer<AVFrame*>(this, OnVideoFrameReceivedStatic, av_frame_free, FramePTS);
 	mAudioFrameBuffer = new CAutoBuffer<AVFrame*>(this, OnAudioFrameReceivedStatic, av_frame_free, FramePTS);
+	//-------------------------------------------------------
+	mDeviationBuffer = new CDeviationBuffer(3.7); //Threshold must be slightly less then max deviation.
 	//-------------------------------------------------------
 	mFFDecodeVideo = new CFFDecodeVideo();
 	mFFDecodeAudio = new CFFDecodeAudio();
@@ -223,6 +227,12 @@ void CFFMpegPlayer::Close()
 		mFFDecodeVideo = NULL;
 	}
 	lock4.unlock();
+	if (mDeviationBuffer != NULL)
+	{
+		mDeviationBuffer->Clear();
+		delete mDeviationBuffer;
+		mDeviationBuffer = NULL;
+	}
 	std::unique_lock<std::mutex> lock5(*mMutexAudioFrameBuffer); // Lock the mutex
 	if (mAudioFrameBuffer != NULL)
 	{
@@ -501,14 +511,14 @@ void CFFMpegPlayer::OnAudioPacketReceived(AVPacket* packet)
 	av_packet_free(&packet);
 }
 
-void CFFMpegPlayer::OnVideoFrameReceivedStatic(void* user, AVFrame* frame)
+void CFFMpegPlayer::OnVideoFrameReceivedStatic(void* user, AVFrame* frame, INT deviation)
 {
 	if (user == NULL) return;
 	CFFMpegPlayer* cFFMpegPlayer = (CFFMpegPlayer*)user;
-	cFFMpegPlayer->OnVideoFrameReceived(frame);
+	cFFMpegPlayer->OnVideoFrameReceived(frame, deviation);
 }
 
-void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame)
+void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame, INT deviation)
 {
 	std::unique_lock<std::mutex> lock2(*mMutexSeek); // Lock the mutex
 	if (frame->pts == AV_NOPTS_VALUE) 
@@ -543,7 +553,11 @@ void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame)
 	}
 	mCurrentPlayingTime.store(frame->pts);
 	lock2.unlock();
-	WaitBetweenFrames(AVMEDIA_TYPE_VIDEO, mLastVideoTime, (INT64)((double)frame->pts * 0.95));
+	mDeviationBuffer->AddDeviation(deviation);
+	//printf("Video: Delay = %d, Deviation = %d\n", mDeviationBuffer->GetDelayTimeInUS(), deviation);
+	//fflush(stdout);
+	std::this_thread::sleep_for(std::chrono::microseconds(mDeviationBuffer->GetDelayTimeInUS()));
+	//WaitBetweenFrames(AVMEDIA_TYPE_VIDEO, mLastVideoTime, (INT64)((double)frame->pts * 1.0));
 	AVFrame* convertedFrame = NULL;
 	std::unique_lock<std::mutex> lock1(*mMutexColorConversion); // Lock the mutex
 	if (mFFColorConversion != NULL)
@@ -580,14 +594,14 @@ void CFFMpegPlayer::OnVideoFrameReceived(AVFrame* frame)
 	av_frame_free(&frame);
 }
 
-void CFFMpegPlayer::OnAudioFrameReceivedStatic(void* user, AVFrame* frame)
+void CFFMpegPlayer::OnAudioFrameReceivedStatic(void* user, AVFrame* frame, INT deviation)
 {
 	if (user == NULL) return;
 	CFFMpegPlayer* cFFMpegPlayer = (CFFMpegPlayer*)user;
-	cFFMpegPlayer->OnAudioFrameReceived(frame);
+	cFFMpegPlayer->OnAudioFrameReceived(frame, deviation);
 }
 
-void CFFMpegPlayer::OnAudioFrameReceived(AVFrame* frame)
+void CFFMpegPlayer::OnAudioFrameReceived(AVFrame* frame, INT deviation)
 {
 	if (frame->pts == AV_NOPTS_VALUE)
 	{
@@ -600,7 +614,7 @@ void CFFMpegPlayer::OnAudioFrameReceived(AVFrame* frame)
 		av_frame_free(&frame);
 		return;
 	}
-	WaitBetweenFrames(AVMEDIA_TYPE_AUDIO, mLastAudioTime, (INT64)((double)frame->pts * 0.95));
+	//WaitBetweenFrames(AVMEDIA_TYPE_AUDIO, mLastAudioTime, (INT64)((double)frame->pts * mAudioCoefficient));
 	AVFrame* convertedFrame = NULL;
 	std::unique_lock<std::mutex> lock1(*mMutexSampleConversion); // Lock the mutex
 	if (mFFSampleConversion != NULL)

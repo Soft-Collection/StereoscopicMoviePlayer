@@ -15,7 +15,6 @@ namespace StereoscopicMoviePlayer
         private static string FilePathValue = string.Empty;
         private static string ComPortValue = "COM1";
         private static int GlassesTimeOffsetValue = 0;
-        private static int TransparentTimePercentValue = 70;
         private static bool SoundOnValue = true;
         private static int VolumeValue = 32768;
         private static bool SwapLRValue = false;
@@ -172,24 +171,6 @@ namespace StereoscopicMoviePlayer
                 GlassesTimeOffsetValue = value;
                 RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct, true);
                 key.SetValue("GlassesTimeOffset", GlassesTimeOffsetValue);
-            }
-        }
-
-        //Transparent Time Percent
-        public static int TransparentTimePercent
-        {
-            get
-            {
-                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct);
-                if (key == null) key = Registry.CurrentUser.CreateSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct);
-                TransparentTimePercentValue = (int)key.GetValue("TransparentTimePercent", 70);
-                return (TransparentTimePercentValue);
-            }
-            set
-            {
-                TransparentTimePercentValue = value;
-                RegistryKey key = Registry.CurrentUser.OpenSubKey("Software\\" + GetAssemblyInfo.AssemblyCompany + "\\" + GetAssemblyInfo.AssemblyProduct, true);
-                key.SetValue("TransparentTimePercent", TransparentTimePercentValue);
             }
         }
 

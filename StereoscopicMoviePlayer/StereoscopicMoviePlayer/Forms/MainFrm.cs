@@ -687,7 +687,6 @@ namespace StereoscopicMoviePlayer
                         mStereoImageManager.StereoLRBoth(Settings.LRBoth);
                         mStereoImageManager.StereoSwapLR(Settings.SwapLR);
                         mStereoImageManager.StereoSetGlassesTimeOffset(Settings.GlassesTimeOffset);
-                        mStereoImageManager.StereoSetTransparentTimePercent(Settings.TransparentTimePercent);
                     }
                     mAlreadySent = true;
                 }
@@ -701,15 +700,6 @@ namespace StereoscopicMoviePlayer
             if (mStereoImageManager != null)
             {
                 mStereoImageManager.StereoSetGlassesTimeOffset(Settings.GlassesTimeOffset);
-            }
-        }
-        private void tbTransparentTimePercent_Scroll(object sender, EventArgs e)
-        {
-            lblTransparentTimePercent.Text = tbTransparentTimePercent.Value.ToString();
-            Settings.TransparentTimePercent = tbTransparentTimePercent.Value;
-            if (mStereoImageManager != null)
-            {
-                mStereoImageManager.StereoSetTransparentTimePercent(Settings.TransparentTimePercent);
             }
         }
         private void bPlayPause_Click(object sender, EventArgs e)
@@ -905,10 +895,6 @@ namespace StereoscopicMoviePlayer
         {
             ttControls.Show("In original video the left picture is above the right picture or near it", (IWin32Window)sender, 5000);
         }
-        private void tbTransparentTimePercent_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Time in percents when glasses are transparent", (IWin32Window)sender, 5000);
-        }
         private void tbGlassesTimeOffset_MouseEnter(object sender, EventArgs e)
         {
             ttControls.Show("Fine correction for the stereo effect", (IWin32Window)sender, 5000);
@@ -941,8 +927,6 @@ namespace StereoscopicMoviePlayer
                     tbVolume.Value = Settings.Volume;
                     tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
                     lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
-                    tbTransparentTimePercent.Value = Settings.TransparentTimePercent;
-                    lblTransparentTimePercent.Text = Settings.TransparentTimePercent.ToString();
                     break;
                 case eMainStates.COMPortNotSelected:
                     mEnableDisableState = eEnableDisableStates.COMPortNotSelected;
@@ -965,8 +949,6 @@ namespace StereoscopicMoviePlayer
                     tbVolume.Value = Settings.Volume;
                     tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
                     lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
-                    tbTransparentTimePercent.Value = Settings.TransparentTimePercent;
-                    lblTransparentTimePercent.Text = Settings.TransparentTimePercent.ToString();
                     break;
                 case eMainStates.Stopped:
                     mEnableDisableState = eEnableDisableStates.Stopped;
@@ -989,8 +971,6 @@ namespace StereoscopicMoviePlayer
                     tbVolume.Value = Settings.Volume;
                     tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
                     lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
-                    tbTransparentTimePercent.Value = Settings.TransparentTimePercent;
-                    lblTransparentTimePercent.Text = Settings.TransparentTimePercent.ToString();
                     break;
                 case eMainStates.PlayingPaused:
                     mEnableDisableState = eEnableDisableStates.PlayingPaused;
@@ -1012,8 +992,6 @@ namespace StereoscopicMoviePlayer
                     tbVolume.Value = Settings.Volume;
                     tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
                     lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
-                    tbTransparentTimePercent.Value = Settings.TransparentTimePercent;
-                    lblTransparentTimePercent.Text = Settings.TransparentTimePercent.ToString();
                     break;
             }
         }
@@ -1037,8 +1015,6 @@ namespace StereoscopicMoviePlayer
                     bVertical.Enabled = false;
                     tbMovieTime.Enabled = false;
                     lblMovieTime.Enabled = false;
-                    tbTransparentTimePercent.Enabled = false;
-                    lblTransparentTimePercent.Enabled = false;
                     tbGlassesTimeOffset.Enabled = false;
                     lblGlassesTimeOffset.Enabled = false;
                     tsslFrequencyLabel.Visible = false;
@@ -1060,8 +1036,6 @@ namespace StereoscopicMoviePlayer
                     bVertical.Enabled = false;
                     tbMovieTime.Enabled = false;
                     lblMovieTime.Enabled = false;
-                    tbTransparentTimePercent.Enabled = false;
-                    lblTransparentTimePercent.Enabled = false;
                     tbGlassesTimeOffset.Enabled = false;
                     lblGlassesTimeOffset.Enabled = false;
                     tsslFrequencyLabel.Visible = false;
@@ -1083,8 +1057,6 @@ namespace StereoscopicMoviePlayer
                     bVertical.Enabled = false;
                     tbMovieTime.Enabled = true;
                     lblMovieTime.Enabled = true;
-                    tbTransparentTimePercent.Enabled = false;
-                    lblTransparentTimePercent.Enabled = false;
                     tbGlassesTimeOffset.Enabled = false;
                     lblGlassesTimeOffset.Enabled = false;
                     tsslFrequencyLabel.Visible = false;
@@ -1106,8 +1078,6 @@ namespace StereoscopicMoviePlayer
                     bVertical.Enabled = true;
                     tbMovieTime.Enabled = true;
                     lblMovieTime.Enabled = true;
-                    tbTransparentTimePercent.Enabled = true;
-                    lblTransparentTimePercent.Enabled = true;
                     tbGlassesTimeOffset.Enabled = true;
                     lblGlassesTimeOffset.Enabled = true;
                     tsslFrequencyLabel.Visible = true;

@@ -40,9 +40,6 @@ public class clsStereoImageManagerWrap
     public static extern void StereoImageManagerStereoSetGlassesTimeOffset(IntPtr StereoImageManagerHandle, int offset);
 
     [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void StereoImageManagerStereoSetTransparentTimePercent(IntPtr StereoImageManagerHandle, int percent);
-
-    [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]
     public static extern void StereoImageManagerStereoLRBoth(IntPtr StereoImageManagerHandle, int lrboth);
 
     [DllImport(DllFileName, CallingConvention = CallingConvention.Cdecl)]

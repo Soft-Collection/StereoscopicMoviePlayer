@@ -7,12 +7,9 @@
 CStereoImageManager::CStereoImageManager(HWND hWnd)
 {
 	mHWnd = hWnd;
-	mStereoDirect3D = new CStereoDirect3D(hWnd);
+	mStereoDirect2D = new CStereoDirect2D(hWnd);
 	mComPortName = std::wstring(L"");
 	mComPort = NULL;
-	//----------------------------------------------------
-	mLeftImage = NULL;
-	mRightImage = NULL;
 	//----------------------------------------------------
 	mMutexWave1 = new std::mutex();
 	mMutexWave2 = new std::mutex();
@@ -51,18 +48,6 @@ CStereoImageManager::~CStereoImageManager()
 	}
 	lock4.unlock();
 	//----------------------------------------------------
-	if (mRightImage != NULL)
-	{
-		delete mRightImage;
-		mRightImage = NULL;
-	}
-	//----------------------------------------------------
-	if (mLeftImage != NULL)
-	{
-		delete mLeftImage;
-		mLeftImage = NULL;
-	}
-	//----------------------------------------------------
 	std::unique_lock<std::mutex> lock1(*mMutexCOMPort); // Lock the mutex
 	if (mComPort != NULL)
 	{
@@ -73,10 +58,10 @@ CStereoImageManager::~CStereoImageManager()
 	//----------------------------------------------------
 	std::unique_lock<std::mutex> lock2(*mMutexRender1); // Lock the mutex
 	std::unique_lock<std::mutex> lock5(*mMutexRender2); // Lock the mutex
-	if (mStereoDirect3D != NULL)
+	if (mStereoDirect2D != NULL)
 	{
-		delete mStereoDirect3D;
-		mStereoDirect3D = NULL;
+		delete mStereoDirect2D;
+		mStereoDirect2D = NULL;
 	}
 	lock5.unlock();
 	lock2.unlock();
@@ -85,6 +70,12 @@ CStereoImageManager::~CStereoImageManager()
 	{
 		delete mMutexCOMPort;
 		mMutexCOMPort = nullptr;
+	}
+	//----------------------------------------------------
+	if (mMutexRender2 != nullptr)
+	{
+		delete mMutexRender2;
+		mMutexRender2 = nullptr;
 	}
 	//----------------------------------------------------
 	if (mMutexRender1 != nullptr)
@@ -97,6 +88,12 @@ CStereoImageManager::~CStereoImageManager()
 	{
 		delete mMutexPlayer;
 		mMutexPlayer = nullptr;
+	}
+	//----------------------------------------------------
+	if (mMutexWave2 != nullptr)
+	{
+		delete mMutexWave2;
+		mMutexWave2 = nullptr;
 	}
 	//----------------------------------------------------
 	if (mMutexWave1 != nullptr)
@@ -132,16 +129,19 @@ BOOL CStereoImageManager::StereoIsStarted()
 }
 int CStereoImageManager::StereoGetFrequency()
 {
-	if (mStereoDirect3D != NULL)
+	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
+	if (mStereoDirect2D != NULL)
 	{
-		return mStereoDirect3D->GetFrequency();
+		return mStereoDirect2D->GetFrequency();
 	}
+	lock1.unlock();
 	return 0;
 }
 void CStereoImageManager::StereoSetCOMPort(LPCWSTR comPort)
 {
 	if (mComPortName != std::wstring(comPort))
 	{
+		std::unique_lock<std::mutex> lock1(*mMutexCOMPort); // Lock the mutex
 		if (mComPort != NULL)
 		{
 			delete mComPort;
@@ -149,49 +149,53 @@ void CStereoImageManager::StereoSetCOMPort(LPCWSTR comPort)
 		}
 		mComPort = new CComPort(std::wstring(comPort));
 		mComPortName = std::wstring(comPort);
+		lock1.unlock();
 	}
 }
 void CStereoImageManager::StereoSetGlassesTimeOffset(int offset)
 {
+	std::unique_lock<std::mutex> lock1(*mMutexCOMPort); // Lock the mutex
 	if (mComPort != NULL)
 	{
 		mComPort->SendGlassesTimeOffset(offset);
 	}
-}
-void CStereoImageManager::StereoSetTransparentTimePercent(int percent)
-{
-	if (mComPort != NULL)
-	{
-		mComPort->SendTransparentTimePercent(percent);
-	}
+	lock1.unlock();
 }
 void CStereoImageManager::StereoLRBoth(int lrboth)
 {
-	if (mStereoDirect3D != NULL)
+	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
+	if (mStereoDirect2D != NULL)
 	{
-		mStereoDirect3D->StereoLRBoth(lrboth);
+		mStereoDirect2D->StereoLRBoth(lrboth);
 	}
+	lock1.unlock();
 }
 void CStereoImageManager::StereoSwapLR(BOOL swaplr)
 {
-	if (mStereoDirect3D != NULL)
+	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
+	if (mStereoDirect2D != NULL)
 	{
-		mStereoDirect3D->StereoSwapLR(swaplr);
+		mStereoDirect2D->StereoSwapLR(swaplr);
 	}
+	lock1.unlock();
 }
 void CStereoImageManager::StereoVerticalLR(BOOL verticallr)
 {
-	if (mStereoDirect3D != NULL)
+	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
+	if (mStereoDirect2D != NULL)
 	{
-		mStereoDirect3D->StereoVerticalLR(verticallr);
+		mStereoDirect2D->StereoVerticalLR(verticallr);
 	}
+	lock1.unlock();
 }
 void CStereoImageManager::StereoWindowSizeChanged()
 {
-	if (mStereoDirect3D != NULL)
+	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
+	if (mStereoDirect2D != NULL)
 	{
-		mStereoDirect3D->StereoWindowSizeChanged();
+		mStereoDirect2D->StereoWindowSizeChanged();
 	}
+	lock1.unlock();
 }
 void CStereoImageManager::PlayerOpen(LPCWSTR fileName)
 {
@@ -205,9 +209,9 @@ void CStereoImageManager::PlayerOpen(LPCWSTR fileName)
 void CStereoImageManager::PlayerClose()
 {
 	std::unique_lock<std::mutex> lock2(*mMutexRender2); // Lock the mutex
-	if (mStereoDirect3D != NULL)
+	if (mStereoDirect2D != NULL)
 	{
-		mStereoDirect3D->DrawImage(NULL);
+		mStereoDirect2D->DrawImage(NULL);
 	}
 	lock2.unlock();
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
@@ -361,21 +365,27 @@ void CStereoImageManager::ThreadRenderFunction()
 	{
 		std::unique_lock<std::mutex> lock1(*mMutexRender1); // Lock the mutex
 		mImageToPlayIsLeft = !mImageToPlayIsLeft;
-		if (mStereoDirect3D != NULL)
+		if (mStereoDirect2D != NULL)
 		{
-			mStereoDirect3D->Blt(mImageToPlayIsLeft);
+			mStereoDirect2D->Blt(mImageToPlayIsLeft, this, SendSyncStatic);
 		}
 		lock1.unlock();
-		std::unique_lock<std::mutex> lock2(*mMutexCOMPort); // Lock the mutex
-		if (mImageToPlayIsLeft)
-		{
-			if (mComPort != NULL)
-			{
-				mComPort->SendSync();
-			}
-		}
-		lock2.unlock();
 	}
+}
+void CStereoImageManager::SendSyncStatic(void* user, int syncType)
+{
+	if (user == NULL) return;
+	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)user;
+	cStereoImageManager->SendSync(syncType);
+}
+void CStereoImageManager::SendSync(int syncType)
+{
+	std::unique_lock<std::mutex> lock1(*mMutexCOMPort); // Lock the mutex
+	if (mComPort != NULL)
+	{
+		mComPort->SendSync(syncType);
+	}
+	lock1.unlock();
 }
 void CStereoImageManager::OnNewVideoFrameStatic(void* user, AVFrame* frame)
 {
@@ -386,9 +396,9 @@ void CStereoImageManager::OnNewVideoFrameStatic(void* user, AVFrame* frame)
 void CStereoImageManager::OnNewVideoFrame(AVFrame* frame)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
-	if (mStereoDirect3D != NULL)
+	if (mStereoDirect2D != NULL)
 	{
-		mStereoDirect3D->DrawImage(frame);
+		mStereoDirect2D->DrawImage(frame);
 	}
 	lock1.unlock();
 }

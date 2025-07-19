@@ -5,6 +5,7 @@
 #include "CFFMpegPlayer.h"
 #include "CAutoBuffer.h"
 #include "CAutoBuffer.cpp"
+#include "CDeviationBuffer.h"
 #include "CFFDecodeVideo.h"
 #include "CFFDecodeAudio.h"
 #include "CFFSampleConversion.h"
@@ -68,6 +69,8 @@ private:
 	class CAutoBuffer<AVFrame*>*  mVideoFrameBuffer;
 	class CAutoBuffer<AVFrame*>*  mAudioFrameBuffer;
 	//------------------------------------------------
+	class CDeviationBuffer*       mDeviationBuffer;
+	//------------------------------------------------
 	class CFFDecodeVideo*         mFFDecodeVideo;
 	class CFFDecodeAudio*         mFFDecodeAudio;
 	class CFFSampleConversion*    mFFSampleConversion;
@@ -98,10 +101,10 @@ private:
 	void MyPlayerThreadFunction();
 	void OnVideoPacketReceived(AVPacket* packet);
 	void OnAudioPacketReceived(AVPacket* packet);
-	static void OnVideoFrameReceivedStatic(void* user, AVFrame* frame);
-	void OnVideoFrameReceived(AVFrame* frame);
-	static void OnAudioFrameReceivedStatic(void* user, AVFrame* frame);
-	void OnAudioFrameReceived(AVFrame* frame);
+	static void OnVideoFrameReceivedStatic(void* user, AVFrame* frame, INT deviation);
+	void OnVideoFrameReceived(AVFrame* frame, INT deviation);
+	static void OnAudioFrameReceivedStatic(void* user, AVFrame* frame, INT deviation);
+	void OnAudioFrameReceived(AVFrame* frame, INT deviation);
 	static void MyLogCallbackFunctionStatic(void* ptr, int level, const char* fmt, va_list vl);
 	static void FramePTS(AVFrame* a, INT64** pts);
 	void ClearAllBuffers();
