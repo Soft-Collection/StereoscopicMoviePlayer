@@ -401,12 +401,19 @@ void CStereoImageManager::OnNewVideoFrameStatic(void* user, AVFrame* frame)
 }
 void CStereoImageManager::OnNewVideoFrame(AVFrame* frame)
 {
-	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
-	if (mStereoDirect2D != NULL)
+	if (mThreadRenderRunning.load())
 	{
-		mStereoDirect2D->DrawImage(frame);
+		std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
+		if (mStereoDirect2D != NULL)
+		{
+			mStereoDirect2D->DrawImage(frame);
+		}
+		lock1.unlock();
 	}
-	lock1.unlock();
+	else
+	{
+		av_frame_free(&frame);
+	}
 }
 void CStereoImageManager::OnNewAudioFrameStatic(void* user, AVFrame* frame)
 {

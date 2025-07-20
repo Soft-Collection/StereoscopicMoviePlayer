@@ -7,6 +7,7 @@
 #include <atomic>
 #include "../StereoRendering/CStereoDirect2D.h"
 #include "../SerialPort/CComPort.h"
+#include "../VideoPlayer/CFFCommon.h"
 #include "../VideoPlayer/CFFMpegPlayer.h"
 #include "../VideoPlayer/CWavePlaying.h"
 
