@@ -133,29 +133,29 @@ void CFFMpegPlayer::Open(std::wstring fileName)
 	mAudioStreamIndex.store(-1);
 	mCurrentPlayingTime.store(0);
 	//-------------------------------------------------------
-	mVideoFrameBuffer = new CAutoBuffer<AVFrame*>(this, OnVideoFrameReceivedStatic, av_frame_free, FramePTS);
-	mAudioFrameBuffer = new CAutoBuffer<AVFrame*>(this, OnAudioFrameReceivedStatic, av_frame_free, FramePTS);
+	mLastVideoTime = { std::chrono::steady_clock::time_point(), 0 };
+	mLastAudioTime = { std::chrono::steady_clock::time_point(), 0 };
 	//-------------------------------------------------------
 	mDeviationBuffer = new CDeviationBuffer(3.7); //Threshold must be slightly less then max deviation.
 	//-------------------------------------------------------
-	mFFDecodeVideo = new CFFDecodeVideo();
-	mFFDecodeAudio = new CFFDecodeAudio();
 	mFFColorConversion = new CFFColorConversion();
 	mFFSampleConversion = new CFFSampleConversion();
+	mFFDecodeVideo = new CFFDecodeVideo();
+	mFFDecodeAudio = new CFFDecodeAudio();
 	//-------------------------------------------------------
-	if (mFFDecodeVideo != NULL) mFFDecodeVideo->ReallocateResources();
-	if (mFFDecodeAudio != NULL) mFFDecodeAudio->ReallocateResources();
 	if (mFFColorConversion != NULL) mFFColorConversion->ReallocateResources();
 	if (mFFSampleConversion != NULL) mFFSampleConversion->ReallocateResources();
-	//-------------------------------------------------------
-	mLastVideoTime = { std::chrono::steady_clock::time_point(), 0 };
-	mLastAudioTime = { std::chrono::steady_clock::time_point(), 0 };
+	if (mFFDecodeVideo != NULL) mFFDecodeVideo->ReallocateResources();
+	if (mFFDecodeAudio != NULL) mFFDecodeAudio->ReallocateResources();
 	//-------------------------------------------------------
 	mFileName = fileName;
 	std::string fileNameA = CTools::ConvertUnicodeToMultibyte(fileName);
 	mFormatContext = avformat_alloc_context();
 	if (avformat_open_input(&mFormatContext, fileNameA.c_str(), NULL, NULL) < 0) return;
 	if (avformat_find_stream_info(mFormatContext, NULL) < 0) return;
+	//-------------------------------------------------------
+	mVideoFrameBuffer = new CAutoBuffer<AVFrame*>(this, OnVideoFrameReceivedStatic, av_frame_free, FramePTS);
+	mAudioFrameBuffer = new CAutoBuffer<AVFrame*>(this, OnAudioFrameReceivedStatic, av_frame_free, FramePTS);
 	//-------------------------------------------------------
 	if (!mPlayerThreadRunning.load())
 	{
@@ -191,26 +191,28 @@ void CFFMpegPlayer::Close()
 		delete mPlayerThread;
 		mPlayerThread = nullptr;
 	}
+	std::unique_lock<std::mutex> lock1(*mMutexAudioFrameBuffer); // Lock the mutex
+	if (mAudioFrameBuffer != NULL)
+	{
+		mAudioFrameBuffer->Clear();
+		delete mAudioFrameBuffer;
+		mAudioFrameBuffer = NULL;
+	}
+	lock1.unlock();
+	std::unique_lock<std::mutex> lock2(*mMutexVideoFrameBuffer); // Lock the mutex
+	if (mVideoFrameBuffer != NULL)
+	{
+		mVideoFrameBuffer->Clear();
+		delete mVideoFrameBuffer;
+		mVideoFrameBuffer = NULL;
+	}
+	lock2.unlock();
 	if (mFormatContext != NULL)
 	{
 		avformat_close_input(&mFormatContext);
 		avformat_free_context(mFormatContext);
 		mFormatContext = NULL;
 	}
-	std::unique_lock<std::mutex> lock1(*mMutexSampleConversion); // Lock the mutex
-	if (mFFSampleConversion != NULL)
-	{
-		delete mFFSampleConversion;
-		mFFSampleConversion = NULL;
-	}
-	lock1.unlock();
-	std::unique_lock<std::mutex> lock2(*mMutexColorConversion); // Lock the mutex
-	if (mFFColorConversion != NULL)
-	{
-		delete mFFColorConversion;
-		mFFColorConversion = NULL;
-	}
-	lock2.unlock();
 	std::unique_lock<std::mutex> lock3(*mMutexDecodeAudio); // Lock the mutex
 	if (mFFDecodeAudio != NULL)
 	{
@@ -227,28 +229,26 @@ void CFFMpegPlayer::Close()
 		mFFDecodeVideo = NULL;
 	}
 	lock4.unlock();
+	std::unique_lock<std::mutex> lock5(*mMutexSampleConversion); // Lock the mutex
+	if (mFFSampleConversion != NULL)
+	{
+		delete mFFSampleConversion;
+		mFFSampleConversion = NULL;
+	}
+	lock5.unlock();
+	std::unique_lock<std::mutex> lock6(*mMutexColorConversion); // Lock the mutex
+	if (mFFColorConversion != NULL)
+	{
+		delete mFFColorConversion;
+		mFFColorConversion = NULL;
+	}
+	lock6.unlock();
 	if (mDeviationBuffer != NULL)
 	{
 		mDeviationBuffer->Clear();
 		delete mDeviationBuffer;
 		mDeviationBuffer = NULL;
 	}
-	std::unique_lock<std::mutex> lock5(*mMutexAudioFrameBuffer); // Lock the mutex
-	if (mAudioFrameBuffer != NULL)
-	{
-		mAudioFrameBuffer->Clear();
-		delete mAudioFrameBuffer;
-		mAudioFrameBuffer = NULL;
-	}
-	lock5.unlock();
-	std::unique_lock<std::mutex> lock6(*mMutexVideoFrameBuffer); // Lock the mutex
-	if (mVideoFrameBuffer != NULL)
-	{
-		mVideoFrameBuffer->Clear();
-		delete mVideoFrameBuffer;
-		mVideoFrameBuffer = NULL;
-	}
-	lock6.unlock();
 }
 
 BOOL CFFMpegPlayer::IsOpened()
