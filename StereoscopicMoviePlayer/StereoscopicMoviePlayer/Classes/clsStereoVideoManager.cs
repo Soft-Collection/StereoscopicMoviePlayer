@@ -1,22 +1,22 @@
 using System;
 
-public class clsStereoImageManager
+public class clsStereoVideoManager
 {
     #region Variables
     private IntPtr mHandle = IntPtr.Zero;
     #endregion
 
     #region New / Dispose
-    public clsStereoImageManager(IntPtr hWnd)
+    public clsStereoVideoManager(IntPtr hWnd)
     {
-        mHandle = clsStereoImageManagerWrap.StereoImageManagerCreateNew(hWnd);
+        mHandle = clsStereoVideoManagerWrap.StereoVideoManagerCreateNew(hWnd);
     }
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        clsStereoImageManagerWrap.StereoImageManagerDispose(mHandle);
+        clsStereoVideoManagerWrap.StereoVideoManagerDispose(mHandle);
     }
-    ~clsStereoImageManager()
+    ~clsStereoVideoManager()
     {
         Dispose();
     }
@@ -27,21 +27,21 @@ public class clsStereoImageManager
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerStereoStart(mHandle);
+            clsStereoVideoManagerWrap.StereoVideoManagerStereoStart(mHandle);
         }
     }
     public void StereoStop()
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerStereoStop(mHandle);
+            clsStereoVideoManagerWrap.StereoVideoManagerStereoStop(mHandle);
         }
     }
     public bool StereoIsStarted()
     {
         if (mHandle != IntPtr.Zero)
         {
-            return clsStereoImageManagerWrap.StereoImageManagerStereoIsStarted(mHandle);
+            return clsStereoVideoManagerWrap.StereoVideoManagerStereoIsStarted(mHandle);
         }
         return false;
     }
@@ -49,7 +49,7 @@ public class clsStereoImageManager
     {
         if (mHandle != IntPtr.Zero)
         {
-            return clsStereoImageManagerWrap.StereoImageManagerStereoGetFrequency(mHandle);
+            return clsStereoVideoManagerWrap.StereoVideoManagerStereoGetFrequency(mHandle);
         }
         return 0;
     }
@@ -57,63 +57,63 @@ public class clsStereoImageManager
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerStereoSetCOMPort(mHandle, comPort);
+            clsStereoVideoManagerWrap.StereoVideoManagerStereoSetCOMPort(mHandle, comPort);
         }
     }
     public void StereoSetGlassesTimeOffset(int offset)
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerStereoSetGlassesTimeOffset(mHandle, offset);
+            clsStereoVideoManagerWrap.StereoVideoManagerStereoSetGlassesTimeOffset(mHandle, offset);
         }
     }
     public void StereoLRBoth(int lrboth)
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerStereoLRBoth(mHandle, lrboth);
+            clsStereoVideoManagerWrap.StereoVideoManagerStereoLRBoth(mHandle, lrboth);
         }
     }
     public void StereoSwapLR(bool swaplr)
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerStereoSwapLR(mHandle, swaplr);
+            clsStereoVideoManagerWrap.StereoVideoManagerStereoSwapLR(mHandle, swaplr);
         }
     }
     public void StereoVerticalLR(bool verticallr)
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerStereoVerticalLR(mHandle, verticallr);
+            clsStereoVideoManagerWrap.StereoVideoManagerStereoVerticalLR(mHandle, verticallr);
         }
     }
     public void StereoWindowSizeChanged()
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerStereoWindowSizeChanged(mHandle);
+            clsStereoVideoManagerWrap.StereoVideoManagerStereoWindowSizeChanged(mHandle);
         }
     }
     public void PlayerOpen(string fileName)
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerPlayerOpen(mHandle, fileName);
+            clsStereoVideoManagerWrap.StereoVideoManagerPlayerOpen(mHandle, fileName);
         }
     }
     public void PlayerClose()
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerPlayerClose(mHandle);
+            clsStereoVideoManagerWrap.StereoVideoManagerPlayerClose(mHandle);
         }
     }
     public bool PlayerIsOpened()
     {
         if (mHandle != IntPtr.Zero)
         {
-            return clsStereoImageManagerWrap.StereoImageManagerPlayerIsOpened(mHandle);
+            return clsStereoVideoManagerWrap.StereoVideoManagerPlayerIsOpened(mHandle);
         }
         return false;
     }
@@ -121,28 +121,28 @@ public class clsStereoImageManager
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerPlayerPlay(mHandle);
+            clsStereoVideoManagerWrap.StereoVideoManagerPlayerPlay(mHandle);
         }
     }
     public void PlayerPause()
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerPlayerPause(mHandle);
+            clsStereoVideoManagerWrap.StereoVideoManagerPlayerPause(mHandle);
         }
     }
     public void PlayerStop()
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerPlayerStop(mHandle);
+            clsStereoVideoManagerWrap.StereoVideoManagerPlayerStop(mHandle);
         }
     }
     public bool PlayerIsPlaying()
     {
         if (mHandle != IntPtr.Zero)
         {
-            return clsStereoImageManagerWrap.StereoImageManagerPlayerIsPlaying(mHandle);
+            return clsStereoVideoManagerWrap.StereoVideoManagerPlayerIsPlaying(mHandle);
         }
         return false;
     }
@@ -150,7 +150,7 @@ public class clsStereoImageManager
     {
         if (mHandle != IntPtr.Zero)
         {
-            return clsStereoImageManagerWrap.StereoImageManagerPlayerIsEOF(mHandle);
+            return clsStereoVideoManagerWrap.StereoVideoManagerPlayerIsEOF(mHandle);
         }
         return false;
     }
@@ -158,7 +158,7 @@ public class clsStereoImageManager
     {
         if (mHandle != IntPtr.Zero)
         {
-            return clsStereoImageManagerWrap.StereoImageManagerPlayerGetDuration(mHandle);
+            return clsStereoVideoManagerWrap.StereoVideoManagerPlayerGetDuration(mHandle);
         }
         return 0;
     }
@@ -166,7 +166,7 @@ public class clsStereoImageManager
     {
         if (mHandle != IntPtr.Zero)
         {
-            return clsStereoImageManagerWrap.StereoImageManagerPlayerGetCurrentPlayingTime(mHandle);
+            return clsStereoVideoManagerWrap.StereoVideoManagerPlayerGetCurrentPlayingTime(mHandle);
         }
         return 0;
     }
@@ -174,14 +174,14 @@ public class clsStereoImageManager
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerPlayerSeek(mHandle, seek_target_ms);
+            clsStereoVideoManagerWrap.StereoVideoManagerPlayerSeek(mHandle, seek_target_ms);
         }
     }
     public int PlayerGetNumberOfAudioTracks()
     {
         if (mHandle != IntPtr.Zero)
         {
-            return clsStereoImageManagerWrap.StereoImageManagerPlayerGetNumberOfAudioTracks(mHandle);
+            return clsStereoVideoManagerWrap.StereoVideoManagerPlayerGetNumberOfAudioTracks(mHandle);
         }
         return 0;
     }
@@ -189,21 +189,21 @@ public class clsStereoImageManager
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerPlayerSetAudioTrack(mHandle, audio_track_index);
+            clsStereoVideoManagerWrap.StereoVideoManagerPlayerSetAudioTrack(mHandle, audio_track_index);
         }
     }
     public void PlayerMute(bool mute)
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerPlayerMute(mHandle, mute);
+            clsStereoVideoManagerWrap.StereoVideoManagerPlayerMute(mHandle, mute);
         }
     }
     public UInt16 PlayerGetVolume()
     {
         if (mHandle != IntPtr.Zero)
         {
-            return clsStereoImageManagerWrap.StereoImageManagerPlayerGetVolume(mHandle);
+            return clsStereoVideoManagerWrap.StereoVideoManagerPlayerGetVolume(mHandle);
         }
         return 0;
     }
@@ -211,7 +211,7 @@ public class clsStereoImageManager
     {
         if (mHandle != IntPtr.Zero)
         {
-            clsStereoImageManagerWrap.StereoImageManagerPlayerSetVolume(mHandle, volume);
+            clsStereoVideoManagerWrap.StereoVideoManagerPlayerSetVolume(mHandle, volume);
         }
     }
     #endregion

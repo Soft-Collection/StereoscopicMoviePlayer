@@ -21,7 +21,7 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CStereoImageManager.h">
+    <ClInclude Include="CStereoVideoManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
@@ -30,7 +30,7 @@
     <ClInclude Include="CImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="StereoImageManagerWrap.h">
+    <ClInclude Include="StereoVideoManagerWrap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -41,13 +41,13 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CStereoImageManager.cpp">
+    <ClCompile Include="CStereoVideoManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="StereoImageManagerWrap.cpp">
+    <ClCompile Include="StereoVideoManagerWrap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

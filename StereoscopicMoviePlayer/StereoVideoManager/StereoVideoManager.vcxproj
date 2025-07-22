@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{37134340-0695-4C19-B053-D4F8025BACF9}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>StereoImageManager</RootNamespace>
+    <RootNamespace>StereoVideoManager</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -86,15 +86,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CStereoImageManager.h" />
+    <ClInclude Include="CStereoVideoManager.h" />
     <ClInclude Include="CImage.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="StereoImageManagerWrap.h" />
+    <ClInclude Include="StereoVideoManagerWrap.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CStereoImageManager.cpp" />
+    <ClCompile Include="CStereoVideoManager.cpp" />
     <ClCompile Include="CImage.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -104,7 +104,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="StereoImageManagerWrap.cpp" />
+    <ClCompile Include="StereoVideoManagerWrap.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

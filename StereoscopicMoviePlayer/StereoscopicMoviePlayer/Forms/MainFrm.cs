@@ -71,9 +71,9 @@ namespace StereoscopicMoviePlayer
             //-----------------------------------
             //LoadStereoImages();
             //-----------------------------------
-            if (mStereoImageManager == null)
+            if (mStereoVideoManager == null)
             {
-                mStereoImageManager = new clsStereoImageManager(pbVideoPanel.Handle);
+                mStereoVideoManager = new clsStereoVideoManager(pbVideoPanel.Handle);
             }
         }
         #endregion
@@ -97,10 +97,10 @@ namespace StereoscopicMoviePlayer
         private void ExitProg()
         {
             PerformStereoStop();
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
-                mStereoImageManager.Dispose();
-                mStereoImageManager = null;
+                mStereoVideoManager.Dispose();
+                mStereoVideoManager = null;
             }
             Application.Exit();
         }
@@ -129,9 +129,9 @@ namespace StereoscopicMoviePlayer
             if (this.Visible)
             {
                 bool isStarted = false;
-                if (mStereoImageManager != null)
+                if (mStereoVideoManager != null)
                 {
-                    isStarted = mStereoImageManager.StereoIsStarted();
+                    isStarted = mStereoVideoManager.StereoIsStarted();
                 }
                 mWasStartedWhenMinimized = isStarted;
                 if (isStarted) PerformStereoStop();
@@ -141,9 +141,9 @@ namespace StereoscopicMoviePlayer
                 if (mWasStartedWhenMinimized)
                 {
                     bool isStarted = false;
-                    if (mStereoImageManager != null)
+                    if (mStereoVideoManager != null)
                     {
-                        isStarted = mStereoImageManager.StereoIsStarted();
+                        isStarted = mStereoVideoManager.StereoIsStarted();
                     }
                     if (!isStarted) PerformStereoStart();
                 }
@@ -244,7 +244,7 @@ namespace StereoscopicMoviePlayer
 
         #region Variables
         private bool mWasStartedWhenMinimized = false;
-        private clsStereoImageManager mStereoImageManager = null;
+        private clsStereoVideoManager mStereoVideoManager = null;
         #endregion
 
         #region Initialize
@@ -408,14 +408,14 @@ namespace StereoscopicMoviePlayer
                         {
                             Settings.FilePath = filepath;
                             mMainState = (cbComPort.SelectedIndex >= 0) ? eMainStates.Stopped : eMainStates.COMPortNotSelected;
-                            if (mStereoImageManager != null)
+                            if (mStereoVideoManager != null)
                             {
-                                if (mStereoImageManager.PlayerIsOpened())
+                                if (mStereoVideoManager.PlayerIsOpened())
                                 {
-                                    mStereoImageManager.PlayerClose();
+                                    mStereoVideoManager.PlayerClose();
                                 }
-                                mStereoImageManager.PlayerOpen(Settings.FilePath);
-                                Int64 duration = mStereoImageManager.PlayerGetDuration() / 1000;
+                                mStereoVideoManager.PlayerOpen(Settings.FilePath);
+                                Int64 duration = mStereoVideoManager.PlayerGetDuration() / 1000;
                                 tbMovieTime.Value = 0;
                                 tbMovieTime.Maximum = (int)duration;
                             }
@@ -429,12 +429,12 @@ namespace StereoscopicMoviePlayer
         {
             if (File.Exists(Settings.FilePath))
             {
-                if (mStereoImageManager != null)
+                if (mStereoVideoManager != null)
                 {
-                    if (!mStereoImageManager.PlayerIsOpened())
+                    if (!mStereoVideoManager.PlayerIsOpened())
                     {
-                        mStereoImageManager.PlayerOpen(Settings.FilePath);
-                        Int64 duration = mStereoImageManager.PlayerGetDuration() / 1000;
+                        mStereoVideoManager.PlayerOpen(Settings.FilePath);
+                        Int64 duration = mStereoVideoManager.PlayerGetDuration() / 1000;
                         tbMovieTime.Maximum = (int)duration;
                         LoadTracks();
                         mMainState = (cbComPort.SelectedIndex >= 0) ? eMainStates.Stopped : eMainStates.COMPortNotSelected;
@@ -446,11 +446,11 @@ namespace StereoscopicMoviePlayer
                 mMainState = eMainStates.VideoFileNotOpened;
             }
             //-----------------------------------------------------
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
-                if (mStereoImageManager.PlayerIsOpened())
+                if (mStereoVideoManager.PlayerIsOpened())
                 {
-                    if (mStereoImageManager.PlayerIsEOF())
+                    if (mStereoVideoManager.PlayerIsEOF())
                     {
                         if (!mIsEOFApplied)
                         {
@@ -475,21 +475,21 @@ namespace StereoscopicMoviePlayer
             if (mLastPlayerButtonsState != mPlayerButtonsState)
             {
                 SetPlayerButtonsState(mPlayerButtonsState);
-                if (mStereoImageManager != null)
+                if (mStereoVideoManager != null)
                 {
-                    if (mStereoImageManager.PlayerIsOpened())
+                    if (mStereoVideoManager.PlayerIsOpened())
                     {
                         switch (mPlayerButtonsState)
                         {
                             case ePlayerButtonsStates.Playing:
-                                mStereoImageManager.PlayerPlay();
+                                mStereoVideoManager.PlayerPlay();
                                 PerformStereoStart();
                                 break;
                             case ePlayerButtonsStates.Paused:
-                                mStereoImageManager.PlayerPause();
+                                mStereoVideoManager.PlayerPause();
                                 break;
                             case ePlayerButtonsStates.Stopped:
-                                mStereoImageManager.PlayerStop();
+                                mStereoVideoManager.PlayerStop();
                                 PerformStereoStop();
                                 break;
                         }
@@ -501,20 +501,20 @@ namespace StereoscopicMoviePlayer
             if (mLastStereoButtonsState != mStereoButtonsState)
             {
                 SetStereoButtonsState(mStereoButtonsState);
-                if (mStereoImageManager != null)
+                if (mStereoVideoManager != null)
                 {
-                    if (mStereoImageManager.PlayerIsOpened())
+                    if (mStereoVideoManager.PlayerIsOpened())
                     {
                         switch (mStereoButtonsState)
                         {
                             case eStereoButtonsStates.Both:
-                                mStereoImageManager.StereoLRBoth(0);
+                                mStereoVideoManager.StereoLRBoth(0);
                                 break;
                             case eStereoButtonsStates.LeftOnly:
-                                mStereoImageManager.StereoLRBoth(1);
+                                mStereoVideoManager.StereoLRBoth(1);
                                 break;
                             case eStereoButtonsStates.RightOnly:
-                                mStereoImageManager.StereoLRBoth(2);
+                                mStereoVideoManager.StereoLRBoth(2);
                                 break;
                         }
                     }
@@ -525,17 +525,17 @@ namespace StereoscopicMoviePlayer
             if (mLastSoundButtonState != mSoundButtonState)
             {
                 SetSoundButtonState(mSoundButtonState);
-                if (mStereoImageManager != null)
+                if (mStereoVideoManager != null)
                 {
-                    if (mStereoImageManager.PlayerIsOpened())
+                    if (mStereoVideoManager.PlayerIsOpened())
                     {
                         switch (mSoundButtonState)
                         {
                             case eSoundButtonStates.SoundOn:
-                                mStereoImageManager.PlayerMute(false);
+                                mStereoVideoManager.PlayerMute(false);
                                 break;
                             case eSoundButtonStates.SoundOff:
-                                mStereoImageManager.PlayerMute(true);
+                                mStereoVideoManager.PlayerMute(true);
                                 break;
                         }
                     }
@@ -546,17 +546,17 @@ namespace StereoscopicMoviePlayer
             if (mLastSwapButtonState != mSwapButtonState)
             {
                 SetSwapButtonState(mSwapButtonState);
-                if (mStereoImageManager != null)
+                if (mStereoVideoManager != null)
                 {
-                    if (mStereoImageManager.PlayerIsOpened())
+                    if (mStereoVideoManager.PlayerIsOpened())
                     {
                         switch (mSwapButtonState)
                         {
                             case eSwapButtonStates.SwapOn:
-                                mStereoImageManager.StereoSwapLR(true);
+                                mStereoVideoManager.StereoSwapLR(true);
                                 break;
                             case eSwapButtonStates.SwapOff:
-                                mStereoImageManager.StereoSwapLR(false);
+                                mStereoVideoManager.StereoSwapLR(false);
                                 break;
                         }
                     }
@@ -567,17 +567,17 @@ namespace StereoscopicMoviePlayer
             if (mLastVerticalButtonState != mVerticalButtonState)
             {
                 SetVerticalButtonState(mVerticalButtonState);
-                if (mStereoImageManager != null)
+                if (mStereoVideoManager != null)
                 {
-                    if (mStereoImageManager.PlayerIsOpened())
+                    if (mStereoVideoManager.PlayerIsOpened())
                     {
                         switch (mVerticalButtonState)
                         {
                             case eVerticalButtonStates.VerticalOn:
-                                mStereoImageManager.StereoVerticalLR(true);
+                                mStereoVideoManager.StereoVerticalLR(true);
                                 break;
                             case eVerticalButtonStates.VerticalOff:
-                                mStereoImageManager.StereoVerticalLR(false);
+                                mStereoVideoManager.StereoVerticalLR(false);
                                 break;
                         }
                     }
@@ -591,9 +591,9 @@ namespace StereoscopicMoviePlayer
                 mLastEnableDisableState = mEnableDisableState;
             }
             //-----------------------------------------------------
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
-                Int64 currentPlayingTime = mStereoImageManager.PlayerGetCurrentPlayingTime() / 1000;
+                Int64 currentPlayingTime = mStereoVideoManager.PlayerGetCurrentPlayingTime() / 1000;
                 int hours = (int)currentPlayingTime / 3600;
                 int minutes = (int)currentPlayingTime / 60 % 60;
                 int seconds = (int)currentPlayingTime % 60;
@@ -602,9 +602,9 @@ namespace StereoscopicMoviePlayer
             //-----------------------------------------------------
             if (((double)(Stopwatch.GetTimestamp() - mLastSWMovieTime)) / ((double)Stopwatch.Frequency / 1000.0) > 400)
             {
-                if (mStereoImageManager != null)
+                if (mStereoVideoManager != null)
                 {
-                    Int64 currentPlayingTime = mStereoImageManager.PlayerGetCurrentPlayingTime() / 1000;
+                    Int64 currentPlayingTime = mStereoVideoManager.PlayerGetCurrentPlayingTime() / 1000;
                     if ((int)currentPlayingTime > tbMovieTime.Maximum) currentPlayingTime = 0;
                     tbMovieTime.Value = (int)currentPlayingTime;
                 }
@@ -614,11 +614,11 @@ namespace StereoscopicMoviePlayer
             {
                 if (!mSeekAlreadyApplied)
                 {
-                    if (mStereoImageManager != null)
+                    if (mStereoVideoManager != null)
                     {
-                        if (mStereoImageManager.PlayerIsOpened())
+                        if (mStereoVideoManager.PlayerIsOpened())
                         {
-                            mStereoImageManager.PlayerSeek(tbMovieTime.Value * 1000);
+                            mStereoVideoManager.PlayerSeek(tbMovieTime.Value * 1000);
                             PerformStereoStart();
                             if (mPlayerButtonsState == ePlayerButtonsStates.Stopped) mPlayerButtonsState = ePlayerButtonsStates.Paused;
                         }
@@ -631,11 +631,11 @@ namespace StereoscopicMoviePlayer
             {
                 if (!mResizeAlreadyApplied)
                 {
-                    if (mStereoImageManager != null)
+                    if (mStereoVideoManager != null)
                     {
-                        if (mStereoImageManager.PlayerIsOpened())
+                        if (mStereoVideoManager.PlayerIsOpened())
                         {
-                            mStereoImageManager.StereoWindowSizeChanged();
+                            mStereoVideoManager.StereoWindowSizeChanged();
                         }
                     }
                     mResizeAlreadyApplied = true;
@@ -668,9 +668,9 @@ namespace StereoscopicMoviePlayer
         private void timerFrequency_Tick(object sender, EventArgs e)
         {
             int frequencyInHz = 0;
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
-                frequencyInHz = mStereoImageManager.StereoGetFrequency();
+                frequencyInHz = mStereoVideoManager.StereoGetFrequency();
             }
             tsslFrequency.Text = frequencyInHz.ToString() + "Hz";
         }
@@ -680,13 +680,13 @@ namespace StereoscopicMoviePlayer
             {
                 if (mAlreadySentCounter > 5)
                 {
-                    if (mStereoImageManager != null)
+                    if (mStereoVideoManager != null)
                     {
-                        mStereoImageManager.PlayerMute(!Settings.SoundOn);
-                        mStereoImageManager.PlayerSetVolume((UInt16)tbVolume.Value);
-                        mStereoImageManager.StereoLRBoth(Settings.LRBoth);
-                        mStereoImageManager.StereoSwapLR(Settings.SwapLR);
-                        mStereoImageManager.StereoSetGlassesTimeOffset(Settings.GlassesTimeOffset);
+                        mStereoVideoManager.PlayerMute(!Settings.SoundOn);
+                        mStereoVideoManager.PlayerSetVolume((UInt16)tbVolume.Value);
+                        mStereoVideoManager.StereoLRBoth(Settings.LRBoth);
+                        mStereoVideoManager.StereoSwapLR(Settings.SwapLR);
+                        mStereoVideoManager.StereoSetGlassesTimeOffset(Settings.GlassesTimeOffset);
                     }
                     mAlreadySent = true;
                 }
@@ -697,9 +697,9 @@ namespace StereoscopicMoviePlayer
         {
             lblGlassesTimeOffset.Text = tbGlassesTimeOffset.Value.ToString();
             Settings.GlassesTimeOffset = tbGlassesTimeOffset.Value;
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
-                mStereoImageManager.StereoSetGlassesTimeOffset(Settings.GlassesTimeOffset);
+                mStereoVideoManager.StereoSetGlassesTimeOffset(Settings.GlassesTimeOffset);
             }
         }
         private void bPlayPause_Click(object sender, EventArgs e)
@@ -738,9 +738,9 @@ namespace StereoscopicMoviePlayer
         }
         private void tbVolume_Scroll(object sender, EventArgs e)
         {
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
-                mStereoImageManager.PlayerSetVolume((UInt16)tbVolume.Value);
+                mStereoVideoManager.PlayerSetVolume((UInt16)tbVolume.Value);
                 Settings.Volume = tbVolume.Value;
             }
         }
@@ -795,14 +795,14 @@ namespace StereoscopicMoviePlayer
                 if (File.Exists(Settings.FilePath))
                 {
                     mMainState = (cbComPort.SelectedIndex >= 0) ? eMainStates.Stopped : eMainStates.COMPortNotSelected;
-                    if (mStereoImageManager != null)
+                    if (mStereoVideoManager != null)
                     {
-                        if (mStereoImageManager.PlayerIsOpened())
+                        if (mStereoVideoManager.PlayerIsOpened())
                         {
-                            mStereoImageManager.PlayerClose();
+                            mStereoVideoManager.PlayerClose();
                         }
-                        mStereoImageManager.PlayerOpen(Settings.FilePath);
-                        Int64 duration = mStereoImageManager.PlayerGetDuration() / 1000;
+                        mStereoVideoManager.PlayerOpen(Settings.FilePath);
+                        Int64 duration = mStereoVideoManager.PlayerGetDuration() / 1000;
                         tbMovieTime.Value = 0;
                         tbMovieTime.Maximum = (int)duration;
                     }
@@ -816,11 +816,11 @@ namespace StereoscopicMoviePlayer
         }
         private void cbTracks_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
-                if (mStereoImageManager.PlayerIsOpened())
+                if (mStereoVideoManager.PlayerIsOpened())
                 {
-                    mStereoImageManager.PlayerSetAudioTrack(cbTracks.SelectedIndex);
+                    mStereoVideoManager.PlayerSetAudioTrack(cbTracks.SelectedIndex);
                 }
             }
         }
@@ -1169,10 +1169,10 @@ namespace StereoscopicMoviePlayer
         }
         private void PerformStereoStart()
         {
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
                 bool isStereoStarted = false;
-                isStereoStarted = mStereoImageManager.StereoIsStarted();
+                isStereoStarted = mStereoVideoManager.StereoIsStarted();
                 //To Be Started here.
                 if (!isStereoStarted)
                 {
@@ -1184,10 +1184,10 @@ namespace StereoscopicMoviePlayer
         }
         private void PerformStereoStop()
         {
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
                 bool isStarted = false;
-                isStarted = mStereoImageManager.StereoIsStarted();
+                isStarted = mStereoVideoManager.StereoIsStarted();
                 //To Be Stopped here.
                 if (isStarted)
                 {
@@ -1198,17 +1198,17 @@ namespace StereoscopicMoviePlayer
         }
         private void StereoStart()
         {
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
-                mStereoImageManager.StereoSetCOMPort(Settings.ComPort);
-                mStereoImageManager.StereoStart();
+                mStereoVideoManager.StereoSetCOMPort(Settings.ComPort);
+                mStereoVideoManager.StereoStart();
             }
         }
         private void StereoStop()
         {
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
-                mStereoImageManager.StereoStop();
+                mStereoVideoManager.StereoStop();
             }
         }
         private string OpenFile()
@@ -1228,11 +1228,11 @@ namespace StereoscopicMoviePlayer
         private void LoadTracks()
         {
             cbTracks.Items.Clear();
-            if (mStereoImageManager != null)
+            if (mStereoVideoManager != null)
             {
-                if (mStereoImageManager.PlayerIsOpened())
+                if (mStereoVideoManager.PlayerIsOpened())
                 {
-                    int numberOfAudioTracks = mStereoImageManager.PlayerGetNumberOfAudioTracks();
+                    int numberOfAudioTracks = mStereoVideoManager.PlayerGetNumberOfAudioTracks();
                     for (int i = 0; i < numberOfAudioTracks; i++)
                     {
                         cbTracks.Items.Add("Track" + i.ToString());

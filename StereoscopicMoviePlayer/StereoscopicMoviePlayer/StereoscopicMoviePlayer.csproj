@@ -47,8 +47,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\clsStereoImageManager.cs" />
-    <Compile Include="Classes\clsStereoImageManagerWrap.cs" />
+    <Compile Include="Classes\clsStereoVideoManager.cs" />
+    <Compile Include="Classes\clsStereoVideoManagerWrap.cs" />
     <Compile Include="Forms\AboutBox.cs">
       <SubType>Form</SubType>
     </Compile>

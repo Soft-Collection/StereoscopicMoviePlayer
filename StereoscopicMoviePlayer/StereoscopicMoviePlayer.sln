@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StereoscopicMoviePlayer", "
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StereoRendering", "StereoRendering\StereoRendering.vcxproj", "{71CD25E8-7A58-47D9-9DA9-5330C7135E52}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StereoImageManager", "StereoImageManager\StereoImageManager.vcxproj", "{37134340-0695-4C19-B053-D4F8025BACF9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StereoVideoManager", "StereoVideoManager\StereoVideoManager.vcxproj", "{37134340-0695-4C19-B053-D4F8025BACF9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SerialPort", "SerialPort\SerialPort.vcxproj", "{1F8F9238-8EE7-4EED-B8D9-36D572B070D6}"
 EndProject

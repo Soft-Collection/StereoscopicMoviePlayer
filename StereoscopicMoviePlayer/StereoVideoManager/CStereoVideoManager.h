@@ -1,5 +1,5 @@
-#ifndef __CSTEREOIMAGEMANAGER_H__
-#define __CSTEREOIMAGEMANAGER_H__
+#ifndef __CSTEREOVIDEOMANAGER_H__
+#define __CSTEREOVIDEOMANAGER_H__
 
 #include "CImage.h"
 #include <mutex>
@@ -11,7 +11,7 @@
 #include "../VideoPlayer/CFFMpegPlayer.h"
 #include "../VideoPlayer/CWavePlaying.h"
 
-class CStereoImageManager
+class CStereoVideoManager
 {
 private:
 	HWND mHWnd;
@@ -41,8 +41,8 @@ private:
 	static void SendSyncStatic(void* user, int syncType);
 	void SendSync(int syncType);
 public:
-	CStereoImageManager(HWND hWnd);
-	~CStereoImageManager();
+	CStereoVideoManager(HWND hWnd);
+	~CStereoVideoManager();
 public:
 	void StereoStart();
 	void StereoStop();
@@ -71,4 +71,4 @@ public:
 	UINT16 PlayerGetVolume();
 	void PlayerSetVolume(UINT16 volume);
 };
-#endif // __CSTEREOIMAGEMANAGER_H__
+#endif // __CSTEREOVIDEOMANAGER_H__

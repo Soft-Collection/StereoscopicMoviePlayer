@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include "CStereoImageManager.h"
+#include "CStereoVideoManager.h"
 #include <thread>
 #include <Windows.h>
 #include <iostream>
 
-CStereoImageManager::CStereoImageManager(HWND hWnd)
+CStereoVideoManager::CStereoVideoManager(HWND hWnd)
 {
 	mHWnd = hWnd;
 	mStereoDirect2D = new CStereoDirect2D(hWnd);
@@ -25,7 +25,7 @@ CStereoImageManager::CStereoImageManager(HWND hWnd)
 	mPlayer = new CFFMpegPlayer(this, OnNewVideoFrameStatic, OnNewAudioFrameStatic);
 	mWave = NULL;
 }
-CStereoImageManager::~CStereoImageManager()
+CStereoVideoManager::~CStereoVideoManager()
 {
 	StereoStop();
 	//----------------------------------------------------
@@ -102,15 +102,15 @@ CStereoImageManager::~CStereoImageManager()
 		mMutexWave1 = nullptr;
 	}
 }
-void CStereoImageManager::StereoStart()
+void CStereoVideoManager::StereoStart()
 {
 	if (!mThreadRenderRunning.load())
 	{
 		mThreadRenderRunning = true;
-		mThreadRender = new std::thread(&CStereoImageManager::ThreadRenderFunction, this);
+		mThreadRender = new std::thread(&CStereoVideoManager::ThreadRenderFunction, this);
 	}
 }
-void CStereoImageManager::StereoStop()
+void CStereoVideoManager::StereoStop()
 {
 	if (mThreadRenderRunning.load())
 	{
@@ -129,11 +129,11 @@ void CStereoImageManager::StereoStop()
 	}
 	lock1.unlock();
 }
-BOOL CStereoImageManager::StereoIsStarted()
+BOOL CStereoVideoManager::StereoIsStarted()
 {
 	return mThreadRenderRunning.load();
 }
-int CStereoImageManager::StereoGetFrequency()
+int CStereoVideoManager::StereoGetFrequency()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
 	if (mStereoDirect2D != NULL)
@@ -143,7 +143,7 @@ int CStereoImageManager::StereoGetFrequency()
 	lock1.unlock();
 	return 0;
 }
-void CStereoImageManager::StereoSetCOMPort(LPCWSTR comPort)
+void CStereoVideoManager::StereoSetCOMPort(LPCWSTR comPort)
 {
 	if (mComPortName != std::wstring(comPort))
 	{
@@ -158,7 +158,7 @@ void CStereoImageManager::StereoSetCOMPort(LPCWSTR comPort)
 		lock1.unlock();
 	}
 }
-void CStereoImageManager::StereoSetGlassesTimeOffset(int offset)
+void CStereoVideoManager::StereoSetGlassesTimeOffset(int offset)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexCOMPort); // Lock the mutex
 	if (mComPort != NULL)
@@ -167,7 +167,7 @@ void CStereoImageManager::StereoSetGlassesTimeOffset(int offset)
 	}
 	lock1.unlock();
 }
-void CStereoImageManager::StereoLRBoth(int lrboth)
+void CStereoVideoManager::StereoLRBoth(int lrboth)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
 	if (mStereoDirect2D != NULL)
@@ -176,7 +176,7 @@ void CStereoImageManager::StereoLRBoth(int lrboth)
 	}
 	lock1.unlock();
 }
-void CStereoImageManager::StereoSwapLR(BOOL swaplr)
+void CStereoVideoManager::StereoSwapLR(BOOL swaplr)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
 	if (mStereoDirect2D != NULL)
@@ -185,7 +185,7 @@ void CStereoImageManager::StereoSwapLR(BOOL swaplr)
 	}
 	lock1.unlock();
 }
-void CStereoImageManager::StereoVerticalLR(BOOL verticallr)
+void CStereoVideoManager::StereoVerticalLR(BOOL verticallr)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
 	if (mStereoDirect2D != NULL)
@@ -194,7 +194,7 @@ void CStereoImageManager::StereoVerticalLR(BOOL verticallr)
 	}
 	lock1.unlock();
 }
-void CStereoImageManager::StereoWindowSizeChanged()
+void CStereoVideoManager::StereoWindowSizeChanged()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexRender2); // Lock the mutex
 	if (mStereoDirect2D != NULL)
@@ -203,7 +203,7 @@ void CStereoImageManager::StereoWindowSizeChanged()
 	}
 	lock1.unlock();
 }
-void CStereoImageManager::PlayerOpen(LPCWSTR fileName)
+void CStereoVideoManager::PlayerOpen(LPCWSTR fileName)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -212,7 +212,7 @@ void CStereoImageManager::PlayerOpen(LPCWSTR fileName)
 	}
 	lock1.unlock();
 }
-void CStereoImageManager::PlayerClose()
+void CStereoVideoManager::PlayerClose()
 {
 	std::unique_lock<std::mutex> lock2(*mMutexRender2); // Lock the mutex
 	if (mStereoDirect2D != NULL)
@@ -230,7 +230,7 @@ void CStereoImageManager::PlayerClose()
 	}
 	lock1.unlock();
 }
-BOOL CStereoImageManager::PlayerIsOpened()
+BOOL CStereoVideoManager::PlayerIsOpened()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -240,7 +240,7 @@ BOOL CStereoImageManager::PlayerIsOpened()
 	lock1.unlock();
 	return false;
 }
-void CStereoImageManager::PlayerPlay()
+void CStereoVideoManager::PlayerPlay()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -252,7 +252,7 @@ void CStereoImageManager::PlayerPlay()
 	}
 	lock1.unlock();
 }
-void CStereoImageManager::PlayerPause()
+void CStereoVideoManager::PlayerPause()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -264,7 +264,7 @@ void CStereoImageManager::PlayerPause()
 	}
 	lock1.unlock();
 }
-void CStereoImageManager::PlayerStop()
+void CStereoVideoManager::PlayerStop()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -276,7 +276,7 @@ void CStereoImageManager::PlayerStop()
 	}
 	lock1.unlock();
 }
-BOOL CStereoImageManager::PlayerIsPlaying()
+BOOL CStereoVideoManager::PlayerIsPlaying()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -289,7 +289,7 @@ BOOL CStereoImageManager::PlayerIsPlaying()
 	lock1.unlock();
 	return false;
 }
-BOOL CStereoImageManager::PlayerIsEOF()
+BOOL CStereoVideoManager::PlayerIsEOF()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -302,7 +302,7 @@ BOOL CStereoImageManager::PlayerIsEOF()
 	lock1.unlock();
 	return false;
 }
-INT64 CStereoImageManager::PlayerGetDuration()
+INT64 CStereoVideoManager::PlayerGetDuration()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -315,7 +315,7 @@ INT64 CStereoImageManager::PlayerGetDuration()
 	lock1.unlock();
 	return 0;
 }
-INT64 CStereoImageManager::PlayerGetCurrentPlayingTime()
+INT64 CStereoVideoManager::PlayerGetCurrentPlayingTime()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -328,7 +328,7 @@ INT64 CStereoImageManager::PlayerGetCurrentPlayingTime()
 	lock1.unlock();
 	return 0;
 }
-void CStereoImageManager::PlayerSeek(INT64 seek_target_ms)
+void CStereoVideoManager::PlayerSeek(INT64 seek_target_ms)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -340,7 +340,7 @@ void CStereoImageManager::PlayerSeek(INT64 seek_target_ms)
 	}
 	lock1.unlock();
 }
-int CStereoImageManager::PlayerGetNumberOfAudioTracks()
+int CStereoVideoManager::PlayerGetNumberOfAudioTracks()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -353,7 +353,7 @@ int CStereoImageManager::PlayerGetNumberOfAudioTracks()
 	lock1.unlock();
 	return 0;
 }
-void CStereoImageManager::PlayerSetAudioTrack(int audio_track_index)
+void CStereoVideoManager::PlayerSetAudioTrack(int audio_track_index)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexPlayer); // Lock the mutex
 	if (mPlayer != NULL)
@@ -365,7 +365,7 @@ void CStereoImageManager::PlayerSetAudioTrack(int audio_track_index)
 	}
 	lock1.unlock();
 }
-void CStereoImageManager::ThreadRenderFunction()
+void CStereoVideoManager::ThreadRenderFunction()
 {
 	while (mThreadRenderRunning.load())
 	{
@@ -378,13 +378,13 @@ void CStereoImageManager::ThreadRenderFunction()
 		lock1.unlock();
 	}
 }
-void CStereoImageManager::SendSyncStatic(void* user, int syncType)
+void CStereoVideoManager::SendSyncStatic(void* user, int syncType)
 {
 	if (user == NULL) return;
-	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)user;
-	cStereoImageManager->SendSync(syncType);
+	CStereoVideoManager* cStereoVideoManager = (CStereoVideoManager*)user;
+	cStereoVideoManager->SendSync(syncType);
 }
-void CStereoImageManager::SendSync(int syncType)
+void CStereoVideoManager::SendSync(int syncType)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexCOMPort); // Lock the mutex
 	if (mComPort != NULL)
@@ -393,13 +393,13 @@ void CStereoImageManager::SendSync(int syncType)
 	}
 	lock1.unlock();
 }
-void CStereoImageManager::OnNewVideoFrameStatic(void* user, AVFrame* frame)
+void CStereoVideoManager::OnNewVideoFrameStatic(void* user, AVFrame* frame)
 {
 	if (user == NULL) return;
-	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)user;
-	cStereoImageManager->OnNewVideoFrame(frame);
+	CStereoVideoManager* cStereoVideoManager = (CStereoVideoManager*)user;
+	cStereoVideoManager->OnNewVideoFrame(frame);
 }
-void CStereoImageManager::OnNewVideoFrame(AVFrame* frame)
+void CStereoVideoManager::OnNewVideoFrame(AVFrame* frame)
 {
 	if (mThreadRenderRunning.load())
 	{
@@ -415,13 +415,13 @@ void CStereoImageManager::OnNewVideoFrame(AVFrame* frame)
 		av_frame_free(&frame);
 	}
 }
-void CStereoImageManager::OnNewAudioFrameStatic(void* user, AVFrame* frame)
+void CStereoVideoManager::OnNewAudioFrameStatic(void* user, AVFrame* frame)
 {
 	if (user == NULL) return;
-	CStereoImageManager* cStereoImageManager = (CStereoImageManager*)user;
-	cStereoImageManager->OnNewAudioFrame(frame);
+	CStereoVideoManager* cStereoVideoManager = (CStereoVideoManager*)user;
+	cStereoVideoManager->OnNewAudioFrame(frame);
 }
-void CStereoImageManager::OnNewAudioFrame(AVFrame* frame)
+void CStereoVideoManager::OnNewAudioFrame(AVFrame* frame)
 {
 	int bitsPerSample = 0;
 	switch (frame->format)
@@ -469,7 +469,7 @@ void CStereoImageManager::OnNewAudioFrame(AVFrame* frame)
 	}
 	lock1.unlock();
 }
-void CStereoImageManager::PlayerMute(BOOL mute)
+void CStereoVideoManager::PlayerMute(BOOL mute)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexWave1); // Lock the mutex
 	if (mWave != NULL)
@@ -485,7 +485,7 @@ void CStereoImageManager::PlayerMute(BOOL mute)
 	}
 	lock1.unlock();
 }
-UINT16 CStereoImageManager::PlayerGetVolume()
+UINT16 CStereoVideoManager::PlayerGetVolume()
 {
 	std::unique_lock<std::mutex> lock1(*mMutexWave1); // Lock the mutex
 	if (mWave != NULL)
@@ -498,7 +498,7 @@ UINT16 CStereoImageManager::PlayerGetVolume()
 	lock1.unlock();
 	return 0;
 }
-void CStereoImageManager::PlayerSetVolume(UINT16 volume)
+void CStereoVideoManager::PlayerSetVolume(UINT16 volume)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexWave1); // Lock the mutex
 	if (mWave != NULL)
