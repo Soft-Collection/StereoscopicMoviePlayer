@@ -331,8 +331,9 @@ void CFFMpegPlayer::Seek(INT64 seek_target_ms)
 			mPlayerPausedOnSeek.store(!IsEventSet(mPlayerPausedEvent));
 			mCurrentPlayingTime.store(MSToPts(AVMEDIA_TYPE_VIDEO, seek_target_ms));
 			mIsEOF.store(false);
-			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, MSToPts(AVMEDIA_TYPE_VIDEO, seek_target_ms), INT64_MAX, 0);
+			ResetEvent(mPlayerPausedEvent);
 			ClearAllBuffers();
+			avformat_seek_file(mFormatContext, mVideoStreamIndex, INT64_MIN, MSToPts(AVMEDIA_TYPE_VIDEO, seek_target_ms), INT64_MAX, 0);
 			SetEvent(mPlayerPausedEvent);
 			lock1.unlock();
 		}
