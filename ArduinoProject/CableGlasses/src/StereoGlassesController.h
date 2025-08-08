@@ -25,7 +25,7 @@ class StereoGlassesController
 public:
   StereoGlassesController();
   static void begin();
-  static void digitalWrite(uint8_t pin, uint8_t state);
+  static void digitalWrite(uint8_t leftPinState, uint8_t commonPinState, uint8_t rightPinState);
   static void setShutterState(bool isLeft, uint8_t state);
   static void heartBeat();
 

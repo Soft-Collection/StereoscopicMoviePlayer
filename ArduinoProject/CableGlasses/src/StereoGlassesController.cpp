@@ -31,39 +31,22 @@ void StereoGlassesController::heartBeat()
     msTimer2TicksCounter = 0;
 }
 
-void StereoGlassesController::digitalWrite(uint8_t pin, uint8_t state)
+void StereoGlassesController::digitalWrite(uint8_t leftPinState, uint8_t commonPinState, uint8_t rightPinState)
 {
-    if (state == HIGH)
-    {
-        if ((pin == PIN_6) || (pin == PIN_7))
-        {
-            PORTD |= (1 << pin);
-        }
-        else if (pin == PIN_8)
-        {
-            PORTB |= (1 << pin);
-        }
-    }
-    else if (state == LOW)
-    {
-        if ((pin == PIN_6) || (pin == PIN_7))
-        {
-            PORTD &= ~(1 << pin);
-        }
-        else if (pin == PIN_8)
-        {
-            PORTB &= ~(1 << pin);
-        }
-    }
+    uint8_t tempPortB = PORTB;
+    uint8_t tempPortD = PORTD;
+    if (leftPinState == HIGH) tempPortD |= (1 << LEFT_SHUTTER_PIN); else tempPortD &= ~(1 << LEFT_SHUTTER_PIN);
+    if (commonPinState == HIGH) tempPortD |= (1 << COMMON_SHUTTER_PIN); else tempPortD &= ~(1 << COMMON_SHUTTER_PIN);
+    if (rightPinState == HIGH) tempPortB |= (1 << RIGHT_SHUTTER_PIN); else tempPortB &= ~(1 << RIGHT_SHUTTER_PIN);
+    PORTB = tempPortB;
+    PORTD = tempPortD;
 }
 
 void StereoGlassesController::SetupPins()
 {
     DDRD |= (1 << DDD6) | (1 << DDD7); // Set D6 and D7 as outputs
     DDRB |= (1 << DDB0);               // Set D8 as output
-    digitalWrite(LEFT_SHUTTER_PIN, LOW);
-    digitalWrite(COMMON_SHUTTER_PIN, LOW);
-    digitalWrite(RIGHT_SHUTTER_PIN, LOW);
+    digitalWrite(LOW, LOW, LOW);
 }
 
 void StereoGlassesController::SetupTimer2()
@@ -84,21 +67,22 @@ void StereoGlassesController::SetupTimer2()
 ISR(TIMER2_COMPA_vect)
 {
     static uint8_t common = LOW;
+    static uint8_t left = LOW;
+    static uint8_t right = LOW;
     //----------------------------------------------------------------
     StereoGlassesController::msTimer2TicksCounter++;
     //----------------------------------------------------------------
-    StereoGlassesController::digitalWrite(COMMON_SHUTTER_PIN, common);
-    //----------------------------------------------------------------
     if (StereoGlassesController::msTimer2TicksCounter > TICKS_TO_SET_TRANSPARENT)
     {
-        StereoGlassesController::digitalWrite(LEFT_SHUTTER_PIN, common);
-        StereoGlassesController::digitalWrite(RIGHT_SHUTTER_PIN, common);
+        left = common;
+        right = common;
     }
     else
     {
-        StereoGlassesController::digitalWrite(LEFT_SHUTTER_PIN, (StereoGlassesController::msLeftShutterState == TRANSPARENT) ? common : !common);
-        StereoGlassesController::digitalWrite(RIGHT_SHUTTER_PIN, (StereoGlassesController::msRightShutterState == TRANSPARENT) ? common : !common);
+        left = (StereoGlassesController::msLeftShutterState == TRANSPARENT) ? common : !common;
+        right = (StereoGlassesController::msRightShutterState == TRANSPARENT) ? common : !common;
     }
+    StereoGlassesController::digitalWrite(left, common, right);
     //----------------------------------------------------------------
     common = !common;
 }
