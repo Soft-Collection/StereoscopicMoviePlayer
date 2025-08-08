@@ -28,16 +28,19 @@ It consists of two projects:
 
 ![Connection Diagram](Images/StereoscopicMoviePlayer.png)
 
+5V Version
 ![Connection Diagram](Images/5V/Connection%20Diagram.png)
 
 ![Connection Diagram](Images/5V/AssembledDevice.png)
 
 ![Connection Diagram](Images/5V/DeviceInBox.png)
 
+10V Version
 ![Connection Diagram](Images/10V/Connection%20Diagram.png)
 
 ![Connection Diagram](Images/10V/AssembledDevice.png)
 
+3D Glasses
 ![Connection Diagram](Images/10V/3DGlassesFront.png)
 
 ![Connection Diagram](Images/10V/3DGlassesBack.png)
