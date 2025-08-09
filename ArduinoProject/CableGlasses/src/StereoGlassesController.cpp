@@ -33,19 +33,16 @@ void StereoGlassesController::heartBeat()
 
 void StereoGlassesController::digitalWrite(uint8_t leftPinState, uint8_t commonPinState, uint8_t rightPinState)
 {
-    uint8_t tempPortB = PORTB;
     uint8_t tempPortD = PORTD;
     if (leftPinState == HIGH) tempPortD |= (1 << LEFT_SHUTTER_PIN); else tempPortD &= ~(1 << LEFT_SHUTTER_PIN);
     if (commonPinState == HIGH) tempPortD |= (1 << COMMON_SHUTTER_PIN); else tempPortD &= ~(1 << COMMON_SHUTTER_PIN);
-    if (rightPinState == HIGH) tempPortB |= (1 << RIGHT_SHUTTER_PIN); else tempPortB &= ~(1 << RIGHT_SHUTTER_PIN);
-    PORTB = tempPortB;
+    if (rightPinState == HIGH) tempPortD |= (1 << RIGHT_SHUTTER_PIN); else tempPortD &= ~(1 << RIGHT_SHUTTER_PIN);
     PORTD = tempPortD;
 }
 
 void StereoGlassesController::SetupPins()
 {
-    DDRD |= (1 << DDD6) | (1 << DDD7); // Set D6 and D7 as outputs
-    DDRB |= (1 << DDB0);               // Set D8 as output
+    DDRD |= (1 << DDD5) | (1 << DDD6) | (1 << DDD7); // Set D5, D6 and D7 as outputs
     digitalWrite(LOW, LOW, LOW);
 }
 

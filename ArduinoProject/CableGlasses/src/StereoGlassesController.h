@@ -7,13 +7,13 @@
 #define LOW 0
 #define HIGH 1
 //-------------------------------------------------------
+#define PIN_5 PD5
 #define PIN_6 PD6
 #define PIN_7 PD7
-#define PIN_8 PB0
 //-------------------------------------------------------
-#define LEFT_SHUTTER_PIN PIN_6
-#define COMMON_SHUTTER_PIN PIN_7
-#define RIGHT_SHUTTER_PIN PIN_8
+#define LEFT_SHUTTER_PIN PIN_5
+#define COMMON_SHUTTER_PIN PIN_6
+#define RIGHT_SHUTTER_PIN PIN_7
 //-------------------------------------------------------
 #define TRANSPARENT 0
 #define OPAQUE 1
