@@ -87,7 +87,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CStereoVideoManager.h" />
-    <ClInclude Include="CImage.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="StereoVideoManagerWrap.h" />
     <ClInclude Include="stdafx.h" />
@@ -95,7 +94,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CStereoVideoManager.cpp" />
-    <ClCompile Include="CImage.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
