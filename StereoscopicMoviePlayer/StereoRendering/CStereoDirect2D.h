@@ -24,14 +24,6 @@ typedef void(*dSendSync)(void* user, int syncType);
 
 class CStereoDirect2D
 {
-public:
-	typedef struct {
-		BYTE* DataPtr;
-		INT Width;
-		INT Height;
-		INT Channels;
-		BOOL IsLeft;
-	} ImageData;
 private:
 	typedef struct {
 		INT Width;
