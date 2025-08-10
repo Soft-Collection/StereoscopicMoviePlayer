@@ -1,7 +1,6 @@
 #ifndef __CSTEREOVIDEOMANAGER_H__
 #define __CSTEREOVIDEOMANAGER_H__
 
-#include "CImage.h"
 #include <mutex>
 #include <thread>
 #include <atomic>
