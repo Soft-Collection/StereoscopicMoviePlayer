@@ -503,20 +503,17 @@ namespace StereoscopicMoviePlayer
                 SetStereoButtonsState(mStereoButtonsState);
                 if (mStereoVideoManager != null)
                 {
-                    if (mStereoVideoManager.PlayerIsOpened())
+                    switch (mStereoButtonsState)
                     {
-                        switch (mStereoButtonsState)
-                        {
-                            case eStereoButtonsStates.Both:
-                                mStereoVideoManager.StereoLRBoth(0);
-                                break;
-                            case eStereoButtonsStates.LeftOnly:
-                                mStereoVideoManager.StereoLRBoth(1);
-                                break;
-                            case eStereoButtonsStates.RightOnly:
-                                mStereoVideoManager.StereoLRBoth(2);
-                                break;
-                        }
+                        case eStereoButtonsStates.Both:
+                            mStereoVideoManager.StereoLRBoth(0);
+                            break;
+                        case eStereoButtonsStates.LeftOnly:
+                            mStereoVideoManager.StereoLRBoth(1);
+                            break;
+                        case eStereoButtonsStates.RightOnly:
+                            mStereoVideoManager.StereoLRBoth(2);
+                            break;
                     }
                 }
                 mLastStereoButtonsState = mStereoButtonsState;
@@ -548,17 +545,14 @@ namespace StereoscopicMoviePlayer
                 SetSwapButtonState(mSwapButtonState);
                 if (mStereoVideoManager != null)
                 {
-                    if (mStereoVideoManager.PlayerIsOpened())
+                    switch (mSwapButtonState)
                     {
-                        switch (mSwapButtonState)
-                        {
-                            case eSwapButtonStates.SwapOn:
-                                mStereoVideoManager.StereoSwapLR(true);
-                                break;
-                            case eSwapButtonStates.SwapOff:
-                                mStereoVideoManager.StereoSwapLR(false);
-                                break;
-                        }
+                        case eSwapButtonStates.SwapOn:
+                            mStereoVideoManager.StereoSwapLR(true);
+                            break;
+                        case eSwapButtonStates.SwapOff:
+                            mStereoVideoManager.StereoSwapLR(false);
+                            break;
                     }
                 }
                 mLastSwapButtonState = mSwapButtonState;
@@ -569,17 +563,14 @@ namespace StereoscopicMoviePlayer
                 SetVerticalButtonState(mVerticalButtonState);
                 if (mStereoVideoManager != null)
                 {
-                    if (mStereoVideoManager.PlayerIsOpened())
+                    switch (mVerticalButtonState)
                     {
-                        switch (mVerticalButtonState)
-                        {
-                            case eVerticalButtonStates.VerticalOn:
-                                mStereoVideoManager.StereoVerticalLR(true);
-                                break;
-                            case eVerticalButtonStates.VerticalOff:
-                                mStereoVideoManager.StereoVerticalLR(false);
-                                break;
-                        }
+                        case eVerticalButtonStates.VerticalOn:
+                            mStereoVideoManager.StereoVerticalLR(true);
+                            break;
+                        case eVerticalButtonStates.VerticalOff:
+                            mStereoVideoManager.StereoVerticalLR(false);
+                            break;
                     }
                 }
                 mLastVerticalButtonState = mVerticalButtonState;
@@ -633,10 +624,7 @@ namespace StereoscopicMoviePlayer
                 {
                     if (mStereoVideoManager != null)
                     {
-                        if (mStereoVideoManager.PlayerIsOpened())
-                        {
-                            mStereoVideoManager.StereoWindowSizeChanged();
-                        }
+                        mStereoVideoManager.StereoWindowSizeChanged();
                     }
                     mResizeAlreadyApplied = true;
                 }
