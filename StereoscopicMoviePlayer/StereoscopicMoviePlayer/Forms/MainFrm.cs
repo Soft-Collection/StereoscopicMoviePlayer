@@ -69,8 +69,6 @@ namespace StereoscopicMoviePlayer
             SetAlwaysOnTop();
             SetRunAtStartup();
             //-----------------------------------
-            //LoadStereoImages();
-            //-----------------------------------
             if (mStereoVideoManager == null)
             {
                 mStereoVideoManager = new clsStereoVideoManager(pbVideoPanel.Handle);
@@ -348,8 +346,6 @@ namespace StereoscopicMoviePlayer
         private eVerticalButtonStates mLastVerticalButtonState = eVerticalButtonStates.NotSetYet;
         private bool mAlreadySent = true;
         private int mAlreadySentCounter = 0;
-        private long mLastSWMovieTime = 0;
-        private bool mSeekAlreadyApplied = true;
         private long mLastWindowResizeTime = 0;
         private bool mResizeAlreadyApplied = true;
         private bool mIsEOFApplied = false;
@@ -591,33 +587,6 @@ namespace StereoscopicMoviePlayer
                 lblMovieTime.Text = $"{hours:D2}:{minutes:D2}:{seconds:D2}";
             }
             //-----------------------------------------------------
-            if (((double)(Stopwatch.GetTimestamp() - mLastSWMovieTime)) / ((double)Stopwatch.Frequency / 1000.0) > 400)
-            {
-                if (mStereoVideoManager != null)
-                {
-                    Int64 currentPlayingTime = mStereoVideoManager.PlayerGetCurrentPlayingTime() / 1000;
-                    if ((int)currentPlayingTime > tbMovieTime.Maximum) currentPlayingTime = 0;
-                    tbMovieTime.Value = (int)currentPlayingTime;
-                }
-            }
-            //-----------------------------------------------------
-            if (((double)(Stopwatch.GetTimestamp() - mLastSWMovieTime)) / ((double)Stopwatch.Frequency / 1000.0) > 200)
-            {
-                if (!mSeekAlreadyApplied)
-                {
-                    if (mStereoVideoManager != null)
-                    {
-                        if (mStereoVideoManager.PlayerIsOpened())
-                        {
-                            mStereoVideoManager.PlayerSeek(tbMovieTime.Value * 1000);
-                            PerformStereoStart();
-                            if (mPlayerButtonsState == ePlayerButtonsStates.Stopped) mPlayerButtonsState = ePlayerButtonsStates.Paused;
-                        }
-                    }
-                    mSeekAlreadyApplied = true;
-                }
-            }
-            //-----------------------------------------------------
             if (((double)(Stopwatch.GetTimestamp() - mLastWindowResizeTime)) / ((double)Stopwatch.Frequency / 1000.0) > 200)
             {
                 if (!mResizeAlreadyApplied)
@@ -819,8 +788,30 @@ namespace StereoscopicMoviePlayer
                 mMainState = eMainStates.PlayingPaused;
                 mPlayerButtonsState = ePlayerButtonsStates.Paused;
             }
-            mLastSWMovieTime = Stopwatch.GetTimestamp();
-            mSeekAlreadyApplied = false;
+        }
+        private void tbMovieTime_SmartScroll(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                if (mStereoVideoManager.PlayerIsOpened())
+                {
+                    mStereoVideoManager.PlayerSeek(tbMovieTime.Value * 1000);
+                    PerformStereoStart();
+                    if (mPlayerButtonsState == ePlayerButtonsStates.Stopped) mPlayerButtonsState = ePlayerButtonsStates.Paused;
+                }
+            }
+        }
+        private void tbMovieTime_ValueUpdatePermitted(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                if (mStereoVideoManager.PlayerIsOpened())
+                {
+                    Int64 currentPlayingTime = mStereoVideoManager.PlayerGetCurrentPlayingTime() / 1000;
+                    if ((int)currentPlayingTime > tbMovieTime.Maximum) currentPlayingTime = 0;
+                    tbMovieTime.Value = (int)currentPlayingTime;
+                }
+            }
         }
         private void pbVideoPanel_SizeChanged(object sender, EventArgs e)
         {

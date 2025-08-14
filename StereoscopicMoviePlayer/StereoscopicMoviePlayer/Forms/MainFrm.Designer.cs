@@ -70,7 +70,7 @@
             this.bOpen = new System.Windows.Forms.Button();
             this.bStop = new System.Windows.Forms.Button();
             this.bPlayPause = new System.Windows.Forms.Button();
-            this.tbMovieTime = new System.Windows.Forms.TrackBar();
+            this.tbMovieTime = new SmartTrackBar();
             this.lblMovieTime = new System.Windows.Forms.Label();
             this.dlgOpen = new System.Windows.Forms.OpenFileDialog();
             this.timerGUIStereoPlayer = new System.Windows.Forms.Timer(this.components);
@@ -515,6 +515,10 @@
             this.tbMovieTime.Size = new System.Drawing.Size(504, 21);
             this.tbMovieTime.TabIndex = 30;
             this.tbMovieTime.TickStyle = System.Windows.Forms.TickStyle.None;
+            this.tbMovieTime.TimeAfterLastMoveToGetScrollEvent = 200;
+            this.tbMovieTime.TimeAfterLastMoveUntilValueUpdateIsPermitted = 400;
+            this.tbMovieTime.SmartScroll += new System.EventHandler(this.tbMovieTime_SmartScroll);
+            this.tbMovieTime.ValueUpdatePermitted += new System.EventHandler(this.tbMovieTime_ValueUpdatePermitted);
             this.tbMovieTime.Scroll += new System.EventHandler(this.tbMovieTime_Scroll);
             this.tbMovieTime.MouseEnter += new System.EventHandler(this.tbMovieTime_MouseEnter);
             // 
@@ -605,7 +609,7 @@
         private System.Windows.Forms.ToolStripMenuItem gitHubToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem arduinoProjectToolStripMenuItem;
         private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.TrackBar tbMovieTime;
+        private SmartTrackBar tbMovieTime;
         private System.Windows.Forms.Label lblMovieTime;
         private System.Windows.Forms.Button bStop;
         private System.Windows.Forms.Button bPlayPause;

@@ -49,6 +49,9 @@
   <ItemGroup>
     <Compile Include="Classes\clsStereoVideoManager.cs" />
     <Compile Include="Classes\clsStereoVideoManagerWrap.cs" />
+    <Compile Include="Controls\SmartTrackBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Forms\AboutBox.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -94,9 +97,7 @@
   <ItemGroup>
     <None Include="Common\App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Controls\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="3d.ico" />
     <Content Include="Icons\3d.ico" />
