@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Diagnostics;
-using System.IO.Ports;
 using System.Security.Permissions;
 using System.Windows.Forms;
+using static StereoscopicMoviePlayer.StereoButtonsPanel;
 
 namespace StereoscopicMoviePlayer
 {
@@ -40,24 +40,6 @@ namespace StereoscopicMoviePlayer
             this.Size = Settings.Size;
             this.Visible = Settings.Visible;
             this.TopMost = Settings.AlwaysOnTop;
-            //-----------------------------------
-            // Get a list of all available COM ports
-            string[] ports = SerialPort.GetPortNames();
-            cbComPort.Items.Clear();
-            foreach (string port in ports)
-            {
-                cbComPort.Items.Add(port);
-            }
-            if (cbComPort.Items.Contains(Settings.ComPort))
-            {
-                cbComPort.SelectedItem = Settings.ComPort;
-            }
-            else
-            {
-                cbComPort.SelectedIndex = 0;
-            }
-            cbComPort.Visible = true;
-            bRefresh.Visible = true;
             //-----------------------------------
             pbVideoPanel.BackColor = System.Drawing.Color.DarkGray;
             //------------------------------------------------------
@@ -293,57 +275,9 @@ namespace StereoscopicMoviePlayer
             Stopped = 3,
             PlayingPaused = 4
         }
-        private enum ePlayerButtonsStates
-        {
-            NotSetYet = 0,
-            Playing = 1,
-            Paused = 2,
-            Stopped = 3,
-            None = 4
-        }
-        private enum eStereoButtonsStates
-        {
-            NotSetYet = 0,
-            Both = 1,
-            LeftOnly = 2,
-            RightOnly = 3,
-            None = 4
-        }
-        private enum eSoundButtonStates
-        {
-            NotSetYet = 0,
-            SoundOn = 1,
-            SoundOff = 2
-        }
-        private enum eSwapButtonStates
-        {
-            NotSetYet = 0,
-            SwapOn = 1,
-            SwapOff = 2
-        }
-        private enum eVerticalButtonStates
-        {
-            NotSetYet = 0,
-            VerticalOn = 1,
-            VerticalOff = 2
-        }
         #endregion
 
         #region Variables
-        private eMainStates mMainState = eMainStates.VideoFileNotOpened;
-        private eMainStates mLastMainState = eMainStates.NotSetYet;
-        private eEnableDisableStates mEnableDisableState = eEnableDisableStates.VideoFileNotOpened;
-        private eEnableDisableStates mLastEnableDisableState = eEnableDisableStates.NotSetYet;
-        private ePlayerButtonsStates mPlayerButtonsState = ePlayerButtonsStates.Stopped;
-        private ePlayerButtonsStates mLastPlayerButtonsState = ePlayerButtonsStates.NotSetYet;
-        private eStereoButtonsStates mStereoButtonsState = eStereoButtonsStates.Both;
-        private eStereoButtonsStates mLastStereoButtonsState = eStereoButtonsStates.NotSetYet;
-        private eSoundButtonStates mSoundButtonState = eSoundButtonStates.SoundOn;
-        private eSoundButtonStates mLastSoundButtonState = eSoundButtonStates.NotSetYet;
-        private eSwapButtonStates mSwapButtonState = eSwapButtonStates.SwapOff;
-        private eSwapButtonStates mLastSwapButtonState = eSwapButtonStates.NotSetYet;
-        private eVerticalButtonStates mVerticalButtonState = eVerticalButtonStates.VerticalOff;
-        private eVerticalButtonStates mLastVerticalButtonState = eVerticalButtonStates.NotSetYet;
         private bool mAlreadySent = true;
         private int mAlreadySentCounter = 0;
         private long mLastWindowResizeTime = 0;
@@ -357,7 +291,8 @@ namespace StereoscopicMoviePlayer
             timerFrequency.Start();
             timerSendSettings.Start();
             timerGUIStereoPlayer.Start();
-            mMainState = eMainStates.VideoFileNotOpened;
+            SetMainState(eMainStates.VideoFileNotOpened);
+            LoadSettingsToControls();
         }
         #endregion
 
@@ -403,7 +338,7 @@ namespace StereoscopicMoviePlayer
                         if (Settings.FilePath != filepath)
                         {
                             Settings.FilePath = filepath;
-                            mMainState = (cbComPort.SelectedIndex >= 0) ? eMainStates.Stopped : eMainStates.COMPortNotSelected;
+                            SetMainState((cppComPortPanel.IsCOMPortSelected) ? eMainStates.Stopped : eMainStates.COMPortNotSelected);
                             if (mStereoVideoManager != null)
                             {
                                 if (mStereoVideoManager.PlayerIsOpened())
@@ -411,11 +346,10 @@ namespace StereoscopicMoviePlayer
                                     mStereoVideoManager.PlayerClose();
                                 }
                                 mStereoVideoManager.PlayerOpen(Settings.FilePath);
-                                Int64 duration = mStereoVideoManager.PlayerGetDuration() / 1000;
-                                tbMovieTime.Value = 0;
-                                tbMovieTime.Maximum = (int)duration;
+                                ptpPlayTimePanel.CurrentPlayingTime = 0;
+                                ptpPlayTimePanel.Duration = mStereoVideoManager.PlayerGetDuration();
+                                spSoundPanel.LoadSoundTracks(mStereoVideoManager.PlayerGetNumberOfAudioTracks());
                             }
-                            LoadTracks();
                         }
                     }
                 }
@@ -430,16 +364,15 @@ namespace StereoscopicMoviePlayer
                     if (!mStereoVideoManager.PlayerIsOpened())
                     {
                         mStereoVideoManager.PlayerOpen(Settings.FilePath);
-                        Int64 duration = mStereoVideoManager.PlayerGetDuration() / 1000;
-                        tbMovieTime.Maximum = (int)duration;
-                        LoadTracks();
-                        mMainState = (cbComPort.SelectedIndex >= 0) ? eMainStates.Stopped : eMainStates.COMPortNotSelected;
+                        ptpPlayTimePanel.Duration = mStereoVideoManager.PlayerGetDuration();
+                        spSoundPanel.LoadSoundTracks(mStereoVideoManager.PlayerGetNumberOfAudioTracks());
+                        SetMainState((cppComPortPanel.IsCOMPortSelected) ? eMainStates.Stopped : eMainStates.COMPortNotSelected);
                     }
                 }
             }
             else
             {
-                mMainState = eMainStates.VideoFileNotOpened;
+                SetMainState(eMainStates.VideoFileNotOpened);
             }
             //-----------------------------------------------------
             if (mStereoVideoManager != null)
@@ -450,8 +383,8 @@ namespace StereoscopicMoviePlayer
                     {
                         if (!mIsEOFApplied)
                         {
-                            mMainState = eMainStates.PlayingPaused;
-                            mPlayerButtonsState = ePlayerButtonsStates.Paused;
+                            SetMainState(eMainStates.PlayingPaused);
+                            ppPlayerPanel.ButtonsState = PlayerPanel.eButtonsStates.Paused;
                             mIsEOFApplied = true;
                         }
                     }
@@ -460,131 +393,6 @@ namespace StereoscopicMoviePlayer
                         mIsEOFApplied = false;
                     }
                 }
-            }
-            //-----------------------------------------------------
-            if (mLastMainState != mMainState)
-            {
-                SetMainState(mMainState);
-                mLastMainState = mMainState;
-            }
-            //-----------------------------------------------------
-            if (mLastPlayerButtonsState != mPlayerButtonsState)
-            {
-                SetPlayerButtonsState(mPlayerButtonsState);
-                if (mStereoVideoManager != null)
-                {
-                    if (mStereoVideoManager.PlayerIsOpened())
-                    {
-                        switch (mPlayerButtonsState)
-                        {
-                            case ePlayerButtonsStates.Playing:
-                                mStereoVideoManager.PlayerPlay();
-                                PerformStereoStart();
-                                break;
-                            case ePlayerButtonsStates.Paused:
-                                mStereoVideoManager.PlayerPause();
-                                break;
-                            case ePlayerButtonsStates.Stopped:
-                                mStereoVideoManager.PlayerStop();
-                                PerformStereoStop();
-                                break;
-                        }
-                    }
-                }
-                mLastPlayerButtonsState = mPlayerButtonsState;
-            }
-            //-----------------------------------------------------
-            if (mLastStereoButtonsState != mStereoButtonsState)
-            {
-                SetStereoButtonsState(mStereoButtonsState);
-                if (mStereoVideoManager != null)
-                {
-                    switch (mStereoButtonsState)
-                    {
-                        case eStereoButtonsStates.Both:
-                            mStereoVideoManager.StereoLRBoth(0);
-                            break;
-                        case eStereoButtonsStates.LeftOnly:
-                            mStereoVideoManager.StereoLRBoth(1);
-                            break;
-                        case eStereoButtonsStates.RightOnly:
-                            mStereoVideoManager.StereoLRBoth(2);
-                            break;
-                    }
-                }
-                mLastStereoButtonsState = mStereoButtonsState;
-            }
-            //-----------------------------------------------------
-            if (mLastSoundButtonState != mSoundButtonState)
-            {
-                SetSoundButtonState(mSoundButtonState);
-                if (mStereoVideoManager != null)
-                {
-                    if (mStereoVideoManager.PlayerIsOpened())
-                    {
-                        switch (mSoundButtonState)
-                        {
-                            case eSoundButtonStates.SoundOn:
-                                mStereoVideoManager.PlayerMute(false);
-                                break;
-                            case eSoundButtonStates.SoundOff:
-                                mStereoVideoManager.PlayerMute(true);
-                                break;
-                        }
-                    }
-                }
-                mLastSoundButtonState = mSoundButtonState;
-            }
-            //-----------------------------------------------------
-            if (mLastSwapButtonState != mSwapButtonState)
-            {
-                SetSwapButtonState(mSwapButtonState);
-                if (mStereoVideoManager != null)
-                {
-                    switch (mSwapButtonState)
-                    {
-                        case eSwapButtonStates.SwapOn:
-                            mStereoVideoManager.StereoSwapLR(true);
-                            break;
-                        case eSwapButtonStates.SwapOff:
-                            mStereoVideoManager.StereoSwapLR(false);
-                            break;
-                    }
-                }
-                mLastSwapButtonState = mSwapButtonState;
-            }
-            //-----------------------------------------------------
-            if (mLastVerticalButtonState != mVerticalButtonState)
-            {
-                SetVerticalButtonState(mVerticalButtonState);
-                if (mStereoVideoManager != null)
-                {
-                    switch (mVerticalButtonState)
-                    {
-                        case eVerticalButtonStates.VerticalOn:
-                            mStereoVideoManager.StereoVerticalLR(true);
-                            break;
-                        case eVerticalButtonStates.VerticalOff:
-                            mStereoVideoManager.StereoVerticalLR(false);
-                            break;
-                    }
-                }
-                mLastVerticalButtonState = mVerticalButtonState;
-            }
-            //-----------------------------------------------------
-            if (mLastEnableDisableState != mEnableDisableState)
-            {
-                SetEnableDisableState(mEnableDisableState);
-                mLastEnableDisableState = mEnableDisableState;
-            }
-            //-----------------------------------------------------
-            if (mStereoVideoManager != null)
-            {
-                Int64 currentPlayingTime = mStereoVideoManager.PlayerGetCurrentPlayingTime() / 1000;
-                int hours = (int)currentPlayingTime / 3600;
-                int minutes = (int)currentPlayingTime / 60 % 60;
-                int seconds = (int)currentPlayingTime % 60;
-                lblMovieTime.Text = $"{hours:D2}:{minutes:D2}:{seconds:D2}";
             }
             //-----------------------------------------------------
             if (((double)(Stopwatch.GetTimestamp() - mLastWindowResizeTime)) / ((double)Stopwatch.Frequency / 1000.0) > 200)
@@ -597,29 +405,6 @@ namespace StereoscopicMoviePlayer
                     }
                     mResizeAlreadyApplied = true;
                 }
-            }
-        }
-        private void cbComPort_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            Settings.ComPort = (string)cbComPort.SelectedItem;
-            mMainState = eMainStates.Stopped;
-        }
-        private void bRefresh_Click(object sender, EventArgs e)
-        {
-            // Get a list of all available COM ports
-            string[] ports = SerialPort.GetPortNames();
-            cbComPort.Items.Clear();
-            foreach (string port in ports)
-            {
-                cbComPort.Items.Add(port);
-            }
-            if (cbComPort.Items.Contains(Settings.ComPort))
-            {
-                cbComPort.SelectedItem = Settings.ComPort;
-            }
-            else
-            {
-                cbComPort.SelectedIndex = 0;
             }
         }
         private void timerFrequency_Tick(object sender, EventArgs e)
@@ -640,7 +425,7 @@ namespace StereoscopicMoviePlayer
                     if (mStereoVideoManager != null)
                     {
                         mStereoVideoManager.PlayerMute(!Settings.SoundOn);
-                        mStereoVideoManager.PlayerSetVolume((UInt16)tbVolume.Value);
+                        mStereoVideoManager.PlayerSetVolume(spSoundPanel.SoundVolume);
                         mStereoVideoManager.StereoLRBoth(Settings.LRBoth);
                         mStereoVideoManager.StereoSwapLR(Settings.SwapLR);
                         mStereoVideoManager.StereoSetGlassesTimeOffset(Settings.GlassesTimeOffset);
@@ -648,98 +433,6 @@ namespace StereoscopicMoviePlayer
                     mAlreadySent = true;
                 }
                 mAlreadySentCounter++;
-            }
-        }
-        private void tbGlassesTimeOffset_Scroll(object sender, EventArgs e)
-        {
-            lblGlassesTimeOffset.Text = tbGlassesTimeOffset.Value.ToString();
-            Settings.GlassesTimeOffset = tbGlassesTimeOffset.Value;
-            if (mStereoVideoManager != null)
-            {
-                mStereoVideoManager.StereoSetGlassesTimeOffset(Settings.GlassesTimeOffset);
-            }
-        }
-        private void bPlayPause_Click(object sender, EventArgs e)
-        {
-            mMainState = eMainStates.PlayingPaused;
-            if (mPlayerButtonsState == ePlayerButtonsStates.Playing)
-            {
-                mPlayerButtonsState = ePlayerButtonsStates.Paused;
-            }
-            else if (mPlayerButtonsState == ePlayerButtonsStates.Paused)
-            {
-                mIsEOFApplied = false;
-                mPlayerButtonsState = ePlayerButtonsStates.Playing;
-            }
-            else if (mPlayerButtonsState == ePlayerButtonsStates.Stopped)
-            {
-                mPlayerButtonsState = ePlayerButtonsStates.Playing;
-            }
-        }
-        private void bStop_Click(object sender, EventArgs e)
-        {
-            mMainState = eMainStates.Stopped;
-        }
-        private void bSound_Click(object sender, EventArgs e)
-        {
-            if (mSoundButtonState == eSoundButtonStates.SoundOn)
-            {
-                mSoundButtonState = eSoundButtonStates.SoundOff;
-                Settings.SoundOn = false;
-            }
-            else if (mSoundButtonState == eSoundButtonStates.SoundOff)
-            {
-                mSoundButtonState = eSoundButtonStates.SoundOn;
-                Settings.SoundOn = true;
-            }
-        }
-        private void tbVolume_Scroll(object sender, EventArgs e)
-        {
-            if (mStereoVideoManager != null)
-            {
-                mStereoVideoManager.PlayerSetVolume((UInt16)tbVolume.Value);
-                Settings.Volume = tbVolume.Value;
-            }
-        }
-        private void bBoth_Click(object sender, EventArgs e)
-        {
-            mStereoButtonsState = eStereoButtonsStates.Both;
-            Settings.LRBoth = 0;
-        }
-        private void bLeftOnly_Click(object sender, EventArgs e)
-        {
-            mStereoButtonsState = eStereoButtonsStates.LeftOnly;
-            Settings.LRBoth = 1;
-        }
-        private void bRightOnly_Click(object sender, EventArgs e)
-        {
-            mStereoButtonsState = eStereoButtonsStates.RightOnly;
-            Settings.LRBoth = 2;
-        }
-        private void bSwap_Click(object sender, EventArgs e)
-        {
-            if (mSwapButtonState == eSwapButtonStates.SwapOn)
-            {
-                mSwapButtonState = eSwapButtonStates.SwapOff;
-                Settings.SwapLR = false;
-            }
-            else if (mSwapButtonState == eSwapButtonStates.SwapOff)
-            {
-                mSwapButtonState = eSwapButtonStates.SwapOn;
-                Settings.SwapLR = true;
-            }
-        }
-        private void bVertical_Click(object sender, EventArgs e)
-        {
-            if (mVerticalButtonState == eVerticalButtonStates.VerticalOn)
-            {
-                mVerticalButtonState = eVerticalButtonStates.VerticalOff;
-                Settings.VerticalLR = false;
-            }
-            else if (mVerticalButtonState == eVerticalButtonStates.VerticalOff)
-            {
-                mVerticalButtonState = eVerticalButtonStates.VerticalOn;
-                Settings.VerticalLR = true;
             }
         }
         private void bOpen_Click(object sender, EventArgs e)
@@ -751,7 +444,7 @@ namespace StereoscopicMoviePlayer
             {
                 if (File.Exists(Settings.FilePath))
                 {
-                    mMainState = (cbComPort.SelectedIndex >= 0) ? eMainStates.Stopped : eMainStates.COMPortNotSelected;
+                    SetMainState((cppComPortPanel.IsCOMPortSelected) ? eMainStates.Stopped : eMainStates.COMPortNotSelected);
                     if (mStereoVideoManager != null)
                     {
                         if (mStereoVideoManager.PlayerIsOpened())
@@ -759,57 +452,14 @@ namespace StereoscopicMoviePlayer
                             mStereoVideoManager.PlayerClose();
                         }
                         mStereoVideoManager.PlayerOpen(Settings.FilePath);
-                        Int64 duration = mStereoVideoManager.PlayerGetDuration() / 1000;
-                        tbMovieTime.Value = 0;
-                        tbMovieTime.Maximum = (int)duration;
+                        ptpPlayTimePanel.CurrentPlayingTime = 0;
+                        ptpPlayTimePanel.Duration = mStereoVideoManager.PlayerGetDuration();
+                        spSoundPanel.LoadSoundTracks(mStereoVideoManager.PlayerGetNumberOfAudioTracks());
                     }
-                    LoadTracks();
                 }
                 else
                 {
-                    mMainState = eMainStates.VideoFileNotOpened;
-                }
-            }
-        }
-        private void cbTracks_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (mStereoVideoManager != null)
-            {
-                if (mStereoVideoManager.PlayerIsOpened())
-                {
-                    mStereoVideoManager.PlayerSetAudioTrack(cbTracks.SelectedIndex);
-                }
-            }
-        }
-        private void tbMovieTime_Scroll(object sender, EventArgs e)
-        {
-            if (mMainState == eMainStates.Stopped)
-            {
-                mMainState = eMainStates.PlayingPaused;
-                mPlayerButtonsState = ePlayerButtonsStates.Paused;
-            }
-        }
-        private void tbMovieTime_SmartScroll(object sender, EventArgs e)
-        {
-            if (mStereoVideoManager != null)
-            {
-                if (mStereoVideoManager.PlayerIsOpened())
-                {
-                    mStereoVideoManager.PlayerSeek(tbMovieTime.Value * 1000);
-                    PerformStereoStart();
-                    if (mPlayerButtonsState == ePlayerButtonsStates.Stopped) mPlayerButtonsState = ePlayerButtonsStates.Paused;
-                }
-            }
-        }
-        private void tbMovieTime_ValueUpdatePermitted(object sender, EventArgs e)
-        {
-            if (mStereoVideoManager != null)
-            {
-                if (mStereoVideoManager.PlayerIsOpened())
-                {
-                    Int64 currentPlayingTime = mStereoVideoManager.PlayerGetCurrentPlayingTime() / 1000;
-                    if ((int)currentPlayingTime > tbMovieTime.Maximum) currentPlayingTime = 0;
-                    tbMovieTime.Value = (int)currentPlayingTime;
+                    SetMainState(eMainStates.VideoFileNotOpened);
                 }
             }
         }
@@ -818,65 +468,184 @@ namespace StereoscopicMoviePlayer
             mLastWindowResizeTime = Stopwatch.GetTimestamp();
             mResizeAlreadyApplied = false;
         }
-        private void tbMovieTime_MouseEnter(object sender, EventArgs e)
+        private void ptpPlayTimePanel_OnSeek(object sender, PlayTimePanel.SeekEventArgs e)
         {
-            ttControls.Show("Rewind or go forward in the movie", (IWin32Window)sender, 5000);
+            if (ppPlayerPanel.ButtonsState == PlayerPanel.eButtonsStates.Stopped)
+            {
+                SetMainState(eMainStates.PlayingPaused);
+                ppPlayerPanel.ButtonsState = PlayerPanel.eButtonsStates.Paused;
+            }
+            if (mStereoVideoManager != null)
+            {
+                if (mStereoVideoManager.PlayerIsOpened())
+                {
+                    mStereoVideoManager.PlayerSeek(e.Seek);
+                    PerformStereoStart();
+                    if (ppPlayerPanel.ButtonsState == PlayerPanel.eButtonsStates.Stopped) ppPlayerPanel.ButtonsState = PlayerPanel.eButtonsStates.Paused;
+                }
+            }
+        }
+        private void ptpPlayTimePanel_OnValueUpdateRequest(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                if (mStereoVideoManager.PlayerIsOpened())
+                {
+                    ptpPlayTimePanel.CurrentPlayingTime = mStereoVideoManager.PlayerGetCurrentPlayingTime();
+                }
+            }
+        }
+        private void ppPlayerPanel_OnPause(object sender, EventArgs e)
+        {
+            SetMainState(eMainStates.PlayingPaused);
+            if (mStereoVideoManager != null)
+            {
+                if (mStereoVideoManager.PlayerIsOpened())
+                {
+                    mStereoVideoManager.PlayerPause();
+                }
+            }
+        }
+        private void ppPlayerPanel_OnPlay(object sender, EventArgs e)
+        {
+            SetMainState(eMainStates.PlayingPaused);
+            if (mStereoVideoManager != null)
+            {
+                if (mStereoVideoManager.PlayerIsOpened())
+                {
+                    mStereoVideoManager.PlayerPlay();
+                    PerformStereoStart();
+                }
+            }
+        }
+        private void ppPlayerPanel_OnStop(object sender, EventArgs e)
+        {
+            SetMainState(eMainStates.Stopped);
+            if (mStereoVideoManager != null)
+            {
+                if (mStereoVideoManager.PlayerIsOpened())
+                {
+                    mStereoVideoManager.PlayerStop();
+                    PerformStereoStop();
+                }
+            }
+        }
+        private void ppPlayerPanel_OnPlayAfterPause(object sender, EventArgs e)
+        {
+            mIsEOFApplied = false;
+        }
+        private void spSoundPanel_OnSoundOff(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                if (mStereoVideoManager.PlayerIsOpened())
+                {
+                    mStereoVideoManager.PlayerMute(true);
+                    Settings.SoundOn = false;
+                }
+            }
+        }
+        private void spSoundPanel_OnSoundOn(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                if (mStereoVideoManager.PlayerIsOpened())
+                {
+                    mStereoVideoManager.PlayerMute(false);
+                    Settings.SoundOn = true;
+                }
+            }
+        }
+        private void spSoundPanel_OnSoundVolumeChanged(object sender, SoundPanel.SoundVolumeEventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                mStereoVideoManager.PlayerSetVolume(e.SoundVolume);
+                Settings.Volume = e.SoundVolume;
+            }
+        }
+        private void spSoundPanel_OnSelectedSoundTrackChanged(object sender, SoundPanel.SelectedSoundTrackEventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                if (mStereoVideoManager.PlayerIsOpened())
+                {
+                    mStereoVideoManager.PlayerSetAudioTrack(e.SelectedSoundTrack);
+                }
+            }
+        }
+        private void cppComPortPanel_OnCOMPortSelected(object sender, COMPortPanel.COMPortEventArgs e)
+        {
+            Settings.ComPort = e.COMPort;
+            SetMainState(eMainStates.Stopped);
+        }
+        private void sbpStereoButtonsPanel_OnBoth(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                mStereoVideoManager.StereoLRBoth(0);
+                Settings.LRBoth = 0;
+            }
+        }
+        private void sbpStereoButtonsPanel_OnLeftOnly(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                mStereoVideoManager.StereoLRBoth(1);
+                Settings.LRBoth = 1;
+            }
+        }
+        private void sbpStereoButtonsPanel_OnRightOnly(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                mStereoVideoManager.StereoLRBoth(2);
+                Settings.LRBoth = 2;
+            }
+        }
+        private void sbpStereoButtonsPanel_OnNoSwap(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                mStereoVideoManager.StereoSwapLR(false);
+                Settings.SwapLR = false;
+            }
+        }
+        private void sbpStereoButtonsPanel_OnSwap(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                mStereoVideoManager.StereoSwapLR(true);
+                Settings.SwapLR = true;
+            }
+        }
+        private void sbpStereoButtonsPanel_OnHorizontal(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                mStereoVideoManager.StereoVerticalLR(false);
+                Settings.VerticalLR = false;
+            }
+        }
+        private void sbpStereoButtonsPanel_OnVertical(object sender, EventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                mStereoVideoManager.StereoVerticalLR(true);
+                Settings.VerticalLR = true;
+            }
+        }
+        private void gtopGlassesTimeOffsetPanel_OnTimeOffset(object sender, GlassesTimeOffsetPanel.TimeOffsetEventArgs e)
+        {
+            if (mStereoVideoManager != null)
+            {
+                mStereoVideoManager.StereoSetGlassesTimeOffset(e.TimeOffset);
+                Settings.GlassesTimeOffset = e.TimeOffset;
+            }
         }
         private void bOpen_MouseEnter(object sender, EventArgs e)
         {
             ttControls.Show("Open video file", (IWin32Window)sender, 5000);
-        }
-        private void bPlayPause_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Play / pause the video", (IWin32Window)sender, 5000);
-        }
-        private void bStop_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Stop the video", (IWin32Window)sender, 5000);
-        }
-        private void bSound_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Sound On / Off", (IWin32Window)sender, 5000);
-        }
-        private void tbVolume_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Change the volume", (IWin32Window)sender, 5000);
-        }
-        private void cbTracks_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Select audio track", (IWin32Window)sender, 5000);
-        }
-        private void cbComPort_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Select COM Port of Arduino glasses controller", (IWin32Window)sender, 5000);
-        }
-        private void bRefresh_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Refresh COM Ports", (IWin32Window)sender, 5000);
-        }
-        private void bBoth_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Show pictures for both eyes", (IWin32Window)sender, 5000);
-        }
-        private void bLeftOnly_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Show picture for left eye only", (IWin32Window)sender, 5000);
-        }
-        private void bRightOnly_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Show picture for right eye only", (IWin32Window)sender, 5000);
-        }
-        private void bSwap_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Swap left eye and right eye pictures", (IWin32Window)sender, 5000);
-        }
-        private void bVertical_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("In original video the left picture is above the right picture or near it", (IWin32Window)sender, 5000);
-        }
-        private void tbGlassesTimeOffset_MouseEnter(object sender, EventArgs e)
-        {
-            ttControls.Show("Fine correction for the stereo effect", (IWin32Window)sender, 5000);
         }
         #endregion
 
@@ -886,265 +655,73 @@ namespace StereoscopicMoviePlayer
             switch (mainState)
             {
                 case eMainStates.VideoFileNotOpened:
-                    mEnableDisableState = eEnableDisableStates.VideoFileNotOpened;
-                    mPlayerButtonsState = ePlayerButtonsStates.None;
-                    switch (Settings.LRBoth)
-                    {
-                        case 0:
-                            mStereoButtonsState = eStereoButtonsStates.Both;
-                            break;
-                        case 1:
-                            mStereoButtonsState = eStereoButtonsStates.LeftOnly;
-                            break;
-                        case 2:
-                            mStereoButtonsState = eStereoButtonsStates.RightOnly;
-                            break;
-                    }
-                    mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
-                    mVerticalButtonState = (Settings.VerticalLR) ? eVerticalButtonStates.VerticalOn : eVerticalButtonStates.VerticalOff;
-                    mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
-                    tbVolume.Value = Settings.Volume;
-                    tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
-                    lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
+                    bOpen.Enabled = true;
+                    ppPlayerPanel.Enabled = false;
+                    spSoundPanel.Enabled = false;
+                    cppComPortPanel.Enabled = false;
+                    sbpStereoButtonsPanel.Enabled = false;
+                    ptpPlayTimePanel.Enabled = false;
+                    gtopGlassesTimeOffsetPanel.Enabled = false;
+                    tsslFrequencyLabel.Visible = false;
+                    tsslFrequency.Visible = false;
                     break;
                 case eMainStates.COMPortNotSelected:
-                    mEnableDisableState = eEnableDisableStates.COMPortNotSelected;
-                    mPlayerButtonsState = ePlayerButtonsStates.None;
-                    switch (Settings.LRBoth)
-                    {
-                        case 0:
-                            mStereoButtonsState = eStereoButtonsStates.Both;
-                            break;
-                        case 1:
-                            mStereoButtonsState = eStereoButtonsStates.LeftOnly;
-                            break;
-                        case 2:
-                            mStereoButtonsState = eStereoButtonsStates.RightOnly;
-                            break;
-                    }
-                    mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
-                    mVerticalButtonState = (Settings.VerticalLR) ? eVerticalButtonStates.VerticalOn : eVerticalButtonStates.VerticalOff;
-                    mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
-                    tbVolume.Value = Settings.Volume;
-                    tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
-                    lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
+                    bOpen.Enabled = true;
+                    ppPlayerPanel.Enabled = false;
+                    spSoundPanel.Enabled = false;
+                    cppComPortPanel.Enabled = true;
+                    sbpStereoButtonsPanel.Enabled = false;
+                    ptpPlayTimePanel.Enabled = false;
+                    gtopGlassesTimeOffsetPanel.Enabled = false;
+                    tsslFrequencyLabel.Visible = false;
+                    tsslFrequency.Visible = false;
                     break;
                 case eMainStates.Stopped:
-                    mEnableDisableState = eEnableDisableStates.Stopped;
-                    mPlayerButtonsState = ePlayerButtonsStates.Stopped;
-                    switch (Settings.LRBoth)
-                    {
-                        case 0:
-                            mStereoButtonsState = eStereoButtonsStates.Both;
-                            break;
-                        case 1:
-                            mStereoButtonsState = eStereoButtonsStates.LeftOnly;
-                            break;
-                        case 2:
-                            mStereoButtonsState = eStereoButtonsStates.RightOnly;
-                            break;
-                    }
-                    mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
-                    mVerticalButtonState = (Settings.VerticalLR) ? eVerticalButtonStates.VerticalOn : eVerticalButtonStates.VerticalOff;
-                    mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
-                    tbVolume.Value = Settings.Volume;
-                    tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
-                    lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
+                    bOpen.Enabled = true;
+                    ppPlayerPanel.Enabled = true;
+                    spSoundPanel.Enabled = true;
+                    cppComPortPanel.Enabled = true;
+                    sbpStereoButtonsPanel.Enabled = false;
+                    ptpPlayTimePanel.Enabled = true;
+                    gtopGlassesTimeOffsetPanel.Enabled = false;
+                    tsslFrequencyLabel.Visible = false;
+                    tsslFrequency.Visible = false;
                     break;
                 case eMainStates.PlayingPaused:
-                    mEnableDisableState = eEnableDisableStates.PlayingPaused;
-                    switch (Settings.LRBoth)
-                    {
-                        case 0:
-                            mStereoButtonsState = eStereoButtonsStates.Both;
-                            break;
-                        case 1:
-                            mStereoButtonsState = eStereoButtonsStates.LeftOnly;
-                            break;
-                        case 2:
-                            mStereoButtonsState = eStereoButtonsStates.RightOnly;
-                            break;
-                    }
-                    mSwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
-                    mVerticalButtonState = (Settings.VerticalLR) ? eVerticalButtonStates.VerticalOn : eVerticalButtonStates.VerticalOff;
-                    mSoundButtonState = (Settings.SoundOn) ? eSoundButtonStates.SoundOn : eSoundButtonStates.SoundOff;
-                    tbVolume.Value = Settings.Volume;
-                    tbGlassesTimeOffset.Value = Settings.GlassesTimeOffset;
-                    lblGlassesTimeOffset.Text = Settings.GlassesTimeOffset.ToString();
-                    break;
-            }
-        }
-        private void SetEnableDisableState(eEnableDisableStates enableDisableState)
-        {
-            switch (enableDisableState)
-            {
-                case eEnableDisableStates.VideoFileNotOpened:
                     bOpen.Enabled = true;
-                    bPlayPause.Enabled = false;
-                    bStop.Enabled = false;
-                    bSound.Enabled = false;
-                    tbVolume.Enabled = false;
-                    cbTracks.Enabled = false;
-                    cbComPort.Enabled = false;
-                    bRefresh.Enabled = false;
-                    bBoth.Enabled = false;
-                    bLeftOnly.Enabled = false;
-                    bRightOnly.Enabled = false;
-                    bSwap.Enabled = false;
-                    bVertical.Enabled = false;
-                    tbMovieTime.Enabled = false;
-                    lblMovieTime.Enabled = false;
-                    tbGlassesTimeOffset.Enabled = false;
-                    lblGlassesTimeOffset.Enabled = false;
-                    tsslFrequencyLabel.Visible = false;
-                    tsslFrequency.Visible = false;
-                    break;
-                case eEnableDisableStates.COMPortNotSelected:
-                    bOpen.Enabled = true;
-                    bPlayPause.Enabled = false;
-                    bStop.Enabled = false;
-                    bSound.Enabled = false;
-                    tbVolume.Enabled = false;
-                    cbTracks.Enabled = false;
-                    cbComPort.Enabled = true;
-                    bRefresh.Enabled = true;
-                    bBoth.Enabled = false;
-                    bLeftOnly.Enabled = false;
-                    bRightOnly.Enabled = false;
-                    bSwap.Enabled = false;
-                    bVertical.Enabled = false;
-                    tbMovieTime.Enabled = false;
-                    lblMovieTime.Enabled = false;
-                    tbGlassesTimeOffset.Enabled = false;
-                    lblGlassesTimeOffset.Enabled = false;
-                    tsslFrequencyLabel.Visible = false;
-                    tsslFrequency.Visible = false;
-                    break;
-                case eEnableDisableStates.Stopped:
-                    bOpen.Enabled = true;
-                    bPlayPause.Enabled = true;
-                    bStop.Enabled = true;
-                    bSound.Enabled = true;
-                    tbVolume.Enabled = true;
-                    cbTracks.Enabled = true;
-                    cbComPort.Enabled = true;
-                    bRefresh.Enabled = true;
-                    bBoth.Enabled = false;
-                    bLeftOnly.Enabled = false;
-                    bRightOnly.Enabled = false;
-                    bSwap.Enabled = false;
-                    bVertical.Enabled = false;
-                    tbMovieTime.Enabled = true;
-                    lblMovieTime.Enabled = true;
-                    tbGlassesTimeOffset.Enabled = false;
-                    lblGlassesTimeOffset.Enabled = false;
-                    tsslFrequencyLabel.Visible = false;
-                    tsslFrequency.Visible = false;
-                    break;
-                case eEnableDisableStates.PlayingPaused:
-                    bOpen.Enabled = true;
-                    bPlayPause.Enabled = true;
-                    bStop.Enabled = true;
-                    bSound.Enabled = true;
-                    tbVolume.Enabled = true;
-                    cbTracks.Enabled = true;
-                    cbComPort.Enabled = false;
-                    bRefresh.Enabled = false;
-                    bBoth.Enabled = true;
-                    bLeftOnly.Enabled = true;
-                    bRightOnly.Enabled = true;
-                    bSwap.Enabled = true;
-                    bVertical.Enabled = true;
-                    tbMovieTime.Enabled = true;
-                    lblMovieTime.Enabled = true;
-                    tbGlassesTimeOffset.Enabled = true;
-                    lblGlassesTimeOffset.Enabled = true;
+                    ppPlayerPanel.Enabled = true;
+                    spSoundPanel.Enabled = true;
+                    cppComPortPanel.Enabled = false;
+                    sbpStereoButtonsPanel.Enabled = true;
+                    ptpPlayTimePanel.Enabled = true;
+                    gtopGlassesTimeOffsetPanel.Enabled = true;
                     tsslFrequencyLabel.Visible = true;
                     tsslFrequency.Visible = true;
                     break;
             }
+
         }
-        private void SetPlayerButtonsState(ePlayerButtonsStates playerButtonsState)
+        private void LoadSettingsToControls()
         {
-            switch (playerButtonsState)
+            spSoundPanel.SoundState = Settings.SoundOn ? SoundPanel.eSoundStates.SoundOn : SoundPanel.eSoundStates.SoundOff;
+            spSoundPanel.SoundVolume = (UInt16)Settings.Volume;
+            cppComPortPanel.SelectedCOMPort = Settings.ComPort;
+            cppComPortPanel.LoadPorts();
+            switch (Settings.LRBoth)
             {
-                case ePlayerButtonsStates.Playing:
-                    bPlayPause.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.apause;
+                case 0:
+                    sbpStereoButtonsPanel.LRBothButtonsState = eLRBothButtonsStates.Both;
                     break;
-                case ePlayerButtonsStates.Paused:
-                    bPlayPause.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.aplay;
+                case 1:
+                    sbpStereoButtonsPanel.LRBothButtonsState = eLRBothButtonsStates.LeftOnly;
                     break;
-                case ePlayerButtonsStates.Stopped:
-                    bPlayPause.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.aplay;
-                    break;
-                case ePlayerButtonsStates.None:
-                    bPlayPause.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.aplay;
+                case 2:
+                    sbpStereoButtonsPanel.LRBothButtonsState = eLRBothButtonsStates.RightOnly;
                     break;
             }
-        }
-        private void SetStereoButtonsState(eStereoButtonsStates stereoButtonsState)
-        {
-            switch (stereoButtonsState)
-            {
-                case eStereoButtonsStates.Both:
-                    bBoth.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.both_selected;
-                    bLeftOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.left_only_unselected;
-                    bRightOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.right_only_unselected;
-                    break;
-                case eStereoButtonsStates.LeftOnly:
-                    bBoth.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.both_unselected;
-                    bLeftOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.left_only_selected;
-                    bRightOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.right_only_unselected;
-                    break;
-                case eStereoButtonsStates.RightOnly:
-                    bBoth.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.both_unselected;
-                    bLeftOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.left_only_unselected;
-                    bRightOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.right_only_selected;
-                    break;
-                case eStereoButtonsStates.None:
-                    bBoth.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.both_unselected;
-                    bLeftOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.left_only_unselected;
-                    bRightOnly.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.right_only_unselected;
-                    break;
-            }
-        }
-        private void SetSoundButtonState(eSoundButtonStates soundButtonStates)
-        {
-            switch (soundButtonStates)
-            {
-                case eSoundButtonStates.SoundOn:
-                    bSound.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.sound;
-                    tbVolume.Enabled = true;
-                    break;
-                case eSoundButtonStates.SoundOff:
-                    bSound.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.no_sound;
-                    tbVolume.Enabled = false;
-                    break;
-            }
-        }
-        private void SetSwapButtonState(eSwapButtonStates swapButtonStates)
-        {
-            switch (swapButtonStates)
-            {
-                case eSwapButtonStates.SwapOn:
-                    bSwap.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.swap_selected;
-                    break;
-                case eSwapButtonStates.SwapOff:
-                    bSwap.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.swap_unselected;
-                    break;
-            }
-        }
-        private void SetVerticalButtonState(eVerticalButtonStates verticalButtonStates)
-        {
-            switch (verticalButtonStates)
-            {
-                case eVerticalButtonStates.VerticalOn:
-                    bVertical.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.vertical;
-                    break;
-                case eVerticalButtonStates.VerticalOff:
-                    bVertical.BackgroundImage = global::StereoscopicMoviePlayer.Properties.Resources.horizontal;
-                    break;
-            }
+            sbpStereoButtonsPanel.SwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
+            sbpStereoButtonsPanel.HVButtonState = (Settings.VerticalLR) ? eHVButtonStates.Vertical : eHVButtonStates.Horizontal;
+            gtopGlassesTimeOffsetPanel.TimeOffset = Settings.GlassesTimeOffset;
         }
         private void PerformStereoStart()
         {
@@ -1203,25 +780,6 @@ namespace StereoscopicMoviePlayer
                 return dlgOpen.FileName;
             }
             return string.Empty;
-        }
-        private void LoadTracks()
-        {
-            cbTracks.Items.Clear();
-            if (mStereoVideoManager != null)
-            {
-                if (mStereoVideoManager.PlayerIsOpened())
-                {
-                    int numberOfAudioTracks = mStereoVideoManager.PlayerGetNumberOfAudioTracks();
-                    for (int i = 0; i < numberOfAudioTracks; i++)
-                    {
-                        cbTracks.Items.Add("Track" + i.ToString());
-                    }
-                    if (cbTracks.Items.Count > 0)
-                    {
-                        cbTracks.SelectedIndex = 0;
-                    }
-                }
-            }
         }
         #endregion
 

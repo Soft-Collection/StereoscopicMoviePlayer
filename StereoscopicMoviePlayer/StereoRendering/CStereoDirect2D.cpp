@@ -161,10 +161,10 @@ void CStereoDirect2D::ResetDevice()
 }
 void CStereoDirect2D::SelectSourceRect(BOOL isLeft)
 {
-	D2D1_RECT_F sourceRectLeftHorizontal = D2D1::RectF(0.0, 0.0, (float)m_LastImageDimensions.Width / 2.0, (float)m_LastImageDimensions.Height);
-	D2D1_RECT_F sourceRectRightHorizontal = D2D1::RectF((float)m_LastImageDimensions.Width / 2.0, 0.0, (float)m_LastImageDimensions.Width, (float)m_LastImageDimensions.Height);
-	D2D1_RECT_F sourceRectLeftVertical = D2D1::RectF(0.0, 0.0, (float)m_LastImageDimensions.Width, (float)m_LastImageDimensions.Height / 2.0);
-	D2D1_RECT_F sourceRectRightVertical = D2D1::RectF(0.0, (float)m_LastImageDimensions.Height / 2.0, (float)m_LastImageDimensions.Width, (float)m_LastImageDimensions.Height);
+	D2D1_RECT_F sourceRectLeftHorizontal = D2D1::RectF(0.0f, 0.0f, (float)m_LastImageDimensions.Width / 2.0f, (float)m_LastImageDimensions.Height);
+	D2D1_RECT_F sourceRectRightHorizontal = D2D1::RectF((float)m_LastImageDimensions.Width / 2.0f, 0.0f, (float)m_LastImageDimensions.Width, (float)m_LastImageDimensions.Height);
+	D2D1_RECT_F sourceRectLeftVertical = D2D1::RectF(0.0f, 0.0f, (float)m_LastImageDimensions.Width, (float)m_LastImageDimensions.Height / 2.0f);
+	D2D1_RECT_F sourceRectRightVertical = D2D1::RectF(0.0f, (float)m_LastImageDimensions.Height / 2.0f, (float)m_LastImageDimensions.Width, (float)m_LastImageDimensions.Height);
 	if (isLeft)
 	{
 		if ((m_LRBoth.load() == BOTH) || (m_LRBoth.load() == LEFT_ONLY))

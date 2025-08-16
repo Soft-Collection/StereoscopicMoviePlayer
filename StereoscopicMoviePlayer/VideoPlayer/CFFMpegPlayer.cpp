@@ -347,7 +347,7 @@ INT CFFMpegPlayer::GetNumberOfVideoTracks()
 	{
 		if (mFormatContext != NULL)
 		{
-			for (INT i = 0; i < mFormatContext->nb_streams; i++)
+			for (UINT i = 0; i < mFormatContext->nb_streams; i++)
 			{
 				if (mFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
 				{
@@ -367,7 +367,7 @@ void CFFMpegPlayer::SetVideoTrack(INT video_track_index)
 		if (mFormatContext != NULL)
 		{
 			INT at_cnt = 0;
-			for (INT i = 0; i < mFormatContext->nb_streams; i++)
+			for (UINT i = 0; i < mFormatContext->nb_streams; i++)
 			{
 				if (mFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
 				{
@@ -389,7 +389,7 @@ INT CFFMpegPlayer::GetNumberOfAudioTracks()
 	{
 		if (mFormatContext != NULL)
 		{
-			for (INT i = 0; i < mFormatContext->nb_streams; i++)
+			for (UINT i = 0; i < mFormatContext->nb_streams; i++)
 			{
 				if (mFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
 				{
@@ -409,7 +409,7 @@ void CFFMpegPlayer::SetAudioTrack(INT audio_track_index)
 		if (mFormatContext != NULL)
 		{
 			INT at_cnt = 0;
-			for (INT i = 0; i < mFormatContext->nb_streams; i++)
+			for (UINT i = 0; i < mFormatContext->nb_streams; i++)
 			{
 				if (mFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
 				{
