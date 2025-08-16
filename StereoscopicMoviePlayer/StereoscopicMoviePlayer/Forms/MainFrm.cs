@@ -3,7 +3,6 @@ using System.IO;
 using System.Diagnostics;
 using System.Security.Permissions;
 using System.Windows.Forms;
-using static StereoscopicMoviePlayer.StereoButtonsPanel;
 
 namespace StereoscopicMoviePlayer
 {
@@ -455,6 +454,7 @@ namespace StereoscopicMoviePlayer
                         ptpPlayTimePanel.CurrentPlayingTime = 0;
                         ptpPlayTimePanel.Duration = mStereoVideoManager.PlayerGetDuration();
                         spSoundPanel.LoadSoundTracks(mStereoVideoManager.PlayerGetNumberOfAudioTracks());
+                        ppPlayerPanel.ButtonsState = PlayerPanel.eButtonsStates.Stopped;
                     }
                 }
                 else
@@ -710,17 +710,17 @@ namespace StereoscopicMoviePlayer
             switch (Settings.LRBoth)
             {
                 case 0:
-                    sbpStereoButtonsPanel.LRBothButtonsState = eLRBothButtonsStates.Both;
+                    sbpStereoButtonsPanel.LRBothButtonsState = StereoButtonsPanel.eLRBothButtonsStates.Both;
                     break;
                 case 1:
-                    sbpStereoButtonsPanel.LRBothButtonsState = eLRBothButtonsStates.LeftOnly;
+                    sbpStereoButtonsPanel.LRBothButtonsState = StereoButtonsPanel.eLRBothButtonsStates.LeftOnly;
                     break;
                 case 2:
-                    sbpStereoButtonsPanel.LRBothButtonsState = eLRBothButtonsStates.RightOnly;
+                    sbpStereoButtonsPanel.LRBothButtonsState = StereoButtonsPanel.eLRBothButtonsStates.RightOnly;
                     break;
             }
-            sbpStereoButtonsPanel.SwapButtonState = (Settings.SwapLR) ? eSwapButtonStates.SwapOn : eSwapButtonStates.SwapOff;
-            sbpStereoButtonsPanel.HVButtonState = (Settings.VerticalLR) ? eHVButtonStates.Vertical : eHVButtonStates.Horizontal;
+            sbpStereoButtonsPanel.SwapButtonState = (Settings.SwapLR) ? StereoButtonsPanel.eSwapButtonStates.SwapOn : StereoButtonsPanel.eSwapButtonStates.SwapOff;
+            sbpStereoButtonsPanel.HVButtonState = (Settings.VerticalLR) ? StereoButtonsPanel.eHVButtonStates.Vertical : StereoButtonsPanel.eHVButtonStates.Horizontal;
             gtopGlassesTimeOffsetPanel.TimeOffset = Settings.GlassesTimeOffset;
         }
         private void PerformStereoStart()
