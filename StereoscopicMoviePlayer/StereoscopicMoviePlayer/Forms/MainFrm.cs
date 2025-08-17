@@ -260,11 +260,10 @@ namespace StereoscopicMoviePlayer
         #region Enums
         private enum eMainStates
         {
-            NotSetYet = 0,
-            VideoFileNotOpened = 1,
-            COMPortNotSelected = 2,
-            Stopped = 3,
-            PlayingPaused = 4
+            VideoFileNotOpened = 0,
+            COMPortNotSelected = 1,
+            Stopped = 2,
+            PlayingPaused = 3
         }
         #endregion
 
@@ -273,6 +272,8 @@ namespace StereoscopicMoviePlayer
         private int mAlreadySentCounter = 0;
         private long mLastWindowResizeTime = 0;
         private bool mResizeAlreadyApplied = true;
+        private bool mLastIsFileExists = false;
+        private bool mLastIsCOMPortSelected = false;
         private bool mIsEOFApplied = false;
         #endregion
 
@@ -348,22 +349,36 @@ namespace StereoscopicMoviePlayer
         }
         private void timerGUIStereoPlayer_Tick(object sender, EventArgs e)
         {
-            if (File.Exists(Settings.FilePath))
+            bool isFileExists = File.Exists(Settings.FilePath);
+            if (mLastIsFileExists != isFileExists)
             {
-                if (mStereoVideoManager != null)
+                if (isFileExists)
                 {
-                    if (!mStereoVideoManager.PlayerIsOpened())
+                    if (mStereoVideoManager != null)
                     {
-                        mStereoVideoManager.PlayerOpen(Settings.FilePath);
-                        ptpPlayTimePanel.Duration = mStereoVideoManager.PlayerGetDuration();
-                        spSoundPanel.LoadSoundTracks(mStereoVideoManager.PlayerGetNumberOfAudioTracks());
-                        SetMainState((cppComPortPanel.IsCOMPortSelected) ? eMainStates.Stopped : eMainStates.COMPortNotSelected);
+                        if (!mStereoVideoManager.PlayerIsOpened())
+                        {
+                            mStereoVideoManager.PlayerOpen(Settings.FilePath);
+                            ptpPlayTimePanel.Duration = mStereoVideoManager.PlayerGetDuration();
+                            spSoundPanel.LoadSoundTracks(mStereoVideoManager.PlayerGetNumberOfAudioTracks());
+                            SetMainState((cppComPortPanel.IsCOMPortSelected) ? eMainStates.Stopped : eMainStates.COMPortNotSelected);
+                        }
                     }
                 }
+                else
+                {
+                    SetMainState(eMainStates.VideoFileNotOpened);
+                }
+                mLastIsFileExists = isFileExists;
             }
-            else
+            //-----------------------------------------------------
+            if (mLastIsCOMPortSelected != cppComPortPanel.IsCOMPortSelected)
             {
-                SetMainState(eMainStates.VideoFileNotOpened);
+                if (!cppComPortPanel.IsCOMPortSelected)
+                {
+                    SetMainState(eMainStates.COMPortNotSelected);
+                }
+                mLastIsCOMPortSelected = cppComPortPanel.IsCOMPortSelected;
             }
             //-----------------------------------------------------
             if (mStereoVideoManager != null)
@@ -419,6 +434,7 @@ namespace StereoscopicMoviePlayer
                         mStereoVideoManager.PlayerSetVolume(spSoundPanel.SoundVolume);
                         mStereoVideoManager.StereoLRBoth(Settings.LRBoth);
                         mStereoVideoManager.StereoSwapLR(Settings.SwapLR);
+                        mStereoVideoManager.StereoVerticalLR(Settings.VerticalLR);
                         mStereoVideoManager.StereoSetGlassesTimeOffset(Settings.GlassesTimeOffset);
                     }
                     mAlreadySent = true;
