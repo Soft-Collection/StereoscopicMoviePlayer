@@ -266,14 +266,6 @@ namespace StereoscopicMoviePlayer
             Stopped = 3,
             PlayingPaused = 4
         }
-        private enum eEnableDisableStates
-        {
-            NotSetYet = 0,
-            VideoFileNotOpened = 1,
-            COMPortNotSelected = 2,
-            Stopped = 3,
-            PlayingPaused = 4
-        }
         #endregion
 
         #region Variables
