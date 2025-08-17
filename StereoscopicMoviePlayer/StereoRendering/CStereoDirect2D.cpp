@@ -274,6 +274,7 @@ void CStereoDirect2D::Blt(BOOL isLeft, void* user, dSendSync sendSync)
 	}
 	else
 	{
+		m_LastImageDimensions = { 0, 0, 0 };
 		m_D2DContext->Clear(D2D1::ColorF(D2D1::ColorF::Gray));
 	}
 	m_D2DContext->EndDraw();
