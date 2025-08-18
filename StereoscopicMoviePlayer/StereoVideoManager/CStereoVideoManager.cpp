@@ -209,6 +209,7 @@ void CStereoVideoManager::PlayerOpen(LPCWSTR fileName)
 	if (mPlayer != NULL)
 	{
 		mPlayer->Open(std::wstring(fileName));
+		mPlayer->Stop();
 	}
 	lock1.unlock();
 }
