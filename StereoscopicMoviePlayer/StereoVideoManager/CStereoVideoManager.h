@@ -37,8 +37,8 @@ private:
 	void OnNewVideoFrame(AVFrame* frame);
 	static void OnNewAudioFrameStatic(void* user, AVFrame* frame);
 	void OnNewAudioFrame(AVFrame* frame);
-	static void SendSyncStatic(void* user, int syncType);
-	void SendSync(int syncType);
+	static void SendSyncStatic(void* user, bool isLeft);
+	void SendSync(bool isLeft);
 public:
 	CStereoVideoManager(HWND hWnd);
 	~CStereoVideoManager();

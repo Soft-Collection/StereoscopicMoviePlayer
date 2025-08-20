@@ -379,18 +379,18 @@ void CStereoVideoManager::ThreadRenderFunction()
 		lock1.unlock();
 	}
 }
-void CStereoVideoManager::SendSyncStatic(void* user, int syncType)
+void CStereoVideoManager::SendSyncStatic(void* user, bool isLeft)
 {
 	if (user == NULL) return;
 	CStereoVideoManager* cStereoVideoManager = (CStereoVideoManager*)user;
-	cStereoVideoManager->SendSync(syncType);
+	cStereoVideoManager->SendSync(isLeft);
 }
-void CStereoVideoManager::SendSync(int syncType)
+void CStereoVideoManager::SendSync(bool isLeft)
 {
 	std::unique_lock<std::mutex> lock1(*mMutexCOMPort); // Lock the mutex
 	if (mComPort != NULL)
 	{
-		mComPort->SendSync(syncType);
+		mComPort->SendSync(isLeft);
 	}
 	lock1.unlock();
 }
