@@ -252,6 +252,12 @@ void CStereoVideoManager::PlayerPlay()
 		}
 	}
 	lock1.unlock();
+	std::unique_lock<std::mutex> lock2(*mMutexRender2); // Lock the mutex
+	if (mStereoDirect2D != NULL)
+	{
+		mStereoDirect2D->PlayerStopped(FALSE);
+	}
+	lock2.unlock();
 }
 void CStereoVideoManager::PlayerPause()
 {
@@ -276,6 +282,12 @@ void CStereoVideoManager::PlayerStop()
 		}
 	}
 	lock1.unlock();
+	std::unique_lock<std::mutex> lock2(*mMutexRender2); // Lock the mutex
+	if (mStereoDirect2D != NULL)
+	{
+		mStereoDirect2D->PlayerStopped(TRUE);
+	}
+	lock2.unlock();
 }
 BOOL CStereoVideoManager::PlayerIsPlaying()
 {

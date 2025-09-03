@@ -46,6 +46,7 @@ private:
 	std::atomic<BOOL>  m_SwapLR;
 	std::atomic<BOOL>  m_VerticalLR;
 	std::atomic<BOOL>  m_ImageDataUpdated;
+	std::atomic<BOOL>  m_IsStopped;
 private:
 	std::mutex*        mMutexDrawBlt;
 	//------------------------------------
@@ -81,5 +82,6 @@ public:
 	void StereoSwapLR(BOOL swaplr);
 	void StereoVerticalLR(BOOL verticallr);
 	void StereoWindowSizeChanged();
+	void PlayerStopped(BOOL stopped);
 };
 #endif // __CSTEREODIRECT2D_H__

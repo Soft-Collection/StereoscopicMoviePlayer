@@ -26,6 +26,7 @@ CStereoDirect2D::CStereoDirect2D(HWND hWnd)
 	m_SwapLR.store(FALSE);
 	m_VerticalLR.store(FALSE);
 	m_ImageDataUpdated.store(FALSE);
+	m_IsStopped.store(FALSE);
 	//--------------------------------------------------------
 	mMutexDrawBlt = new std::mutex();
 	//--------------------------------------------------------
@@ -169,7 +170,7 @@ void CStereoDirect2D::SelectSourceRect(BOOL isLeft)
 	{
 		if ((m_LRBoth.load() == BOTH) || (m_LRBoth.load() == LEFT_ONLY))
 		{
-			if (m_VerticalLR)
+			if (m_VerticalLR.load())
 			{
 				if (m_SwapLR.load())
 				{
@@ -197,7 +198,7 @@ void CStereoDirect2D::SelectSourceRect(BOOL isLeft)
 	{
 		if ((m_LRBoth.load() == BOTH) || (m_LRBoth.load() == RIGHT_ONLY))
 		{
-			if (m_VerticalLR)
+			if (m_VerticalLR.load())
 			{
 				if (m_SwapLR.load())
 				{
@@ -274,7 +275,10 @@ void CStereoDirect2D::Blt(BOOL isLeft, void* user, dSendSync sendSync)
 	}
 	else
 	{
-		m_LastImageDimensions = { 0, 0, 0 };
+		if (m_IsStopped.load())
+		{
+			m_LastImageDimensions = { 0, 0, 0 };
+		}
 		m_D2DContext->Clear(D2D1::ColorF(D2D1::ColorF::Gray));
 	}
 	m_D2DContext->EndDraw();
@@ -304,6 +308,10 @@ void CStereoDirect2D::StereoWindowSizeChanged()
 	GetClientRect(m_HWnd, &clientRect);
 	m_D2DClientRect = D2D1::RectF(static_cast<FLOAT>(clientRect.left), static_cast<FLOAT>(clientRect.top), static_cast<FLOAT>(clientRect.right), static_cast<FLOAT>(clientRect.bottom));
 	ResizeSwapChain(clientRect.right - clientRect.left, clientRect.bottom - clientRect.top);
+}
+void CStereoDirect2D::PlayerStopped(BOOL stopped)
+{
+	m_IsStopped.store(stopped);
 }
 void CStereoDirect2D::ResizeSwapChain(UINT width, UINT height)
 {
